@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Save, BookOpen, Check, X, HelpCircle, RefreshCw } from 'lucide-react';
-import { Subject, StudyLog } from '../types';
+import { Subject, StudyLog, StudyType } from '../types';
 
 interface RegisterPageProps {
   subjects: Subject[];
   onAddLog: (log: Omit<StudyLog, 'id' | 'timestamp'>) => void;
-  prefilledTime?: { hours: number; minutes: number };
-  onTimeClear: () => void;
+  prefilledTime?: { hours: number; minutes: number; seconds: number };
+  onTimeClear?: () => void;
 }
 
 export default function RegisterPage({
@@ -16,112 +16,120 @@ export default function RegisterPage({
   onTimeClear,
 }: RegisterPageProps) {
   const [subjectId, setSubjectId] = useState('');
-  const [type, setType] = useState<'teoria' | 'questoes' | 'revisao'>('teoria');
+  const [type, setType] = useState<StudyType>('teoria');
   const [hours, setHours] = useState('');
   const [minutes, setMinutes] = useState('');
-  const [notes, setNotes] = useState('');
-  
-  // Campos Condicionais
+  const [seconds, setSeconds] = useState(''); // NOVO STATE
   const [pages, setPages] = useState('');
   const [correct, setCorrect] = useState('');
   const [wrong, setWrong] = useState('');
   const [blank, setBlank] = useState('');
-  const [showBlank, setShowBlank] = useState(false);
+  const [enableBlank, setEnableBlank] = useState(false);
+  const [notes, setNotes] = useState('');
 
-  // Efeito para carregar o tempo vindo do Cronômetro
   useEffect(() => {
     if (prefilledTime) {
-      setHours(prefilledTime.hours.toString());
-      setMinutes(prefilledTime.minutes.toString());
+      setHours(String(prefilledTime.hours));
+      setMinutes(String(prefilledTime.minutes));
+      setSeconds(String(prefilledTime.seconds)); // Preenche segundos
     }
   }, [prefilledTime]);
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!subjectId) {
-      alert('Selecione uma matéria, guerreiro!');
+      alert('Preencha a matéria e o tempo de estudo!');
       return;
     }
 
     const h = parseInt(hours) || 0;
     const m = parseInt(minutes) || 0;
+    const s = parseInt(seconds) || 0;
 
-    if (h === 0 && m === 0) {
+    if (h === 0 && m === 0 && s === 0) {
       alert('O tempo de estudo não pode ser zero.');
       return;
     }
 
-    const subject = subjects.find(s => s.id === subjectId);
-
-    const newLog: any = {
+    const log: Omit<StudyLog, 'id' | 'timestamp'> = {
       subjectId,
-      subject: subject?.name || 'Desconhecida',
       type,
       hours: h,
       minutes: m,
+      seconds: s, // Salva segundos
       date: new Date().toISOString().split('T')[0],
-      notes: notes.trim(),
+      notes: notes.trim() || undefined,
     };
 
-    if (type === 'teoria') {
-      newLog.pages = parseInt(pages) || 0;
-    } else if (type === 'questoes') {
-      newLog.correct = parseInt(correct) || 0;
-      newLog.wrong = parseInt(wrong) || 0;
-      newLog.blank = parseInt(blank) || 0;
+    if (type === 'teoria' && pages) {
+      log.pages = parseInt(pages);
     }
 
-    onAddLog(newLog);
-    
+    if (type === 'questoes') {
+      log.correct = parseInt(correct) || 0;
+      log.wrong = parseInt(wrong) || 0;
+      if (enableBlank) {
+        log.blank = parseInt(blank) || 0;
+      }
+    }
+
+    onAddLog(log);
+
     setSubjectId('');
     setHours('');
     setMinutes('');
-    setNotes('');
+    setSeconds('');
     setPages('');
     setCorrect('');
     setWrong('');
     setBlank('');
-    onTimeClear();
-    
-    alert('Estudo registrado! 🚀');
+    setEnableBlank(false);
+    setNotes('');
+
+    if (onTimeClear) {
+      onTimeClear();
+    }
+
+    alert('Estudo registrado com sucesso! 🚀');
   };
 
-  // Configuração dos botões (Estilo Antigo)
   const typeButtons = [
-    { id: 'teoria', label: 'Teoria', icon: BookOpen },
-    { id: 'questoes', label: 'Questões', icon: HelpCircle },
-    { id: 'revisao', label: 'Revisão', icon: RefreshCw },
+    { id: 'teoria' as StudyType, label: 'Teoria', icon: BookOpen },
+    { id: 'questoes' as StudyType, label: 'Questões', icon: HelpCircle },
+    { id: 'revisao' as StudyType, label: 'Revisão', icon: RefreshCw },
   ];
 
   return (
     <div className="max-w-lg mx-auto px-6 py-6 pb-24">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Registrar</h1>
-        <p className="text-gray-600 text-sm">Salve sua missão cumprida</p>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Registrar Estudo</h1>
+        <p className="text-gray-600 text-sm">Adicione seus estudos manualmente</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
-        
-        {/* Seleção de Matéria */}
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Matéria</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Matéria *
+          </label>
           <select
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value)}
-            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 outline-none text-base"
+            className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 font-medium bg-white"
+            required
           >
-            <option value="">Selecione a matéria...</option>
-            {subjects.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
+            <option value="">Selecione uma matéria</option>
+            {subjects.map((subject) => (
+              <option key={subject.id} value={subject.id}>
+                {subject.name}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Tipo de Estudo (ESTILO ANTIGO RESTAURADO) */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-3">
-            Tipo de Estudo
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Tipo de Estudo *
           </label>
           <div className="grid grid-cols-3 gap-3">
             {typeButtons.map((btn) => {
@@ -130,7 +138,7 @@ export default function RegisterPage({
                 <button
                   key={btn.id}
                   type="button"
-                  onClick={() => setType(btn.id as any)}
+                  onClick={() => setType(btn.id)}
                   className={`py-4 rounded-xl font-semibold text-sm transition-all flex flex-col items-center gap-2 ${
                     type === btn.id
                       ? 'bg-emerald-500 text-white shadow-lg scale-105'
@@ -145,25 +153,30 @@ export default function RegisterPage({
           </div>
         </div>
 
-        {/* Tempo (Input Numérico Otimizado - Mantido Novo) */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Tempo com 3 colunas (H, M, S) e inputMode numeric */}
+        <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Horas</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Horas
+            </label>
             <div className="relative">
               <input
                 type="number"
                 inputMode="numeric"
                 min="0"
+                max="23"
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-xl focus:border-emerald-500 text-base"
-                placeholder="00"
+                placeholder="0"
+                className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 font-medium text-center"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">H</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">H</span>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Minutos</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Minutos
+            </label>
             <div className="relative">
               <input
                 type="number"
@@ -172,125 +185,135 @@ export default function RegisterPage({
                 max="59"
                 value={minutes}
                 onChange={(e) => setMinutes(e.target.value)}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-xl focus:border-emerald-500 text-base"
-                placeholder="00"
+                placeholder="0"
+                className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 font-medium text-center"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">M</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">M</span>
             </div>
           </div>
-        </div>
-
-        {/* Condicional: Teoria (Páginas) */}
-        {type === 'teoria' && (
-          <div className="animate-in slide-in-from-top-2 fade-in duration-200">
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Páginas Lidas</label>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Segundos
+            </label>
             <div className="relative">
-              <BookOpen className="absolute left-3 top-3.5 text-gray-400" size={20} />
               <input
                 type="number"
                 inputMode="numeric"
-                value={pages}
-                onChange={(e) => setPages(e.target.value)}
-                className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-emerald-500 text-base"
-                placeholder="Quantidade de páginas"
+                min="0"
+                max="59"
+                value={seconds}
+                onChange={(e) => setSeconds(e.target.value)}
+                placeholder="0"
+                className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 font-medium text-center"
               />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">S</span>
             </div>
+          </div>
+        </div>
+
+        {type === 'teoria' && (
+          <div className="animate-in slide-in-from-top-2 fade-in duration-200">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Páginas Lidas
+            </label>
+            <input
+              type="number"
+              inputMode="numeric"
+              min="0"
+              value={pages}
+              onChange={(e) => setPages(e.target.value)}
+              placeholder="Opcional"
+              className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 font-medium"
+            />
           </div>
         )}
 
-        {/* Condicional: Questões */}
         {type === 'questoes' && (
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-gray-500 uppercase">Desempenho</label>
-              <button 
-                onClick={() => setShowBlank(!showBlank)}
-                className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              {/* Certas */}
+          <div className="space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-bold text-emerald-600 mb-1 block">CERTAS</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-100 rounded-l-lg border-y border-l border-emerald-200">
-                    <Check size={16} className="text-emerald-600" />
-                  </div>
-                  <input 
-                    type="number" 
-                    inputMode="numeric"
-                    placeholder="0" 
-                    className="w-full pl-10 p-2 border border-emerald-200 rounded-lg text-emerald-700 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base" 
-                    value={correct} 
-                    onChange={e => setCorrect(e.target.value)} 
-                  />
-                </div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Certas
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={correct}
+                  onChange={(e) => setCorrect(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 font-medium"
+                />
               </div>
-              
-              {/* Erradas */}
               <div>
-                <label className="text-[10px] font-bold text-red-600 mb-1 block">ERRADAS</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-100 rounded-l-lg border-y border-l border-red-200">
-                    <X size={16} className="text-red-600" />
-                  </div>
-                  <input 
-                    type="number" 
-                    inputMode="numeric"
-                    placeholder="0" 
-                    className="w-full pl-10 p-2 border border-red-200 rounded-lg text-red-700 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base" 
-                    value={wrong} 
-                    onChange={e => setWrong(e.target.value)} 
-                  />
-                </div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Erradas
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={wrong}
+                  onChange={(e) => setWrong(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 font-medium"
+                />
               </div>
-              
-              {/* Em Branco */}
-              {showBlank && (
-                <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
-                  <label className="text-[10px] font-bold text-gray-500 mb-1 block">EM BRANCO</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-gray-200 rounded-l-lg border-y border-l border-gray-300">
-                      <HelpCircle size={16} className="text-gray-500" />
-                    </div>
-                    <input 
-                      type="number" 
-                      inputMode="numeric"
-                      placeholder="0" 
-                      className="w-full pl-10 p-2 border border-gray-300 rounded-lg text-gray-600 font-bold outline-none focus:ring-2 focus:ring-gray-400 text-base" 
-                      value={blank} 
-                      onChange={e => setBlank(e.target.value)} 
-                    />
-                  </div>
-                </div>
-              )}
             </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="enableBlank"
+                checked={enableBlank}
+                onChange={(e) => setEnableBlank(e.target.checked)}
+                className="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
+              />
+              <label htmlFor="enableBlank" className="text-sm font-medium text-gray-700">
+                Registrar questões em branco
+              </label>
+            </div>
+
+            {enableBlank && (
+              <div className="animate-in fade-in slide-in-from-top-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Em Branco
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={blank}
+                  onChange={(e) => setBlank(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 font-medium"
+                />
+              </div>
+            )}
           </div>
         )}
 
-        {/* Observações */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Observações</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Observações
+          </label>
           <textarea
-            rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm focus:border-emerald-500 resize-none"
-            placeholder="Ex: Art. 5º, Inciso XI..."
-          ></textarea>
+            placeholder="Adicione notas sobre esse estudo..."
+            rows={4}
+            className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:outline-none text-gray-800 resize-none"
+          />
         </div>
 
         <button
-          onClick={handleSubmit}
-          className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2"
+          type="submit"
+          className="w-full py-5 rounded-2xl font-bold text-lg text-white bg-emerald-500 hover:bg-emerald-600 shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
         >
-          <Save size={20} />
-          <span>Salvar Registro</span>
+          <Save className="w-6 h-6" />
+          Salvar Estudo
         </button>
-      </div>
+      </form>
     </div>
   );
 }

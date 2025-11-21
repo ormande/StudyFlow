@@ -6,7 +6,6 @@ export interface StudyLog {
   type: StudyType;
   hours: number;
   minutes: number;
-  seconds?: number; // NOVO: Campo opcional de segundos
   pages?: number;
   correct?: number;
   wrong?: number;

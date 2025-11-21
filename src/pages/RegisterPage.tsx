@@ -5,8 +5,10 @@ import { Subject, StudyLog } from '../types';
 interface RegisterPageProps {
   subjects: Subject[];
   onAddLog: (log: Omit<StudyLog, 'id' | 'timestamp'>) => void;
-  prefilledTime?: { hours: number; minutes: number };
+  prefilledTime?: { hours: number; minutes: number; seconds: number };
   onTimeClear: () => void;
+  timerSeconds: number;
+  isTimerRunning: boolean;
 }
 
 export default function RegisterPage({
@@ -14,10 +16,13 @@ export default function RegisterPage({
   onAddLog,
   prefilledTime,
   onTimeClear,
+  timerSeconds,
+  isTimerRunning,
 }: RegisterPageProps) {
   const [subjectId, setSubjectId] = useState('');
   const [type, setType] = useState<'teoria' | 'questoes' | 'revisao'>('teoria');
   const [hours, setHours] = useState('');
+  const [seconds, setSeconds] = useState('');
   const [minutes, setMinutes] = useState('');
   const [notes, setNotes] = useState('');
   
@@ -33,8 +38,21 @@ export default function RegisterPage({
     if (prefilledTime) {
       setHours(prefilledTime.hours.toString());
       setMinutes(prefilledTime.minutes.toString());
+      setSeconds(prefilledTime.seconds.toString());
     }
   }, [prefilledTime]);
+
+  // Atualiza os campos com o tempo do cronômetro em tempo real quando está rodando
+  useEffect(() => {
+    if (isTimerRunning && timerSeconds > 0) {
+      const h = Math.floor(timerSeconds / 3600);
+      const m = Math.floor((timerSeconds % 3600) / 60);
+      const s = timerSeconds % 60;
+      setHours(h.toString());
+      setMinutes(m.toString());
+      setSeconds(s.toString());
+    }
+  }, [timerSeconds, isTimerRunning]);
 
   const handleSubmit = () => {
     if (!subjectId) {
@@ -44,8 +62,9 @@ export default function RegisterPage({
 
     const h = parseInt(hours) || 0;
     const m = parseInt(minutes) || 0;
+    const s = parseInt(seconds) || 0;
 
-    if (h === 0 && m === 0) {
+    if (h === 0 && m === 0 && s === 0) {
       alert('O tempo de estudo não pode ser zero.');
       return;
     }
@@ -58,6 +77,7 @@ export default function RegisterPage({
       type,
       hours: h,
       minutes: m,
+      seconds: s,
       date: new Date().toISOString().split('T')[0],
       notes: notes.trim(),
     };
@@ -74,6 +94,7 @@ export default function RegisterPage({
     
     setSubjectId('');
     setHours('');
+    setSeconds('');
     setMinutes('');
     setNotes('');
     setPages('');
@@ -145,8 +166,8 @@ export default function RegisterPage({
           </div>
         </div>
 
-        {/* Tempo (Input Numérico Otimizado - Mantido Novo) */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Tempo (3 Campos: Horas, Minutos, Segundos) */}
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Horas</label>
             <div className="relative">
@@ -156,10 +177,11 @@ export default function RegisterPage({
                 min="0"
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-xl focus:border-emerald-500 text-base"
+                disabled={isTimerRunning}
+                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-lg focus:border-emerald-500 disabled:opacity-50"
                 placeholder="00"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">H</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">H</span>
             </div>
           </div>
           <div>
@@ -172,10 +194,28 @@ export default function RegisterPage({
                 max="59"
                 value={minutes}
                 onChange={(e) => setMinutes(e.target.value)}
-                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-xl focus:border-emerald-500 text-base"
+                disabled={isTimerRunning}
+                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-lg focus:border-emerald-500 disabled:opacity-50"
                 placeholder="00"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">M</span>
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">M</span>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Segundos</label>
+            <div className="relative">
+              <input
+                type="number"
+                inputMode="numeric"
+                min="0"
+                max="59"
+                value={seconds}
+                onChange={(e) => setSeconds(e.target.value)}
+                disabled={isTimerRunning}
+                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-lg focus:border-emerald-500 disabled:opacity-50"
+                placeholder="00"
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">S</span>
             </div>
           </div>
         </div>

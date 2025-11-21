@@ -49,7 +49,7 @@ export default function CyclePage({
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
     const totalMinutes = logs
       .filter((log) => log.subjectId === subjectId && log.timestamp >= cycleStartDate)
-      .reduce((sum, log) => sum + log.hours * 60 + log.minutes, 0);
+      .reduce((sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60), 0);
 
     const percentage = Math.min((totalMinutes / goalMinutes) * 100, 100);
     return { totalMinutes, percentage };

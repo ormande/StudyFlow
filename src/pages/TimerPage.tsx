@@ -2,18 +2,26 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
 interface TimerPageProps {
-  onTimerStop: (hours: number, minutes: number) => void;
+  onTimerStop: (hours: number, minutes: number, seconds: number) => void;
+  timerSeconds: number;
+  setTimerSeconds: (seconds: number) => void;
+  isTimerRunning: boolean;
+  setIsTimerRunning: (running: boolean) => void;
 }
 
-export default function TimerPage({ onTimerStop }: TimerPageProps) {
-  const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+export default function TimerPage({
+  onTimerStop,
+  timerSeconds,
+  setTimerSeconds,
+  isTimerRunning,
+  setIsTimerRunning
+}: TimerPageProps) {
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (isRunning) {
+    if (isTimerRunning) {
       intervalRef.current = window.setInterval(() => {
-        setSeconds((s) => s + 1);
+        setTimerSeconds(timerSeconds + 1);
       }, 1000);
     } else {
       if (intervalRef.current) {
@@ -26,7 +34,7 @@ export default function TimerPage({ onTimerStop }: TimerPageProps) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning]);
+  }, [isTimerRunning, timerSeconds, setTimerSeconds]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -41,24 +49,25 @@ export default function TimerPage({ onTimerStop }: TimerPageProps) {
   };
 
   const handlePlayPause = () => {
-    setIsRunning(!isRunning);
+    setIsTimerRunning(!isTimerRunning);
   };
 
   const handleStop = () => {
-    if (seconds > 0) {
-      const { hours, minutes } = formatTime(seconds);
-      setIsRunning(false);
-      setSeconds(0);
-      onTimerStop(hours, minutes);
+    if (timerSeconds > 0) {
+      const { hours, minutes } = formatTime(timerSeconds);
+      const secs = timerSeconds % 60;
+      setIsTimerRunning(false);
+      setTimerSeconds(0);
+      onTimerStop(hours, minutes, secs);
     }
   };
 
   const handleReset = () => {
-    setIsRunning(false);
-    setSeconds(0);
+    setIsTimerRunning(false);
+    setTimerSeconds(0);
   };
 
-  const { display } = formatTime(seconds);
+  const { display } = formatTime(timerSeconds);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4 md:px-6">
@@ -84,12 +93,12 @@ export default function TimerPage({ onTimerStop }: TimerPageProps) {
         <button
           onClick={handlePlayPause}
           className={`flex-1 py-6 rounded-2xl font-semibold text-lg text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3 ${
-            isRunning
+            isTimerRunning
               ? 'bg-orange-500 hover:bg-orange-600'
               : 'bg-emerald-500 hover:bg-emerald-600'
           }`}
         >
-          {isRunning ? (
+          {isTimerRunning ? (
             <>
               <Pause className="w-6 h-6" />
               <span className="hidden md:inline">Pausar</span>
@@ -104,7 +113,7 @@ export default function TimerPage({ onTimerStop }: TimerPageProps) {
           )}
         </button>
 
-        {seconds > 0 && (
+        {timerSeconds > 0 && (
           <button
             onClick={handleReset}
             className="px-6 py-6 rounded-2xl font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 shadow-lg transition-all active:scale-95"
@@ -114,7 +123,7 @@ export default function TimerPage({ onTimerStop }: TimerPageProps) {
         )}
       </div>
 
-      {seconds > 0 && !isRunning && (
+      {timerSeconds > 0 && !isTimerRunning && (
         <button
           onClick={handleStop}
           className="mt-4 w-full max-w-md py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all active:scale-95"

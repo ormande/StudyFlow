@@ -6,6 +6,7 @@ export interface StudyLog {
   type: StudyType;
   hours: number;
   minutes: number;
+  seconds?: number;
   pages?: number;
   correct?: number;
   wrong?: number;

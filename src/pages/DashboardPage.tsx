@@ -67,7 +67,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
     const todayLogs = logs.filter((log) => log.date === today);
 
     const totalMinutes = todayLogs.reduce(
-      (sum, log) => sum + log.hours * 60 + log.minutes,
+      (sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60),
       0
     );
 
@@ -95,7 +95,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
     const totalMinutes = logs
       .filter((log) => log.subjectId === subjectId && log.timestamp >= cycleStartDate)
-      .reduce((sum, log) => sum + log.hours * 60 + log.minutes, 0);
+      .reduce((sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60), 0);
 
     const percentage = Math.min((totalMinutes / goalMinutes) * 100, 100);
     return { totalMinutes, percentage };

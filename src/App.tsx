@@ -119,10 +119,12 @@ function App() {
   const [logs, setLogs] = useLocalStorage<StudyLog[]>('studyflow_logs', []);
   const [cycleStartDate, setCycleStartDate] = useLocalStorage<number>('studyflow_cycle_start', Date.now());
   
-  const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number } | undefined>();
+  const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  const handleTimerStop = (hours: number, minutes: number) => {
-    setPrefilledTime({ hours, minutes });
+  const handleTimerStop = (hours: number, minutes: number, seconds: number) => {
+    setPrefilledTime({ hours, minutes, seconds });
     setActiveTab('register');
   };
 
@@ -187,7 +189,15 @@ function App() {
           />
         );
       case 'timer':
-        return <TimerPage onTimerStop={handleTimerStop} />;
+        return (
+          <TimerPage
+            onTimerStop={handleTimerStop}
+            timerSeconds={timerSeconds}
+            setTimerSeconds={setTimerSeconds}
+            isTimerRunning={isTimerRunning}
+            setIsTimerRunning={setIsTimerRunning}
+          />
+        );
       case 'register':
         return (
           <RegisterPage
@@ -195,6 +205,8 @@ function App() {
             onAddLog={handleAddLog}
             prefilledTime={prefilledTime}
             onTimeClear={() => setPrefilledTime(undefined)}
+            timerSeconds={timerSeconds}
+            isTimerRunning={isTimerRunning}
           />
         );
       case 'cycle':

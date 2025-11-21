@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TabType, Subject, StudyLog } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import BottomNav from './components/BottomNav';
@@ -9,7 +9,7 @@ import CyclePage from './pages/CyclePage';
 import SettingsModal from './components/SettingsModal';
 import { Lock, Mail, ArrowRight, BookOpen, Settings } from 'lucide-react';
 
-// --- TELA DE LOGIN (DESIGN CLARO / LIGHT MODE) ---
+// --- TELA DE LOGIN (MANTIDA IGUAL) ---
 const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,19 +27,14 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-gray-800">
       <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
-        {/* Header do Login - ATUALIZADO COM CORES INVERTIDAS */}
         <div className="text-center">
-          {/* Fundo Verde Forte */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-600 mb-4 shadow-lg shadow-emerald-500/20">
-            {/* Ícone Branco */}
             <BookOpen size={40} className="text-white" />
           </div>
           <h1 className="text-3xl font-black tracking-tight mb-2 text-gray-900">STUDYFLOW</h1>
-          <p className="text-gray-500 text-sm">Área restrita para membros.</p>
+          <p className="text-gray-500 text-sm">Área restrita para guerreiros.</p>
         </div>
 
-        {/* Formulário Claro */}
         <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-6">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Seu E-mail</label>
@@ -60,7 +55,6 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
             <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Senha de Acesso</label>
             <div className="relative">
               <Lock className="absolute left-3 top-3.5 text-gray-400" size={20} />
-              {/* Senha Oculta e Teclado Normal */}
               <input 
                 type="password" 
                 required
@@ -119,13 +113,49 @@ function App() {
   const [logs, setLogs] = useLocalStorage<StudyLog[]>('studyflow_logs', []);
   const [cycleStartDate, setCycleStartDate] = useLocalStorage<number>('studyflow_cycle_start', Date.now());
   
-  const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number } | undefined>();
+  // --- LÓGICA DO TIMER (MOVIDA PARA CÁ PARA PERSISTIR ENTRE ABAS) ---
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const timerIntervalRef = useRef<number | null>(null);
 
-  const handleTimerStop = (hours: number, minutes: number) => {
-    setPrefilledTime({ hours, minutes });
+  useEffect(() => {
+    if (isTimerRunning) {
+      timerIntervalRef.current = window.setInterval(() => {
+        setTimerSeconds((s) => s + 1);
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    }
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [isTimerRunning]);
+
+  const handleTimerToggle = () => setIsTimerRunning(!isTimerRunning);
+  const handleTimerReset = () => {
+    setIsTimerRunning(false);
+    setTimerSeconds(0);
+  };
+
+  // --- PREENCHIMENTO DO REGISTRO ---
+  const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
+
+  const handleTimerFinish = () => {
+    const h = Math.floor(timerSeconds / 3600);
+    const m = Math.floor((timerSeconds % 3600) / 60);
+    const s = timerSeconds % 60;
+    
+    setIsTimerRunning(false);
+    setPrefilledTime({ hours: h, minutes: m, seconds: s });
+    setTimerSeconds(0); // Reseta o timer após enviar
     setActiveTab('register');
   };
 
+  // --- OUTROS HANDLERS ---
   const handleAddLog = (log: Omit<StudyLog, 'id' | 'timestamp'>) => {
     const newLog: StudyLog = {
       ...log,
@@ -170,7 +200,6 @@ function App() {
         localStorage.removeItem('studyflow_subjects');
         localStorage.removeItem('studyflow_logs');
         localStorage.removeItem('studyflow_cycle_start');
-        // Removido o logout forçado para facilitar o reset rápido
         window.location.reload();
       }
     }
@@ -187,7 +216,15 @@ function App() {
           />
         );
       case 'timer':
-        return <TimerPage onTimerStop={handleTimerStop} />;
+        return (
+          <TimerPage 
+            seconds={timerSeconds}
+            isRunning={isTimerRunning}
+            onToggle={handleTimerToggle}
+            onReset={handleTimerReset}
+            onFinish={handleTimerFinish}
+          />
+        );
       case 'register':
         return (
           <RegisterPage
@@ -228,13 +265,11 @@ function App() {
         onHardReset={handleHardReset}
       />
 
-      {/* HEADER FIXO NO TOPO */}
       <div className="bg-white p-4 border-b border-gray-100 sticky top-0 z-40 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-2 text-gray-800 font-black text-xl tracking-tight">
           <BookOpen className="text-emerald-500" size={24} />
           STUDYFLOW
         </div>
-        {/* AQUI ESTÁ A ENGRENAGEM */}
         <button 
           onClick={() => setShowSettings(true)}
           className="h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"

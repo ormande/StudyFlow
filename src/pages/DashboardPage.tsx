@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2 } from 'lucide-react';
+import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import ShareModal from '../components/ShareModal';
 
@@ -61,10 +61,11 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
     return streak;
   };
 
-  // --- ESTATÍSTICAS DE HOJE (Mantido) ---
+  // --- ESTATÍSTICAS DE HOJE (Corrigido com timezone local) ---
   const getTodayStats = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const todayLogs = logs.filter((log) => log.date === today);
+    const today = new Date();
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayLogs = logs.filter((log) => log.date === todayString);
 
     const totalMinutes = todayLogs.reduce(
       (sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60),
@@ -122,9 +123,21 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
       .slice(0, 5);
   };
 
+  // --- CÁLCULO DE HORAS TOTAIS ---
+  const getTotalHours = () => {
+    const totalMinutes = logs.reduce(
+      (sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60),
+      0
+    );
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return { totalMinutes, hours, minutes };
+  };
+
   // Variáveis calculadas
   const streak = calculateStreak();
   const { totalMinutes, totalPages, todayQuestions, totalCorrect } = getTodayStats();
+  const { hours: totalHours, minutes: totalMin } = getTotalHours();
   const recentActivities = getRecentActivities();
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
@@ -167,28 +180,42 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
         </button>
       </div>
 
-      {/* Cards de Resumo (Ofensiva e Hoje) */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-5 text-white shadow-lg">
+      {/* Cards de Resumo (Ofensiva, Hoje e Total) */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="w-5 h-5" />
-            <span className="text-sm font-semibold">Ofensiva</span>
+            <span className="text-xs font-semibold">Ofensiva</span>
           </div>
-          <p className="text-4xl font-bold">{streak}</p>
-          <p className="text-xs opacity-90 mt-1">dias seguidos</p>
+          <p className="text-3xl font-bold">{streak}</p>
+          <p className="text-[11px] opacity-90 mt-1">dias</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-5 text-white shadow-lg">
+        <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-5 h-5" />
-            <span className="text-sm font-semibold">Hoje</span>
+            <span className="text-xs font-semibold">Hoje</span>
           </div>
-          <p className="text-4xl font-bold">
+          <p className="text-3xl font-bold">
             {hours > 0 ? `${hours}h` : `${minutes}m`}
           </p>
-          <p className="text-xs opacity-90 mt-1">
-            {hours > 0 && minutes > 0 && `${minutes} min`}
-            {hours === 0 && minutes === 0 && 'Comece agora!'}
+          <p className="text-[11px] opacity-90 mt-1">
+            {hours > 0 && minutes > 0 && `${minutes}m`}
+            {hours === 0 && minutes === 0 && 'Comece!'}
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-5 h-5" />
+            <span className="text-xs font-semibold">Total</span>
+          </div>
+          <p className="text-3xl font-bold">
+            {totalHours > 0 ? `${totalHours}h` : '0h'}
+          </p>
+          <p className="text-[11px] opacity-90 mt-1">
+            {totalHours > 0 && totalMin > 0 && `${totalMin}m`}
+            {totalHours === 0 && totalMin === 0 && 'Sem dados'}
           </p>
         </div>
       </div>

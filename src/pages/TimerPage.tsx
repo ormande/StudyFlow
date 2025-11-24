@@ -28,11 +28,8 @@ export default function TimerPage({
         clearInterval(intervalRef.current);
       }
     }
-
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isTimerRunning, timerSeconds, setTimerSeconds]);
 
@@ -40,7 +37,6 @@ export default function TimerPage({
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
-
     return {
       display: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
       hours,
@@ -48,9 +44,7 @@ export default function TimerPage({
     };
   };
 
-  const handlePlayPause = () => {
-    setIsTimerRunning(!isTimerRunning);
-  };
+  const handlePlayPause = () => setIsTimerRunning(!isTimerRunning);
 
   const handleStop = () => {
     if (timerSeconds > 0) {
@@ -72,19 +66,12 @@ export default function TimerPage({
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4 md:px-6">
       <div className="text-center mb-8 md:mb-12">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Cronômetro</h1>
-        <p className="text-gray-600 text-sm">Acompanhe seu tempo de estudo</p>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 transition-colors">Cronômetro</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Acompanhe seu tempo de estudo</p>
       </div>
 
-      {/* AQUI FOI O AJUSTE TÁTICO: 
-          1. mx-auto: Garante centro absoluto.
-          2. p-6 md:p-12: Diminui o padding no celular para sobrar espaço pro texto.
-      */}
-      <div className="bg-white rounded-3xl shadow-xl p-6 md:p-12 mb-8 md:mb-12 w-full max-w-md mx-auto">
-        {/* AQUI A FONTE DIMINUI NO MOBILE:
-          text-5xl (mobile) -> md:text-7xl (PC)
-        */}
-        <div className="text-5xl md:text-7xl font-bold text-gray-800 tracking-tight text-center font-mono">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xlQl p-6 md:p-12 mb-8 md:mb-12 w-full max-w-md mx-auto transition-colors duration-300">
+        <div className="text-5xl md:text-7xl font-bold text-gray-800 dark:text-white tracking-tight text-center font-mono transition-colors">
           {display}
         </div>
       </div>
@@ -92,23 +79,17 @@ export default function TimerPage({
       <div className="flex gap-4 w-full max-w-md">
         <button
           onClick={handlePlayPause}
-          className={`flex-1 py-6 rounded-2xl font-semibold text-lg text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3 ${
-            isTimerRunning
-              ? 'bg-orange-500 hover:bg-orange-600'
-              : 'bg-emerald-500 hover:bg-emerald-600'
+          className={`flex-1 py-6 rounded-2xl font-semibold text-lg text-white shadow-lg transition-all active:scale-95cB flex items-center justify-center gap-3 ${
+            isTimerRunning ? 'bg-orange-500 hover:bg-orange-600' : 'bg-emerald-500 hover:bg-emerald-600'
           }`}
         >
           {isTimerRunning ? (
             <>
-              <Pause className="w-6 h-6" />
-              <span className="hidden md:inline">Pausar</span>
-              <span className="md:hidden">Pause</span>
+              <Pause className="w-6 h-6" /> <span className="hidden md:inline">Pausar</span> <span className="md:hidden">Pause</span>
             </>
           ) : (
             <>
-              <Play className="w-6 h-6" />
-              <span className="hidden md:inline">Iniciar</span>
-              <span className="md:hidden">Play</span>
+              <Play className="w-6 h-6" /> <span className="hidden md:inline">Iniciar</span> <span className="md:hidden">Play</span>
             </>
           )}
         </button>
@@ -116,7 +97,7 @@ export default function TimerPage({
         {timerSeconds > 0 && (
           <button
             onClick={handleReset}
-            className="px-6 py-6 rounded-2xl font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 shadow-lg transition-all active:scale-95"
+            className="px-6 py-6 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 shadow-lg transition-all active:scale-95"
           >
             <RotateCcw className="w-6 h-6" />
           </button>

@@ -70,7 +70,7 @@ export default function TimerPage({
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Acompanhe seu tempo de estudo</p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xlQl p-6 md:p-12 mb-8 md:mb-12 w-full max-w-md mx-auto transition-colors duration-300">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 md:p-12 mb-8 md:mb-12 w-full max-w-md mx-auto transition-colors duration-300">
         <div className="text-5xl md:text-7xl font-bold text-gray-800 dark:text-white tracking-tight text-center font-mono transition-colors">
           {display}
         </div>
@@ -79,7 +79,7 @@ export default function TimerPage({
       <div className="flex gap-4 w-full max-w-md">
         <button
           onClick={handlePlayPause}
-          className={`flex-1 py-6 rounded-2xl font-semibold text-lg text-white shadow-lg transition-all active:scale-95cB flex items-center justify-center gap-3 ${
+          className={`flex-1 py-6 rounded-2xl font-semibold text-lg text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3 ${
             isTimerRunning ? 'bg-orange-500 hover:bg-orange-600' : 'bg-emerald-500 hover:bg-emerald-600'
           }`}
         >

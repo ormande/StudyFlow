@@ -1,11 +1,12 @@
-import { X, Instagram, AlertTriangle, Moon, Sun } from 'lucide-react';
+import { X, Instagram, AlertTriangle, Moon, Sun, Download, Upload } from 'lucide-react';
+import { useRef } from 'react';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onHardReset: () => void;
-  isDarkMode: boolean;       // Recebe o estado atual
-  onToggleTheme: () => void; // Recebe a função de troca
+  isDarkMode: boolean;
+  onToggleTheme: () => void;
 }
 
 export default function SettingsModal({ 
@@ -15,7 +16,71 @@ export default function SettingsModal({
   isDarkMode, 
   onToggleTheme 
 }: SettingsModalProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!isOpen) return null;
+
+  const handleExport = () => {
+    const data = {
+      subjects: JSON.parse(localStorage.getItem('studyflow_subjects') || '[]'),
+      logs: JSON.parse(localStorage.getItem('studyflow_logs') || '[]'),
+      cycleStartDate: JSON.parse(localStorage.getItem('studyflow_cycle_start') || 'null'),
+      exportedAt: new Date().toISOString(),
+      version: '1.1.0'
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `studyflow-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+
+        if (!data.subjects || !data.logs) {
+          alert('Arquivo inválido! Verifique se é um backup do StudyFlow.');
+          return;
+        }
+
+        const confirmImport = confirm(
+          `Isso vai substituir seus dados atuais por:\n\n` +
+          `• ${data.subjects.length} matéria(s)\n` +
+          `• ${data.logs.length} registro(s)\n\n` +
+          `Deseja continuar?`
+        );
+
+        if (confirmImport) {
+          localStorage.setItem('studyflow_subjects', JSON.stringify(data.subjects));
+          localStorage.setItem('studyflow_logs', JSON.stringify(data.logs));
+          if (data.cycleStartDate) {
+            localStorage.setItem('studyflow_cycle_start', JSON.stringify(data.cycleStartDate));
+          }
+          alert('Dados importados com sucesso! O app vai recarregar.');
+          window.location.reload();
+        }
+      } catch {
+        alert('Erro ao ler o arquivo. Verifique se é um JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
@@ -43,6 +108,37 @@ export default function SettingsModal({
                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                {isDarkMode ? 'Ativar Modo Claro' : 'Ativar Modo Escuro'}
              </button>
+          </div>
+
+          {/* SEÇÃO SEUS DADOS */}
+          <div className="text-center pb-4 border-b border-gray-100 dark:border-gray-700">
+            <p className="text-xs text-gray-400 uppercase font-bold mb-3">Seus Dados</p>
+            <div className="space-y-2">
+              <button
+                onClick={handleExport}
+                className="w-full py-3 rounded-xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+              >
+                <Download size={18} />
+                Exportar Backup
+              </button>
+              <button
+                onClick={handleImportClick}
+                className="w-full py-3 rounded-xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+              >
+                <Upload size={18} />
+                Importar Backup
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+            <p className="text-[10px] text-gray-400 mt-2">
+              Use para backup ou trocar de dispositivo
+            </p>
           </div>
 
           <div className="text-center pb-4 border-b border-gray-100 dark:border-gray-700">

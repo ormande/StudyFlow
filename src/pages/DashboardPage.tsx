@@ -12,56 +12,40 @@ interface DashboardPageProps {
 export default function DashboardPage({ subjects, logs, cycleStartDate }: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
 
- // --- NOVA LÓGICA DE OFENSIVA (Fuso Horário BR) ---
+  // --- LÓGICA DE OFENSIVA E ESTATÍSTICAS (MANTIDAS IGUAIS) ---
   const calculateStreak = () => {
     if (logs.length === 0) return 0;
-
-    // 1. Converte todos os logs para datas simples (DD/MM/AAAA) no fuso do usuário
     const studyDates = new Set(
       logs.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR'))
     );
-
     const today = new Date();
     const todayStr = today.toLocaleDateString('pt-BR');
-    
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toLocaleDateString('pt-BR');
-
     let streak = 0;
-    let currentCheckDate = new Date(); // Começa conferindo de hoje pra trás
+    let currentCheckDate = new Date();
 
-    // Verificação inicial: A ofensiva está viva?
-    // Se não estudei hoje E não estudei ontem, a ofensiva é zero.
     if (!studyDates.has(todayStr) && !studyDates.has(yesterdayStr)) {
       return 0;
     }
 
-    // Loop para contar os dias para trás (até 365 dias)
     for (let i = 0; i < 365; i++) {
       const dateString = currentCheckDate.toLocaleDateString('pt-BR');
-      
       if (studyDates.has(dateString)) {
         streak++;
       } else {
-        // Se falhou hoje, mas tem ontem, não quebra ainda (o dia não acabou)
         if (i === 0 && !studyDates.has(todayStr)) {
-           // Pula essa iteração e continua checando, pois pode ter estudado ontem
-           // Mas não soma streak neste loop, pois o streak++ tá no if de cima
            currentCheckDate.setDate(currentCheckDate.getDate() - 1);
            continue;
         }
-        // Se chegou aqui, é porque falhou num dia passado. Game over.
         break;
       }
-      // Volta um dia no tempo
       currentCheckDate.setDate(currentCheckDate.getDate() - 1);
     }
-
     return streak;
   };
 
-  // --- ESTATÍSTICAS DE HOJE (Corrigido com timezone local) ---
   const getTodayStats = () => {
     const today = new Date();
     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -71,59 +55,39 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
       (sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60),
       0
     );
-
     const totalPages = todayLogs
       .filter(log => log.type === 'teoria')
       .reduce((sum, log) => sum + (log.pages || 0), 0);
-
     const totalQuestions = todayLogs
       .filter((log) => log.type === 'questoes')
       .reduce((sum, log) => sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0), 0);
-
     const totalCorrect = todayLogs
       .filter((log) => log.type === 'questoes')
       .reduce((sum, log) => sum + (log.correct || 0), 0);
 
-    return {
-      totalMinutes,
-      totalPages,
-      todayQuestions: totalQuestions,
-      totalCorrect,
-    };
+    return { totalMinutes, totalPages, todayQuestions, totalCorrect };
   };
 
-  // --- PROGRESSO DO CICLO (Mantido) ---
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
     const totalMinutes = logs
       .filter((log) => log.subjectId === subjectId && log.timestamp >= cycleStartDate)
       .reduce((sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60), 0);
-
     const percentage = Math.min((totalMinutes / goalMinutes) * 100, 100);
     return { totalMinutes, percentage };
   };
 
-  // --- NOVO: CÁLCULO DE DESEMPENHO (ACERTOS) ---
   const getSubjectPerformance = (subjectId: string) => {
-    // Pega todas as questões dessa matéria (Histórico total ou do ciclo? 
-    // Geralmente desempenho é bom ver o histórico total, vou deixar total)
     const subjectLogs = logs.filter(log => log.subjectId === subjectId && log.type === 'questoes');
-    
     const totalQuestions = subjectLogs.reduce((sum, log) => sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0), 0);
     const totalCorrect = subjectLogs.reduce((sum, log) => sum + (log.correct || 0), 0);
-    
     const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
-    
     return { totalQuestions, accuracy };
   };
 
-  // --- ATIVIDADES RECENTES (Mantido) ---
   const getRecentActivities = () => {
-    return [...logs]
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .slice(0, 5);
+    return [...logs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
   };
 
-  // --- CÁLCULO DE HORAS TOTAIS ---
   const getTotalHours = () => {
     const totalMinutes = logs.reduce(
       (sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60),
@@ -134,7 +98,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
     return { totalMinutes, hours, minutes };
   };
 
-  // Variáveis calculadas
   const streak = calculateStreak();
   const { totalMinutes, totalPages, todayQuestions, totalCorrect } = getTodayStats();
   const { hours: totalHours, minutes: totalMin } = getTotalHours();
@@ -142,26 +105,21 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  // Helpers visuais
   const getTypeLabel = (type: string) => {
-    const labels = {
-      teoria: 'Teoria',
-      questoes: 'Questões',
-      revisao: 'Revisão',
-    };
+    const labels = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão' };
     return labels[type as keyof typeof labels] || type;
   };
 
   const getAccuracyColor = (acc: number) => {
-    if (acc >= 80) return 'bg-emerald-500'; // Excelente
-    if (acc >= 50) return 'bg-yellow-500';  // Atenção
-    return 'bg-red-500';                    // Crítico
+    if (acc >= 80) return 'bg-emerald-500'; 
+    if (acc >= 50) return 'bg-yellow-500';  
+    return 'bg-red-500';                    
   };
 
   const getAccuracyTextColor = (acc: number) => {
-    if (acc >= 80) return 'text-emerald-600';
-    if (acc >= 50) return 'text-yellow-600';
-    return 'text-red-600';
+    if (acc >= 80) return 'text-emerald-600 dark:text-emerald-400';
+    if (acc >= 50) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   return (
@@ -169,8 +127,8 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">Painel</h1>
-          <p className="text-gray-600 text-sm">Acompanhe seu progresso</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Painel</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
         </div>
         <button
           onClick={() => setShowShareModal(true)}
@@ -180,7 +138,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
         </button>
       </div>
 
-      {/* Cards de Resumo (Ofensiva, Hoje e Total) */}
+      {/* Cards de Resumo */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg">
           <div className="flex items-center gap-2 mb-2">
@@ -220,44 +178,32 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
         </div>
       </div>
 
-      {/* 1. Card: Progresso do Ciclo (Horas) */}
+      {/* 1. Card: Progresso do Ciclo */}
       {subjects.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-md p-5 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6 transition-colors duration-300">
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-lg font-bold text-gray-800">Progresso do Ciclo Atual</h2>
+            <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Progresso do Ciclo Atual</h2>
           </div>
 
           <div className="space-y-4">
             {subjects.map((subject) => {
-              const { totalMinutes, percentage } = getSubjectProgress(
-                subject.id,
-                subject.goalMinutes
-              );
-
+              const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);
               return (
                 <div key={subject.id}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: subject.color }}
-                      />
-                      <span className="text-sm font-semibold text-gray-800">
-                        {subject.name}
-                      </span>
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: subject.color }} />
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{subject.name}</span>
                     </div>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
                       {totalMinutes}/{subject.goalMinutes} min
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                     <div
                       className="h-full transition-all duration-300 rounded-full"
-                      style={{
-                        width: `${percentage}%`,
-                        backgroundColor: subject.color,
-                      }}
+                      style={{ width: `${percentage}%`, backgroundColor: subject.color }}
                     />
                   </div>
                 </div>
@@ -267,22 +213,21 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
         </div>
       )}
 
-      {/* 2. NOVO CARD: Desempenho Geral (Acertos) */}
+      {/* 2. Card: Desempenho Geral */}
       {subjects.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-md p-5 mb-6 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
           <div className="flex items-center gap-2 mb-4">
-            <BarChart2 className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-lg font-bold text-gray-800">Desempenho Geral</h2>
+            <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho Geral</h2>
           </div>
 
           <div className="space-y-5">
             {subjects.map((subject) => {
               const { totalQuestions, accuracy } = getSubjectPerformance(subject.id);
-
               return (
                 <div key={`perf-${subject.id}`}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-gray-700 truncate max-w-[60%]">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[60%]">
                       {subject.name}
                     </span>
                     <div className="text-right">
@@ -294,23 +239,20 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
                       )}
                     </div>
                   </div>
-                  
-                  {/* Barra de Precisão */}
-                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                     {totalQuestions > 0 ? (
                       <div 
                         className={`h-full transition-all duration-500 rounded-full ${getAccuracyColor(accuracy)}`} 
                         style={{ width: `${accuracy}%` }} 
                       />
                     ) : (
-                      <div className="h-full w-full bg-gray-100" /> // Barra vazia
+                      <div className="h-full w-full bg-gray-100 dark:bg-gray-700" /> 
                     )}
                   </div>
                 </div>
               );
             })}
           </div>
-           {/* Mensagem se não tiver nenhuma questão ainda */}
            {subjects.every(s => getSubjectPerformance(s.id).totalQuestions === 0) && (
              <p className="text-xs text-center text-gray-400 mt-4 italic">
                Nenhuma questão registrada. Bora praticar, guerreiro!
@@ -321,10 +263,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
 
       {/* 3. Card: Atividades Recentes */}
       {recentActivities.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-md p-5">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
           <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-lg font-bold text-gray-800">Atividades Recentes</h2>
+            <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Atividades Recentes</h2>
           </div>
 
           <div className="space-y-3">
@@ -335,30 +277,27 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
               return (
                 <div
                   key={log.id}
-                  className="flex items-start gap-3 p-3 rounded-xl bg-gray-50"
+                  className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"
                 >
                   <div
                     className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
                     style={{ backgroundColor: subject?.color || '#6b7280' }}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
                       {subject?.name || 'Matéria Excluída'}
                     </p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       {getTypeLabel(log.type)} • {logMinutes} min
                     </p>
                     {log.notes && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">
                         {log.notes}
                       </p>
                     )}
                   </div>
-                  <span className="text-xs text-gray-500 flex-shrink-0">
-                    {new Date(log.timestamp).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                    })}
+                  <span className="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0">
+                    {new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                   </span>
                 </div>
               );
@@ -369,9 +308,9 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
 
       {/* Estado Vazio */}
       {subjects.length === 0 && logs.length === 0 && (
-        <div className="bg-white rounded-2xl shadow-md p-8 text-center">
-          <p className="text-gray-600 mb-2">Bem-vindo ao StudyFlow!</p>
-          <p className="text-sm text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 text-center transition-colors duration-300">
+          <p className="text-gray-600 dark:text-gray-300 mb-2">Bem-vindo ao StudyFlow!</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
             Comece adicionando matérias na aba Ciclo e registre seus estudos.
           </p>
         </div>

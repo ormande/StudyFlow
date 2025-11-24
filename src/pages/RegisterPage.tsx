@@ -26,14 +26,12 @@ export default function RegisterPage({
   const [minutes, setMinutes] = useState('');
   const [notes, setNotes] = useState('');
   
-  // Campos Condicionais
   const [pages, setPages] = useState('');
   const [correct, setCorrect] = useState('');
   const [wrong, setWrong] = useState('');
   const [blank, setBlank] = useState('');
   const [showBlank, setShowBlank] = useState(false);
 
-  // Efeito para carregar o tempo vindo do Cronômetro
   useEffect(() => {
     if (prefilledTime) {
       setHours(prefilledTime.hours.toString());
@@ -42,7 +40,6 @@ export default function RegisterPage({
     }
   }, [prefilledTime]);
 
-  // Atualiza os campos com o tempo do cronômetro em tempo real quando está rodando
   useEffect(() => {
     if (isTimerRunning && timerSeconds > 0) {
       const h = Math.floor(timerSeconds / 3600);
@@ -109,7 +106,6 @@ export default function RegisterPage({
     alert('Estudo registrado! 🚀');
   };
 
-  // Configuração dos botões (Estilo Antigo)
   const typeButtons = [
     { id: 'teoria', label: 'Teoria', icon: BookOpen },
     { id: 'questoes', label: 'Questões', icon: HelpCircle },
@@ -119,19 +115,19 @@ export default function RegisterPage({
   return (
     <div className="max-w-lg mx-auto px-6 py-6 pb-24">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Registrar</h1>
-        <p className="text-gray-600 text-sm">Salve sua missão cumprida</p>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 transition-colors">Registrar</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-colors duration-300">
         
         {/* Seleção de Matéria */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Matéria</label>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Matéria</label>
           <select
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value)}
-            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 outline-none text-base"
+            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-base text-gray-900 dark:text-white transition-colors"
           >
             <option value="">Selecione a matéria...</option>
             {subjects.map((s) => (
@@ -142,9 +138,9 @@ export default function RegisterPage({
           </select>
         </div>
 
-        {/* Tipo de Estudo (ESTILO ANTIGO RESTAURADO) */}
+        {/* Tipo de Estudo */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-3">
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">
             Tipo de Estudo
           </label>
           <div className="grid grid-cols-3 gap-3">
@@ -158,7 +154,7 @@ export default function RegisterPage({
                   className={`py-4 rounded-xl font-semibold text-sm transition-all flex flex-col items-center gap-2 ${
                     type === btn.id
                       ? 'bg-emerald-500 text-white shadow-lg scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -169,64 +165,37 @@ export default function RegisterPage({
           </div>
         </div>
 
-        {/* Tempo (3 Campos: Horas, Minutos, Segundos) */}
+        {/* Tempo */}
         <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Horas</label>
-            <div className="relative">
-              <input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                value={hours}
-                onChange={(e) => setHours(e.target.value)}
-                disabled={isTimerRunning}
-                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-lg focus:border-emerald-500 disabled:opacity-50"
-                placeholder="00"
-              />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">H</span>
+          {['Horas', 'Minutos', 'Segundos'].map((label, idx) => (
+            <div key={label}>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{label}</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  max={idx > 0 ? 59 : undefined}
+                  value={idx === 0 ? hours : idx === 1 ? minutes : seconds}
+                  onChange={(e) => {
+                    if (idx === 0) setHours(e.target.value);
+                    else if (idx === 1) setMinutes(e.target.value);
+                    else setSeconds(e.target.value);
+                  }}
+                  disabled={isTimerRunning}
+                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors"
+                  placeholder="00"
+                />
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">{label[0]}</span>
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Minutos</label>
-            <div className="relative">
-              <input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                max="59"
-                value={minutes}
-                onChange={(e) => setMinutes(e.target.value)}
-                disabled={isTimerRunning}
-                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-lg focus:border-emerald-500 disabled:opacity-50"
-                placeholder="00"
-              />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">M</span>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Segundos</label>
-            <div className="relative">
-              <input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                max="59"
-                value={seconds}
-                onChange={(e) => setSeconds(e.target.value)}
-                disabled={isTimerRunning}
-                className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-center font-bold text-lg focus:border-emerald-500 disabled:opacity-50"
-                placeholder="00"
-              />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">S</span>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Condicional: Teoria (Páginas) */}
         {type === 'teoria' && (
           <div className="animate-in slide-in-from-top-2 fade-in duration-200">
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Páginas Lidas</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Páginas Lidas</label>
             <div className="relative">
               <BookOpen className="absolute left-3 top-3.5 text-gray-400" size={20} />
               <input
@@ -234,7 +203,7 @@ export default function RegisterPage({
                 inputMode="numeric"
                 value={pages}
                 onChange={(e) => setPages(e.target.value)}
-                className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-emerald-500 text-base"
+                className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-base text-gray-900 dark:text-white transition-colors"
                 placeholder="Quantidade de páginas"
               />
             </div>
@@ -243,12 +212,12 @@ export default function RegisterPage({
 
         {/* Condicional: Questões */}
         {type === 'questoes' && (
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200 transition-colors">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-gray-500 uppercase">Desempenho</label>
+              <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
               <button 
                 onClick={() => setShowBlank(!showBlank)}
-                className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-lg hover:bg-blue-100 transition-colors"
+                className="text-[10px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
               >
                 {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
               </button>
@@ -257,36 +226,30 @@ export default function RegisterPage({
             <div className="grid grid-cols-2 gap-3">
               {/* Certas */}
               <div>
-                <label className="text-[10px] font-bold text-emerald-600 mb-1 block">CERTAS</label>
+                <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-100 rounded-l-lg border-y border-l border-emerald-200">
-                    <Check size={16} className="text-emerald-600" />
+                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/50 rounded-l-lg border-y border-l border-emerald-200 dark:border-emerald-800">
+                    <Check size={16} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <input 
-                    type="number" 
-                    inputMode="numeric"
-                    placeholder="0" 
-                    className="w-full pl-10 p-2 border border-emerald-200 rounded-lg text-emerald-700 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base" 
-                    value={correct} 
-                    onChange={e => setCorrect(e.target.value)} 
+                    type="number" inputMode="numeric" placeholder="0" 
+                    className="w-full pl-10 p-2 border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
+                    value={correct} onChange={e => setCorrect(e.target.value)} 
                   />
                 </div>
               </div>
               
               {/* Erradas */}
               <div>
-                <label className="text-[10px] font-bold text-red-600 mb-1 block">ERRADAS</label>
+                <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-100 rounded-l-lg border-y border-l border-red-200">
-                    <X size={16} className="text-red-600" />
+                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-100 dark:bg-red-900/50 rounded-l-lg border-y border-l border-red-200 dark:border-red-800">
+                    <X size={16} className="text-red-600 dark:text-red-400" />
                   </div>
                   <input 
-                    type="number" 
-                    inputMode="numeric"
-                    placeholder="0" 
-                    className="w-full pl-10 p-2 border border-red-200 rounded-lg text-red-700 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base" 
-                    value={wrong} 
-                    onChange={e => setWrong(e.target.value)} 
+                    type="number" inputMode="numeric" placeholder="0" 
+                    className="w-full pl-10 p-2 border border-red-200 dark:border-red-800 bg-white dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
+                    value={wrong} onChange={e => setWrong(e.target.value)} 
                   />
                 </div>
               </div>
@@ -294,18 +257,15 @@ export default function RegisterPage({
               {/* Em Branco */}
               {showBlank && (
                 <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
-                  <label className="text-[10px] font-bold text-gray-500 mb-1 block">EM BRANCO</label>
+                  <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1 block">EM BRANCO</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-gray-200 rounded-l-lg border-y border-l border-gray-300">
-                      <HelpCircle size={16} className="text-gray-500" />
+                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-l-lg border-y border-l border-gray-300 dark:border-gray-500">
+                      <HelpCircle size={16} className="text-gray-500 dark:text-gray-300" />
                     </div>
                     <input 
-                      type="number" 
-                      inputMode="numeric"
-                      placeholder="0" 
-                      className="w-full pl-10 p-2 border border-gray-300 rounded-lg text-gray-600 font-bold outline-none focus:ring-2 focus:ring-gray-400 text-base" 
-                      value={blank} 
-                      onChange={e => setBlank(e.target.value)} 
+                      type="number" inputMode="numeric" placeholder="0" 
+                      className="w-full pl-10 p-2 border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-200 font-bold outline-none focus:ring-2 focus:ring-gray-400 text-base transition-colors" 
+                      value={blank} onChange={e => setBlank(e.target.value)} 
                     />
                   </div>
                 </div>
@@ -316,12 +276,12 @@ export default function RegisterPage({
 
         {/* Observações */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Observações</label>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
           <textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm focus:border-emerald-500 resize-none"
+            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors"
             placeholder="Ex: Art. 5º, Inciso XI..."
           ></textarea>
         </div>

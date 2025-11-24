@@ -95,9 +95,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
-  // --- LÓGICA DE TEMA (MANUAL) ---
+  // Lógica de Tema Manual
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Tenta pegar do localStorage ou usa preferência do sistema como padrão inicial
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('studyflow_theme');
       if (saved) return saved === 'dark';
@@ -106,7 +105,6 @@ function App() {
     return false;
   });
 
-  // Aplica a classe 'dark' no HTML quando o estado muda
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -201,7 +199,7 @@ function App() {
       case 'timer':
         return <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} />;
       case 'register':
-        return <RegisterPage subjects={subjects} onAddLog={handleAddLog}QH prefilledTime={prefilledTime} onTimeClear={() => setPrefilledTime(undefined)} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
+        return <RegisterPage subjects={subjects} onAddLog={handleAddLog} prefilledTime={prefilledTime} onTimeClear={() => setPrefilledTime(undefined)} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
       case 'cycle':
         return <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject} onUpdateSubject={handleUpdateSubject} onRestartCycle={handleRestartCycle} />;
       default:

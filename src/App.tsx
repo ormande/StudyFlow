@@ -9,7 +9,7 @@ import CyclePage from './pages/CyclePage';
 import SettingsModal from './components/SettingsModal';
 import { Lock, Mail, ArrowRight, BookOpen, Settings } from 'lucide-react';
 
-// --- TELA DE LOGIN (DESIGN CLARO / LIGHT MODE) ---
+// --- TELA DE LOGIN ---
 const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,24 +25,22 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">
       <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         
-        {/* Header do Login - ATUALIZADO COM CORES INVERTIDAS */}
+        {/* Header do Login */}
         <div className="text-center">
-          {/* Fundo Verde Forte */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-600 mb-4 shadow-lg shadow-emerald-500/20">
-            {/* Ícone Branco */}
             <BookOpen size={40} className="text-white" />
           </div>
-          <h1 className="text-3xl font-black tracking-tight mb-2 text-gray-900">STUDYFLOW</h1>
-          <p className="text-gray-500 text-sm">Área restrita para membros.</p>
+          <h1 className="text-3xl font-black tracking-tight mb-2 text-gray-900 dark:text-white">STUDYFLOW</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Área restrita para membros.</p>
         </div>
 
-        {/* Formulário Claro */}
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-6">
+        {/* Formulário */}
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 space-y-6 transition-colors duration-300">
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Seu E-mail</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Seu E-mail</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3.5 text-gray-400" size={20} />
               <input 
@@ -50,30 +48,29 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-10 text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
                 placeholder="email@exemplo.com"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Senha de Acesso</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Senha de Acesso</label>
             <div className="relative">
               <Lock className="absolute left-3 top-3.5 text-gray-400" size={20} />
-              {/* Senha Oculta e Teclado Normal */}
               <input 
                 type="password" 
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-10 text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
                 placeholder="Sua senha única"
               />
             </div>
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center font-bold bg-red-50 p-3 rounded-xl border border-red-100">
+            <div className="text-red-600 dark:text-red-400 text-sm text-center font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-xl border border-red-100 dark:border-red-800">
               {error}
             </div>
           )}
@@ -87,7 +84,7 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-400">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-500">
           Este acesso é individual e intransferível.
         </p>
       </div>
@@ -172,7 +169,6 @@ function App() {
         localStorage.removeItem('studyflow_subjects');
         localStorage.removeItem('studyflow_logs');
         localStorage.removeItem('studyflow_cycle_start');
-        // Removido o logout forçado para facilitar o reset rápido
         window.location.reload();
       }
     }
@@ -233,7 +229,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative transition-colors duration-300">
       <SettingsModal 
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
@@ -241,15 +237,15 @@ function App() {
       />
 
       {/* HEADER FIXO NO TOPO */}
-      <div className="bg-white p-4 border-b border-gray-100 sticky top-0 z-40 flex justify-between items-center shadow-sm">
-        <div className="flex items-center gap-2 text-gray-800 font-black text-xl tracking-tight">
+      <div className="bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-40 flex justify-between items-center shadow-sm transition-colors duration-300">
+        <div className="flex items-center gap-2 text-gray-800 dark:text-white font-black text-xl tracking-tight">
           <BookOpen className="text-emerald-500" size={24} />
           STUDYFLOW
         </div>
-        {/* AQUI ESTÁ A ENGRENAGEM */}
+        {/* ENGRENAGEM */}
         <button 
           onClick={() => setShowSettings(true)}
-          className="h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
+          className="h-10 w-10 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-gray-600 transition-all"
         >
            <Settings size={20} />
         </button>
@@ -259,7 +255,7 @@ function App() {
         {renderPage()}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white pb-6 border-t border-gray-200">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 pb-6 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
     </div>

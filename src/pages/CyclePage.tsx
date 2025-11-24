@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import {MQ Plus, Trash2, Check, X, ChevronDown, ChevronUp, RefreshCw, Target } from 'lucide-react';
+import { Plus, Trash2, Check, X, ChevronDown, ChevronUp, RefreshCw, Target } from 'lucide-react';
 import { Subject, StudyLog, Subtopic } from '../types';
 import { getRandomColor } from '../utils/colors';
 
@@ -44,7 +44,7 @@ export default function CyclePage({
     setIsAdding(false);
   };
 
-  constMQ getSubjectProgress = (subjectId: string, goalMinutes: number) => {
+  const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
     const totalMinutes = logs
       .filter((log) => log.subjectId === subjectId && log.timestamp >= cycleStartDate)
       .reduce((sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60), 0);
@@ -95,6 +95,7 @@ export default function CyclePage({
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Gerencie suas matérias e acompanhe o progresso</p>
       </div>
 
+      {/* CARD DE STATUS DO CICLO */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-lg mb-8 transition-colors duration-300">
         <div className="flex justify-between items-start mb-4">
           <div>
@@ -121,6 +122,7 @@ export default function CyclePage({
         </button>
       </div>
 
+      {/* Lista de Matérias */}
       <div className="space-y-4 mb-12">
         {subjects.map((subject) => {
           const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);

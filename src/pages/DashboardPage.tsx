@@ -46,7 +46,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
     return streak;
   };
 
-  const getTodayStats = () => {
+  const getTodayStats = (): { totalMinutes: number; totalPages: number; todayQuestions: number; totalCorrect: number } => {
     const today = new Date();
     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const todayLogs = logs.filter((log) => log.date === todayString);
@@ -58,14 +58,14 @@ export default function DashboardPage({ subjects, logs, cycleStartDate }: Dashbo
     const totalPages = todayLogs
       .filter(log => log.type === 'teoria')
       .reduce((sum, log) => sum + (log.pages || 0), 0);
-    const totalQuestions = todayLogs
+    const totalQuestionsCount = todayLogs
       .filter((log) => log.type === 'questoes')
       .reduce((sum, log) => sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0), 0);
     const totalCorrect = todayLogs
       .filter((log) => log.type === 'questoes')
       .reduce((sum, log) => sum + (log.correct || 0), 0);
 
-    return { totalMinutes, totalPages, todayQuestions, totalCorrect };
+    return { totalMinutes, totalPages, todayQuestions: totalQuestionsCount, totalCorrect };
   };
 
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {

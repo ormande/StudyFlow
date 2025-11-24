@@ -157,7 +157,6 @@ function App() {
     const newSubject: Subject = {
       ...subject,
       id: Date.now().toString(),
-      timestamp: Date.now(),
     };
     setSubjects([...subjects, newSubject]);
   };

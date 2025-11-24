@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
 interface TimerPageProps {

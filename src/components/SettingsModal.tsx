@@ -1,12 +1,20 @@
-import { X, Instagram, AlertTriangle } from 'lucide-react';
+import { X, Instagram, AlertTriangle, Moon, Sun } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onHardReset: () => void;
+  isDarkMode: boolean;       // Recebe o estado atual
+  onToggleTheme: () => void; // Recebe a função de troca
 }
 
-export default function SettingsModal({ isOpen, onClose, onHardReset }: SettingsModalProps) {
+export default function SettingsModal({ 
+  isOpen, 
+  onClose, 
+  onHardReset, 
+  isDarkMode, 
+  onToggleTheme 
+}: SettingsModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -20,6 +28,23 @@ export default function SettingsModal({ isOpen, onClose, onHardReset }: Settings
         </div>
 
         <div className="p-4 space-y-4">
+          
+          {/* BOTÃO MODO ESCURO/CLARO */}
+          <div className="text-center pb-4 border-b border-gray-100 dark:border-gray-700">
+             <p className="text-xs text-gray-400 uppercase font-bold mb-3">Aparência</p>
+             <button
+               onClick={onToggleTheme}
+               className={`w-full py-3 rounded-xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 border-2 ${
+                 isDarkMode 
+                   ? 'bg-gray-700 border-gray-600 text-yellow-400 hover:bg-gray-600' 
+                   : 'bg-indigo-50 border-indigo-100 text-indigo-600 hover:bg-indigo-100'
+               }`}
+             >
+               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+               {isDarkMode ? 'Ativar Modo Claro' : 'Ativar Modo Escuro'}
+             </button>
+          </div>
+
           <div className="text-center pb-4 border-b border-gray-100 dark:border-gray-700">
             <p className="text-xs text-gray-400 uppercase font-bold mb-2">Desenvolvido por</p>
             <p className="font-bold text-gray-800 dark:text-white text-lg">Kayke Paião</p>
@@ -27,6 +52,7 @@ export default function SettingsModal({ isOpen, onClose, onHardReset }: Settings
               <Instagram size={16} /> @paiao.kayke
             </a>
           </div>
+
           <div className="text-center">
             <p className="text-xs text-red-400 uppercase font-bold mb-3">Zona de Perigo</p>
             <button onClick={onHardReset} className="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2">

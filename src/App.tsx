@@ -27,8 +27,6 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">
       <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
-        {/* Header do Login */}
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-600 mb-4 shadow-lg shadow-emerald-500/20">
             <BookOpen size={40} className="text-white" />
@@ -37,7 +35,6 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
           <p className="text-gray-500 dark:text-gray-400 text-sm">Área restrita para membros.</p>
         </div>
 
-        {/* Formulário */}
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 space-y-6 transition-colors duration-300">
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Seu E-mail</label>
@@ -97,6 +94,30 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+
+  // --- LÓGICA DE TEMA (MANUAL) ---
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Tenta pegar do localStorage ou usa preferência do sistema como padrão inicial
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('studyflow_theme');
+      if (saved) return saved === 'dark';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  // Aplica a classe 'dark' no HTML quando o estado muda
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('studyflow_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('studyflow_theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   useEffect(() => {
     const access = localStorage.getItem('studyflow_access_token');
@@ -162,7 +183,6 @@ function App() {
 
   const handleHardReset = () => {
     const confirm1 = confirm("⚠️ ATENÇÃO GUERREIRO! ⚠️\n\nIsso vai apagar TODAS as matérias, histórico e estatísticas.\n\nVocê vai começar o app do zero absoluto. Tem certeza?");
-    
     if (confirm1) {
       const confirm2 = confirm("Última chance: Confirma a exclusão total dos dados?");
       if (confirm2) {
@@ -177,46 +197,13 @@ function App() {
   const renderPage = () => {
     switch (activeTab) {
       case 'dashboard':
-        return (
-          <DashboardPage 
-            subjects={subjects} 
-            logs={logs} 
-            cycleStartDate={cycleStartDate}
-          />
-        );
+        return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} />;
       case 'timer':
-        return (
-          <TimerPage
-            onTimerStop={handleTimerStop}
-            timerSeconds={timerSeconds}
-            setTimerSeconds={setTimerSeconds}
-            isTimerRunning={isTimerRunning}
-            setIsTimerRunning={setIsTimerRunning}
-          />
-        );
+        return <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} />;
       case 'register':
-        return (
-          <RegisterPage
-            subjects={subjects}
-            onAddLog={handleAddLog}
-            prefilledTime={prefilledTime}
-            onTimeClear={() => setPrefilledTime(undefined)}
-            timerSeconds={timerSeconds}
-            isTimerRunning={isTimerRunning}
-          />
-        );
+        return <RegisterPage subjects={subjects} onAddLog={handleAddLog}QH prefilledTime={prefilledTime} onTimeClear={() => setPrefilledTime(undefined)} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
       case 'cycle':
-        return (
-          <CyclePage
-            subjects={subjects}
-            logs={logs}
-            cycleStartDate={cycleStartDate}
-            onAddSubject={handleAddSubject}
-            onDeleteSubject={handleDeleteSubject}
-            onUpdateSubject={handleUpdateSubject}
-            onRestartCycle={handleRestartCycle}
-          />
-        );
+        return <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject} onUpdateSubject={handleUpdateSubject} onRestartCycle={handleRestartCycle} />;
       default:
         return null;
     }
@@ -234,15 +221,15 @@ function App() {
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
         onHardReset={handleHardReset}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
       />
 
-      {/* HEADER FIXO NO TOPO */}
       <div className="bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-40 flex justify-between items-center shadow-sm transition-colors duration-300">
         <div className="flex items-center gap-2 text-gray-800 dark:text-white font-black text-xl tracking-tight">
           <BookOpen className="text-emerald-500" size={24} />
           STUDYFLOW
         </div>
-        {/* ENGRENAGEM */}
         <button 
           onClick={() => setShowSettings(true)}
           className="h-10 w-10 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-gray-600 transition-all"

@@ -30,18 +30,6 @@ export default function CyclePage({
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   const [newSubtopic, setNewSubtopic] = useState('');
 
-  const moveSubject = (index: number, direction: 'up' | 'down') => {
-    const newSubjects = [...subjects];
-    if (direction === 'up' && index > 0) {
-      // Troca com o de cima
-      [newSubjects[index], newSubjects[index - 1]] = [newSubjects[index - 1], newSubjects[index]];
-    } else if (direction === 'down' && index < newSubjects.length - 1) {
-      // Troca com o de baixo
-      [newSubjects[index], newSubjects[index + 1]] = [newSubjects[index + 1], newSubjects[index]];
-    }
-    onReorderSubjects(newSubjects);
-  };
-
   const handleAddSubject = () => {
     if (!newName.trim() || !newGoal) {
       alert('Preencha todos os campos!');
@@ -100,6 +88,19 @@ export default function CyclePage({
     onUpdateSubject(subjectId, { subtopics: updatedSubtopics });
   };
 
+  // Função nova para mover as matérias
+  const moveSubject = (index: number, direction: 'up' | 'down') => {
+    const newSubjects = [...subjects];
+    if (direction === 'up' && index > 0) {
+      // Troca com o de cima
+      [newSubjects[index], newSubjects[index - 1]] = [newSubjects[index - 1], newSubjects[index]];
+    } else if (direction === 'down' && index < newSubjects.length - 1) {
+      // Troca com o de baixo
+      [newSubjects[index], newSubjects[index + 1]] = [newSubjects[index + 1], newSubjects[index]];
+    }
+    onReorderSubjects(newSubjects);
+  };
+
   const totalCycleProgress = getTotalCycleProgress();
 
   return (
@@ -147,32 +148,30 @@ export default function CyclePage({
               <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  {/* CONTROLES DE ORDEM */}
-                  <div className="flex flex-col gap-0.5">
-                    <button 
-                      onClick={() => moveSubject(index, 'up')}
-                      disabled={index === 0}
-                      className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
-                    >
-                      <ArrowUp size={14} strokeWidth={3} />
-                    </button>
-                    <button 
-                      onClick={() => moveSubject(index, 'down')}
-                      disabled={index === subjects.length - 1}
-                      className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
-                    >
-                      <ArrowDown size={14} strokeWidth={3} />
-                    </button>
-                  </div>
+                    <div className="flex items-center gap-3 mb-1">
+                      {/* CONTROLES DE ORDEM */}
+                      <div className="flex flex-col gap-0.5">
+                        <button 
+                          onClick={() => moveSubject(index, 'up')}
+                          disabled={index === 0}
+                          className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
+                        >
+                          <ArrowUp size={14} strokeWidth={3} />
+                        </button>
+                        <button 
+                          onClick={() => moveSubject(index, 'down')}
+                          disabled={index === subjects.length - 1}
+                          className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
+                        >
+                          <ArrowDown size={14} strokeWidth={3} />
+                        </button>
+                      </div>
 
-                  {/* TÍTULO E COR */}
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
-                </div>
+                      {/* TÍTULO E COR */}
+                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 pl-8">
                       Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
                     </p>
                   </div>

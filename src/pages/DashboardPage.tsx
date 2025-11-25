@@ -297,9 +297,17 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                       </p>
                     )}
                   </div>
-                  <span className="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0">
-                    {new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                  </span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-gray-500 dark:text-gray-500">
+                      {new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                    </span>
+                    <button
+                      onClick={() => onDeleteLog(log.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               );
             })}

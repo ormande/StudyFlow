@@ -134,6 +134,7 @@ function App() {
   const [subjects, setSubjects] = useLocalStorage<Subject[]>('studyflow_subjects', []);
   const [logs, setLogs] = useLocalStorage<StudyLog[]>('studyflow_logs', []);
   const [cycleStartDate, setCycleStartDate] = useLocalStorage<number>('studyflow_cycle_start', Date.now());
+  const [dailyGoal, setDailyGoal] = useLocalStorage<number>('studyflow_daily_goal', 0);
   
   const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -231,7 +232,7 @@ function App() {
   const renderPage = () => {
     switch (activeTab) {
       case 'dashboard':
-         return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} />;
+         return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} dailyGoal={dailyGoal} />;
       case 'timer':
         return <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} />;
       case 'register':
@@ -257,6 +258,8 @@ function App() {
         onHardReset={handleHardReset}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
+        dailyGoal={dailyGoal}
+        onSetDailyGoal={setDailyGoal}
       />
 
       <div className="bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-40 flex justify-between items-center shadow-sm transition-colors duration-300">

@@ -102,6 +102,12 @@ export default function RegisterPage({
     setWrong('');
     setBlank('');
     onTimeClear();
+
+    // Verifica se o navegador suporta vibração
+    if (navigator.vibrate) {
+      navigator.vibrate(200); // Vibra por 200ms
+    }
+    // -----------------------------------------------
     
     alert('Estudo registrado! 🚀');
   };

@@ -209,6 +209,10 @@ function App() {
     );
   };
 
+  const handleReorderSubjects = (newSubjects: Subject[]) => {
+    setSubjects(newSubjects);
+  };
+  
   const handleRestartCycle = () => {
     if (confirm("Tem certeza, Guerreiro? Isso vai zerar as barras de progresso para começar um novo ciclo. Seu histórico de horas continua salvo.")) {
       setCycleStartDate(Date.now());
@@ -238,7 +242,7 @@ function App() {
       case 'register':
         return <RegisterPage subjects={subjects} onAddLog={handleAddLog} prefilledTime={prefilledTime} onTimeClear={() => setPrefilledTime(undefined)} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
       case 'cycle':
-        return <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject} onUpdateSubject={handleUpdateSubject} onRestartCycle={handleRestartCycle} />;
+        return <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject} onUpdateSubject={handleUpdateSubject} onRestartCycle={handleRestartCycle} onReorderSubjects={handleReorderSubjects} />;
       default:
         return null;
     }

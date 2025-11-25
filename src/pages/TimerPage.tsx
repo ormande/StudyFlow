@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
 interface TimerPageProps {
@@ -16,22 +16,34 @@ export default function TimerPage({
   isTimerRunning,
   setIsTimerRunning
 }: TimerPageProps) {
-  const intervalRef = useRef<number | null>(null);
+ const intervalRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  const baseSecondsRef = useRef<number>(0);
 
   useEffect(() => {
     if (isTimerRunning) {
-      intervalRef.current = window.setInterval(() => {
-        setTimerSeconds(timerSeconds + 1);
-      }, 1000);
+      if (startTimeRef.current === null) {
+        startTimeRef.current = Date.now();
+        baseSecondsRef.current = timerSeconds;
+      }
+
+      const tick = () => {
+        const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000);
+        setTimerSeconds(baseSecondsRef.current + elapsed);
+      };
+
+      intervalRef.current = window.setInterval(tick, 250);
+      tick();
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
+      startTimeRef.current = null;
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isTimerRunning, timerSeconds, setTimerSeconds]);
+  }, [isTimerRunning, setTimerSeconds]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);

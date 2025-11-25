@@ -128,7 +128,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Painel</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
         </div>
         <button

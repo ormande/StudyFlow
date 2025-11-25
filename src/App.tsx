@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TabType, Subject, StudyLog } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import BottomNav from './components/BottomNav';
@@ -138,6 +138,34 @@ function App() {
   const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const timerIntervalRef = useRef<number | null>(null);
+  const timerStartRef = useRef<number | null>(null);
+  const timerBaseRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (isTimerRunning) {
+      if (timerStartRef.current === null) {
+        timerStartRef.current = Date.now();
+        timerBaseRef.current = timerSeconds;
+      }
+
+      const tick = () => {
+        const elapsed = Math.floor((Date.now() - timerStartRef.current!) / 1000);
+        setTimerSeconds(timerBaseRef.current + elapsed);
+      };
+
+      timerIntervalRef.current = window.setInterval(tick, 250);
+      tick();
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      timerStartRef.current = null;
+    }
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
+  }, [isTimerRunning]);
 
   const handleTimerStop = (hours: number, minutes: number, seconds: number) => {
     setPrefilledTime({ hours, minutes, seconds });

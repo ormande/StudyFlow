@@ -217,7 +217,7 @@ export default function RegisterPage({
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
               <button 
                 onClick={() => setShowBlank(!showBlank)}
-                className="text-[10px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                className="text-[10px] font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm active:scale-95"
               >
                 {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
               </button>
@@ -228,12 +228,12 @@ export default function RegisterPage({
               <div>
                 <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/50 rounded-l-lg border-y border-l border-emerald-200 dark:border-emerald-800">
-                    <Check size={16} className="text-emerald-600 dark:text-emerald-400" />
+                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg">
+                    <Check size={16} className="text-white" />
                   </div>
                   <input 
                     type="number" inputMode="numeric" placeholder="0" 
-                    className="w-full pl-10 p-2 border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
+                    className="w-full pl-10 p-2 border border-emerald-500 bg-white dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
                     value={correct} onChange={e => setCorrect(e.target.value)} 
                   />
                 </div>
@@ -243,12 +243,12 @@ export default function RegisterPage({
               <div>
                 <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-100 dark:bg-red-900/50 rounded-l-lg border-y border-l border-red-200 dark:border-red-800">
-                    <X size={16} className="text-red-600 dark:text-red-400" />
+                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg">
+                    <X size={16} className="text-white" />
                   </div>
                   <input 
                     type="number" inputMode="numeric" placeholder="0" 
-                    className="w-full pl-10 p-2 border border-red-200 dark:border-red-800 bg-white dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
+                    className="w-full pl-10 p-2 border border-red-500 bg-white dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
                     value={wrong} onChange={e => setWrong(e.target.value)} 
                   />
                 </div>
@@ -259,12 +259,12 @@ export default function RegisterPage({
                 <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
                   <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1 block">EM BRANCO</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-gray-200 dark:bg-gray-600 rounded-l-lg border-y border-l border-gray-300 dark:border-gray-500">
-                      <HelpCircle size={16} className="text-gray-500 dark:text-gray-300" />
+                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-gray-500 rounded-l-lg">
+                      <HelpCircle size={16} className="text-white" />
                     </div>
                     <input 
                       type="number" inputMode="numeric" placeholder="0" 
-                      className="w-full pl-10 p-2 border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-200 font-bold outline-none focus:ring-2 focus:ring-gray-400 text-base transition-colors" 
+                      className="w-full pl-10 p-2 border border-gray-500 bg-white dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-200 font-bold outline-none focus:ring-2 focus:ring-gray-400 text-base transition-colors" 
                       value={blank} onChange={e => setBlank(e.target.value)} 
                     />
                   </div>

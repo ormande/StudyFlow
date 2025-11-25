@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Check, X, ChevronDown, ChevronUp, RefreshCw, Target } from 'lucide-react';
+import { Plus, Trash2, Check, X, ChevronDown, ChevronUp, RefreshCw, Target, ArrowUp, ArrowDown } from 'lucide-react';
 import { Subject, StudyLog, Subtopic } from '../types';
 import { getRandomColor } from '../utils/colors';
 
@@ -11,6 +11,7 @@ interface CyclePageProps {
   onDeleteSubject: (id: string) => void;
   onUpdateSubject: (id: string, subject: Partial<Subject>) => void;
   onRestartCycle: () => void;
+  onReorderSubjects: (subjects: Subject[]) => void;
 }
 
 export default function CyclePage({
@@ -20,13 +21,26 @@ export default function CyclePage({
   onAddSubject,
   onDeleteSubject,
   onUpdateSubject,
-  onRestartCycle
+  onRestartCycle,
+  onReorderSubjects
 }: CyclePageProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [newGoal, setNewGoal] = useState('');
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   const [newSubtopic, setNewSubtopic] = useState('');
+
+  const moveSubject = (index: number, direction: 'up' | 'down') => {
+    const newSubjects = [...subjects];
+    if (direction === 'up' && index > 0) {
+      // Troca com o de cima
+      [newSubjects[index], newSubjects[index - 1]] = [newSubjects[index - 1], newSubjects[index]];
+    } else if (direction === 'down' && index < newSubjects.length - 1) {
+      // Troca com o de baixo
+      [newSubjects[index], newSubjects[index + 1]] = [newSubjects[index + 1], newSubjects[index]];
+    }
+    onReorderSubjects(newSubjects);
+  };
 
   const handleAddSubject = () => {
     if (!newName.trim() || !newGoal) {
@@ -124,7 +138,7 @@ export default function CyclePage({
 
       {/* Lista de Matérias */}
       <div className="space-y-4 mb-12">
-        {subjects.map((subject) => {
+        {subjects.map((subject, index) => {
           const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);
           const isExpanded = expandedSubject === subject.id;
 
@@ -133,8 +147,29 @@ export default function CyclePage({
               <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: subject.color }} />
+                <div className="flex items-center gap-3 mb-1">
+                  {/* CONTROLES DE ORDEM */}
+                  <div className="flex flex-col gap-0.5">
+                    <button 
+                      onClick={() => moveSubject(index, 'up')}
+                      disabled={index === 0}
+                      className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
+                    >
+                      <ArrowUp size={14} strokeWidth={3} />
+                    </button>
+                    <button 
+                      onClick={() => moveSubject(index, 'down')}
+                      disabled={index === subjects.length - 1}
+                      className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
+                    >
+                      <ArrowDown size={14} strokeWidth={3} />
+                    </button>
+                  </div>
+
+                  {/* TÍTULO E COR */}
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
+                </div>
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">

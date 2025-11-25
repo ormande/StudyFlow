@@ -180,6 +180,11 @@ function App() {
     };
     setLogs([...logs, newLog]);
   };
+  const handleDeleteLog = (id: string) => {
+    if (confirm('Excluir este registro?')) {
+      setLogs(logs.filter((log) => log.id !== id));
+    }
+  };
 
   const handleAddSubject = (subject: Omit<Subject, 'id'>) => {
     const newSubject: Subject = {

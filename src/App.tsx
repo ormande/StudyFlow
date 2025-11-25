@@ -186,6 +186,10 @@ function App() {
     }
   };
 
+  const handleEditLog = (id: string, updates: Partial<StudyLog>) => {
+    setLogs(logs.map((log) => (log.id === id ? { ...log, ...updates } : log)));
+  };
+
   const handleAddSubject = (subject: Omit<Subject, 'id'>) => {
     const newSubject: Subject = {
       ...subject,

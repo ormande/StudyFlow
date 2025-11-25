@@ -13,7 +13,7 @@ interface DashboardPageProps {
   dailyGoal: number;
 }
 
-export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog }: DashboardPageProps) {
+export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog, dailyGoal }: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 

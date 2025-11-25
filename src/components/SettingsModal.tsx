@@ -1,4 +1,4 @@
-import { X, Instagram, AlertTriangle, Moon, Sun, Download, Upload } from 'lucide-react';
+import { X, Instagram, AlertTriangle, Moon, Sun, Download, Upload, Target } from 'lucide-react';
 import { useRef } from 'react';
 
 interface SettingsModalProps {
@@ -7,6 +7,8 @@ interface SettingsModalProps {
   onHardReset: () => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
+  dailyGoal: number;
+  onSetDailyGoal: (minutes: number) => void;
 }
 
 export default function SettingsModal({ 
@@ -104,6 +106,34 @@ export default function SettingsModal({
                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                {isDarkMode ? 'Ativar Modo Claro' : 'Ativar Modo Escuro'}
              </button>
+          </div>
+
+          {/* NOVA SEÇÃO: META DIÁRIA */}
+          <div className="text-center pb-4 border-b border-gray-100 dark:border-gray-700">
+             <div className="flex items-center justify-center gap-2 mb-2">
+               <Target className="text-emerald-500" size={16} />
+               <p className="text-xs text-gray-400 uppercase font-bold">Meta Diária</p>
+             </div>
+             
+             <div className="mb-2">
+               <span className="text-3xl font-black text-gray-800 dark:text-white">
+                 {Math.floor(dailyGoal / 60)}h
+               </span>
+               <span className="text-xs text-gray-400 font-medium ml-1">por dia</span>
+             </div>
+
+             <input 
+               type="range" 
+               min="0" 
+               max="12" 
+               step="1"
+               value={Math.floor(dailyGoal / 60)}
+               onChange={(e) => onSetDailyGoal(parseInt(e.target.value) * 60)}
+               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-emerald-500"
+             />
+             <p className="text-[10px] text-gray-400 mt-2">
+               {dailyGoal === 0 ? "Arraste para definir uma meta" : "Foco na missão!"}
+             </p>
           </div>
 
           {/* SEÇÃO SEUS DADOS */}

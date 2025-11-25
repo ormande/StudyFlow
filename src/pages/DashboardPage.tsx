@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap } from 'lucide-react';
+import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2 } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import ShareModal from '../components/ShareModal';
 
@@ -7,9 +7,10 @@ interface DashboardPageProps {
   subjects: Subject[];
   logs: StudyLog[];
   cycleStartDate: number;
+  onDeleteLog: (id: string) => void;
 }
 
-export default function DashboardPage({ subjects, logs, cycleStartDate }: DashboardPageProps) {
+export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog }: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
 
   // --- LÓGICA DE OFENSIVA E ESTATÍSTICAS (MANTIDAS IGUAIS) ---

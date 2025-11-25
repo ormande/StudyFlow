@@ -16,7 +16,9 @@ export default function SettingsModal({
   onClose, 
   onHardReset, 
   isDarkMode, 
-  onToggleTheme 
+  onToggleTheme,
+  dailyGoal,
+  onSetDailyGoal
 }: SettingsModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 

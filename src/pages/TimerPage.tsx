@@ -47,7 +47,8 @@ export default function TimerPage({
   const { display } = formatTime(timerSeconds);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4 md:px-6">
+    // ALTERAÇÃO AQUI: h-[calc(100vh-140px)] força a altura exata e overflow-hidden trava o scroll
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-140px)] overflow-hidden px-4 md:px-6">
       <div className="text-center mb-8 md:mb-12">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 transition-colors">Cronômetro</h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Acompanhe seu tempo de estudo</p>
@@ -90,7 +91,7 @@ export default function TimerPage({
       {timerSeconds > 0 && !isTimerRunning && (
         <button
           onClick={handleStop}
-          className="mt-4 w-full max-w-md py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all active:scale-95"
+          className="mt-4 w-full max-w-md py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all active:scale-95 animate-in fade-in slide-in-from-bottom-2"
         >
           Parar e Registrar
         </button>

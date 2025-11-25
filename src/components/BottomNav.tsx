@@ -8,7 +8,7 @@ interface BottomNavProps {
 
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
-    { id: 'dashboard' as TabType, icon: Home, label: 'Painel' },
+    { id: 'dashboard' as TabType, icon: Home, label: 'Dashboard' },
     { id: 'timer' as TabType, icon: Timer, label: 'Timer' },
     { id: 'register' as TabType, icon: PenLine, label: 'Registrar' },
     { id: 'cycle' as TabType, icon: Target, label: 'Ciclo' },

@@ -3,7 +3,11 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class', // <--- O SEGREDO DO CONTROLE MANUAL ESTÁ AQUI
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['Poppins', 'system-ui', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 };

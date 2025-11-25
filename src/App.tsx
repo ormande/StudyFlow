@@ -283,7 +283,7 @@ function App() {
         </button>
       </div>
 
-      <div className="pb-40"> 
+      <div className="pb-24"> 
         {renderPage()}
       </div>
 

@@ -95,7 +95,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Lógica de Tema Manual
+// Lógica de Tema Manual + Pintura do Body (Correção Mobile)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('studyflow_theme');
@@ -106,6 +106,10 @@ function App() {
   });
 
   useEffect(() => {
+    // Cores exatas do Tailwind: gray-900 (#111827) e gray-50 (#f9fafb)
+    const color = isDarkMode ? '#111827' : '#f9fafb';
+    document.body.style.backgroundColor = color; // <--- O TRUQUE ESTÁ AQUI
+    
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('studyflow_theme', 'dark');

@@ -10,6 +10,7 @@ interface DashboardPageProps {
   cycleStartDate: number;
   onDeleteLog: (id: string) => void;
   onEditLog: (id: string, updates: Partial<StudyLog>) => void;
+  dailyGoal: number;
 }
 
 export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog }: DashboardPageProps) {
@@ -126,6 +127,17 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     return 'text-red-600 dark:text-red-400';
   };
 
+// --- LÓGICA DA META DIÁRIA (NOVO) ---
+  const goalPercentage = dailyGoal > 0 ? Math.min((totalMinutes / dailyGoal) * 100, 100) : 0;
+  
+  const getMotivationalMessage = () => {
+    if (goalPercentage >= 100) return "MISSÃO CUMPRIDA! 🏆";
+    if (goalPercentage >= 75) return "Reta final! Não pare agora! 🔥";
+    if (goalPercentage >= 50) return "Metade já foi! Continue firme! 👊";
+    if (goalPercentage > 0) return "Bom começo! Mantenha o foco. 🚀";
+    return "Vamos começar os estudos de hoje?";
+  };
+  
   return (
     <div className="max-w-lg mx-auto px-6 py-6 pb-24">
       {/* Header */}
@@ -182,6 +194,45 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </div>
       </div>
 
+{/* BARRA DE META DIÁRIA (Só aparece se tiver meta definida) */}
+      {dailyGoal > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+          <div className="flex justify-between items-end mb-2">
+            <div>
+              <h2 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <Target size={16} className={goalPercentage >= 100 ? "text-yellow-500" : "text-emerald-500"} />
+                Meta Diária
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {getMotivationalMessage()}
+              </p>
+            </div>
+            <span className="text-lg font-black text-gray-800 dark:text-white">
+              {Math.floor(goalPercentage)}%
+            </span>
+          </div>
+
+          <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+            <div 
+              className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${
+                goalPercentage >= 100 
+                  ? 'bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-pulse' 
+                  : 'bg-emerald-500'
+              }`}
+              style={{ width: `${goalPercentage > 0 ? goalPercentage : 0}%` }}
+            >
+              {/* Efeito de brilho branco se estiver preenchido */}
+              {goalPercentage > 0 && <div className="w-1 h-1 bg-white/50 rounded-full" />}
+            </div>
+          </div>
+          
+          <div className="flex justify-between mt-2 text-[10px] font-bold text-gray-400 uppercase">
+            <span>0h</span>
+            <span>{Math.floor(dailyGoal / 60)}h</span>
+          </div>
+        </div>
+      )}
+      
       {/* 1. Card: Progresso do Ciclo */}
       {subjects.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6 transition-colors duration-300">

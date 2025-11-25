@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History } from 'lucide-react';
+import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History, Target } from 'lucide-react';
 import HistoryModal from '../components/HistoryModal';
 import { Subject, StudyLog } from '../types';
 import ShareModal from '../components/ShareModal';

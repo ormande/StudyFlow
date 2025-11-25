@@ -99,11 +99,7 @@ export default function SettingsModal({
              <p className="text-xs text-gray-400 uppercase font-bold mb-3">Aparência</p>
              <button
                onClick={onToggleTheme}
-               className={`w-full py-3 rounded-xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 border-2 ${
-                 isDarkMode 
-                   ? 'bg-gray-700 border-gray-600 text-yellow-400 hover:bg-gray-600' 
-                   : 'bg-indigo-50 border-indigo-100 text-indigo-600 hover:bg-indigo-100'
-               }`}
+               className="w-full py-3 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white active:scale-95"
              >
                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                {isDarkMode ? 'Ativar Modo Claro' : 'Ativar Modo Escuro'}
@@ -116,14 +112,14 @@ export default function SettingsModal({
             <div className="space-y-2">
               <button
                 onClick={handleExport}
-                className="w-full py-3 rounded-xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                className="w-full py-3 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white active:scale-95"
               >
                 <Download size={18} />
                 Exportar Backup
               </button>
               <button
                 onClick={handleImportClick}
-                className="w-full py-3 rounded-xl font-bold shadow-sm transition-all flex items-center justify-center gap-2 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                className="w-full py-3 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white active:scale-95"
               >
                 <Upload size={18} />
                 Importar Backup

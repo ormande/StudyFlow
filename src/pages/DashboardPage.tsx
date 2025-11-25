@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2 } from 'lucide-react';
+import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History } from 'lucide-react';
+import HistoryModal from '../components/HistoryModal';
 import { Subject, StudyLog } from '../types';
 import ShareModal from '../components/ShareModal';
 
@@ -8,10 +9,12 @@ interface DashboardPageProps {
   logs: StudyLog[];
   cycleStartDate: number;
   onDeleteLog: (id: string) => void;
+  onEditLog: (id: string, updates: Partial<StudyLog>) => void;
 }
 
-export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog }: DashboardPageProps) {
+export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog }: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   // --- LÓGICA DE OFENSIVA E ESTATÍSTICAS (MANTIDAS IGUAIS) ---
   const calculateStreak = () => {
@@ -312,6 +315,14 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               );
             })}
           </div>
+
+          <button
+            onClick={() => setShowHistoryModal(true)}
+            className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+          >
+            <History size={18} />
+            Ver histórico completo
+          </button>
         </div>
       )}
 
@@ -333,6 +344,15 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         todayPages={totalPages}
         todayQuestions={todayQuestions}
         todayCorrect={totalCorrect}
+      />
+
+      <HistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        logs={logs}
+        subjects={subjects}
+        onDeleteLog={onDeleteLog}
+        onEditLog={onEditLog}
       />
     </div>
   );

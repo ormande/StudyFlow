@@ -95,7 +95,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Lógica de Tema Manual + Pintura do Body
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('studyflow_theme');
@@ -138,6 +137,9 @@ function App() {
   const [logs, setLogs] = useLocalStorage<StudyLog[]>('studyflow_logs', []);
   const [cycleStartDate, setCycleStartDate] = useLocalStorage<number>('studyflow_cycle_start', Date.now());
   const [dailyGoal, setDailyGoal] = useLocalStorage<number>('studyflow_daily_goal', 0);
+  
+  // NOVO ESTADO: Privacidade no Compartilhamento
+  const [showPerformance, setShowPerformance] = useLocalStorage<boolean>('studyflow_show_performance', true);
   
   const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -232,6 +234,7 @@ function App() {
         localStorage.removeItem('studyflow_logs');
         localStorage.removeItem('studyflow_cycle_start');
         localStorage.removeItem('studyflow_daily_goal');
+        localStorage.removeItem('studyflow_show_performance');
         window.location.reload();
       }
     }
@@ -240,7 +243,8 @@ function App() {
   const renderPage = () => {
     switch (activeTab) {
       case 'dashboard':
-         return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} dailyGoal={dailyGoal} />;
+         // Passa o estado de performance para o Dashboard
+         return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} dailyGoal={dailyGoal} showPerformance={showPerformance} />;
       case 'timer':
         return <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} />;
       case 'register':
@@ -268,9 +272,11 @@ function App() {
         onToggleTheme={toggleTheme}
         dailyGoal={dailyGoal}
         onSetDailyGoal={setDailyGoal}
+        // Passa o controle de performance para o Settings
+        showPerformance={showPerformance}
+        onTogglePerformance={() => setShowPerformance(!showPerformance)}
       />
 
-      {/* BOTÃO FLUTUANTE DE CONFIGURAÇÕES (FAB) */}
       <button 
         onClick={() => setShowSettings(true)}
         className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"
@@ -278,7 +284,6 @@ function App() {
          <Settings size={24} />
       </button>
 
-      {/* ÁREA DE CONTEÚDO (Sem header fixo, layout limpo) */}
       <div className="pb-24 pt-2"> 
         {renderPage()}
       </div>

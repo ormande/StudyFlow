@@ -75,7 +75,6 @@ export default function RegisterPage({
 
     const subtopicName = selectedSubject?.subtopics.find(st => st.id === subtopicId)?.name;
 
-    // ALTERAÇÃO: Agora salvamos TODOS os campos, independente do tipo
     const newLog: any = {
       subjectId,
       subject: selectedSubject?.name || 'Desconhecida',
@@ -90,9 +89,7 @@ export default function RegisterPage({
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       })(),
       notes: notes.trim(),
-      // Salva páginas se tiver valor, senão 0
       pages: parseInt(pages) || 0,
-      // Salva questões se tiver valor, senão 0
       correct: parseInt(correct) || 0,
       wrong: parseInt(wrong) || 0,
       blank: parseInt(blank) || 0,
@@ -100,7 +97,6 @@ export default function RegisterPage({
 
     onAddLog(newLog);
     
-    // Limpeza
     setSubjectId('');
     setSubtopicId('');
     setHours('');
@@ -133,10 +129,11 @@ export default function RegisterPage({
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      {/* GRID PRINCIPAL: Removi 'items-start' para as colunas terem a mesma altura (stretch) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         
-        {/* COLUNA 1: Matéria, Tipo, Observações */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-colors duration-300">
+        {/* COLUNA 1: Matéria, Tipo, Observações (ELÁSTICA) */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col">
           
           {/* Matéria */}
           <div>
@@ -203,21 +200,20 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Observações - Ajustado tamanho */}
-          <div>
+          {/* Observações - AGORA É FLEXÍVEL (Estica para preencher o buraco) */}
+          <div className="flex-1 flex flex-col">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
             <textarea
-              rows={5}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors"
+              className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors h-full min-h-[100px]"
               placeholder="Ex: Art. 5º, Inciso XI..."
             ></textarea>
           </div>
         </div>
 
         {/* COLUNA 2: Tempo, Páginas, Desempenho */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-colors duration-300">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col">
           
           {/* Tempo */}
           <div>
@@ -248,7 +244,7 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Páginas Lidas - SEMPRE VISÍVEL */}
+          {/* Páginas Lidas */}
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
             <div className="relative">
@@ -264,8 +260,8 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Desempenho - SEMPRE VISÍVEL */}
-          <div>
+          {/* Desempenho */}
+          <div className="flex-1">
             <div className="flex justify-between items-center mb-3">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
               <button 
@@ -329,7 +325,7 @@ export default function RegisterPage({
           {/* Botão Salvar */}
           <button
             onClick={handleSubmit}
-            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2"
+            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-auto"
           >
             <Save size={20} />
             <span>Salvar Registro</span>

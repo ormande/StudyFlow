@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History, Target } from 'lucide-react';
+import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import HistoryModal from '../components/HistoryModal';
 import { Subject, StudyLog } from '../types';
 import ShareModal from '../components/ShareModal';
@@ -16,8 +16,11 @@ interface DashboardPageProps {
 export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog, dailyGoal }: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  
+  // Estado para controlar qual matéria está expandida no card de desempenho
+  const [expandedPerformanceId, setExpandedPerformanceId] = useState<string | null>(null);
 
-  // --- LÓGICA DE OFENSIVA E ESTATÍSTICAS (MANTIDAS IGUAIS) ---
+  // --- LÓGICA DE ESTATÍSTICAS ---
   const calculateStreak = () => {
     if (logs.length === 0) return 0;
     const studyDates = new Set(
@@ -81,12 +84,26 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     return { totalMinutes, percentage };
   };
 
+  // ATUALIZADO: Filtra pelo Ciclo Atual e calcula acertos/erros/branco
   const getSubjectPerformance = (subjectId: string) => {
-    const subjectLogs = logs.filter(log => log.subjectId === subjectId && log.type === 'questoes');
+    const subjectLogs = logs.filter(log => 
+      log.subjectId === subjectId && 
+      log.type === 'questoes' &&
+      log.timestamp >= cycleStartDate // Filtro do Ciclo Atual
+    );
+    
     const totalQuestions = subjectLogs.reduce((sum, log) => sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0), 0);
     const totalCorrect = subjectLogs.reduce((sum, log) => sum + (log.correct || 0), 0);
-    const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
-    return { totalQuestions, accuracy };
+    const totalWrong = subjectLogs.reduce((sum, log) => sum + (log.wrong || 0), 0);
+    const totalBlank = subjectLogs.reduce((sum, log) => sum + (log.blank || 0), 0);
+
+    // Evita divisão por zero
+    const correctPct = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+    const wrongPct = totalQuestions > 0 ? (totalWrong / totalQuestions) * 100 : 0;
+    const blankPct = totalQuestions > 0 ? (totalBlank / totalQuestions) * 100 : 0;
+    const accuracy = Math.round(correctPct);
+
+    return { totalQuestions, totalCorrect, totalWrong, totalBlank, correctPct, wrongPct, blankPct, accuracy };
   };
 
   const getRecentActivities = () => {
@@ -127,7 +144,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     return 'text-red-600 dark:text-red-400';
   };
 
-// --- LÓGICA DA META DIÁRIA (NOVO) ---
+  // --- LÓGICA DA META DIÁRIA ---
   const goalPercentage = dailyGoal > 0 ? Math.min((totalMinutes / dailyGoal) * 100, 100) : 0;
   
   const getMotivationalMessage = () => {
@@ -137,9 +154,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     if (goalPercentage > 0) return "Bom começo! Mantenha o foco. 🚀";
     return "Vamos começar os estudos de hoje?";
   };
-  
+
   return (
-    <div className="max-w-lg mx-auto px-6 py-6 pb-24">
+    // ALTERAÇÃO: max-w-5xl para permitir layout largo no PC
+    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -154,7 +172,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </button>
       </div>
 
-      {/* Cards de Resumo */}
+      {/* Cards de Resumo (KPIs) - Sempre no topo */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg">
           <div className="flex items-center gap-2 mb-2">
@@ -194,188 +212,251 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </div>
       </div>
 
-{/* BARRA DE META DIÁRIA (Só aparece se tiver meta definida) */}
-      {dailyGoal > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
-          <div className="flex justify-between items-end mb-2">
-            <div>
-              <h2 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                <Target size={16} className={goalPercentage >= 100 ? "text-yellow-500" : "text-emerald-500"} />
-                Meta Diária
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {getMotivationalMessage()}
-              </p>
-            </div>
-            <span className="text-lg font-black text-gray-800 dark:text-white">
-              {Math.floor(goalPercentage)}%
-            </span>
-          </div>
-
-          <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
-            <div 
-              className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${
-                goalPercentage >= 100 
-                  ? 'bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-pulse' 
-                  : 'bg-emerald-500'
-              }`}
-              style={{ width: `${goalPercentage > 0 ? goalPercentage : 0}%` }}
-            >
-              {/* Efeito de brilho branco se estiver preenchido */}
-              {goalPercentage > 0 && <div className="w-1 h-1 bg-white/50 rounded-full" />}
-            </div>
-          </div>
+      {/* LAYOUT GRID PARA PC: Duas colunas em telas médias (md) ou maiores */}
+      <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-6">
+        
+        {/* COLUNA ESQUERDA (PC): Meta Diária + Ciclo */}
+        <div className="space-y-6">
           
-          <div className="flex justify-between mt-2 text-[10px] font-bold text-gray-400 uppercase">
-            <span>0h</span>
-            <span>{Math.floor(dailyGoal / 60)}h</span>
-          </div>
-        </div>
-      )}
-      
-      {/* 1. Card: Progresso do Ciclo */}
-      {subjects.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Progresso do Ciclo Atual</h2>
-          </div>
-
-          <div className="space-y-4">
-            {subjects.map((subject) => {
-              const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);
-              return (
-                <div key={subject.id}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: subject.color }} />
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{subject.name}</span>
-                    </div>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                      {totalMinutes}/{subject.goalMinutes} min
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="h-full transition-all duration-300 rounded-full"
-                      style={{ width: `${percentage}%`, backgroundColor: subject.color }}
-                    />
-                  </div>
+          {/* BARRA DE META DIÁRIA */}
+          {dailyGoal > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+              <div className="flex justify-between items-end mb-2">
+                <div>
+                  <h2 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <Target size={16} className={goalPercentage >= 100 ? "text-yellow-500" : "text-emerald-500"} />
+                    Meta Diária
+                  </h2>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {getMotivationalMessage()}
+                  </p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                <span className="text-lg font-black text-gray-800 dark:text-white">
+                  {Math.floor(goalPercentage)}%
+                </span>
+              </div>
 
-      {/* 2. Card: Desempenho Geral */}
-      {subjects.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho Geral</h2>
-          </div>
-
-          <div className="space-y-5">
-            {subjects.map((subject) => {
-              const { totalQuestions, accuracy } = getSubjectPerformance(subject.id);
-              return (
-                <div key={`perf-${subject.id}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[60%]">
-                      {subject.name}
-                    </span>
-                    <div className="text-right">
-                      <span className={`text-sm font-bold ${totalQuestions === 0 ? 'text-gray-400' : getAccuracyTextColor(accuracy)}`}>
-                        {totalQuestions > 0 ? `${accuracy}%` : '-'}
-                      </span>
-                      {totalQuestions > 0 && (
-                        <p className="text-[10px] text-gray-400">{totalQuestions} questões</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                    {totalQuestions > 0 ? (
-                      <div 
-                        className={`h-full transition-all duration-500 rounded-full ${getAccuracyColor(accuracy)}`} 
-                        style={{ width: `${accuracy}%` }} 
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-gray-100 dark:bg-gray-700" /> 
-                    )}
-                  </div>
+              <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+                <div 
+                  className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${
+                    goalPercentage >= 100 
+                      ? 'bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-pulse' 
+                      : 'bg-emerald-500'
+                  }`}
+                  style={{ width: `${goalPercentage > 0 ? goalPercentage : 0}%` }}
+                >
+                  {goalPercentage > 0 && <div className="w-1 h-1 bg-white/50 rounded-full" />}
                 </div>
-              );
-            })}
-          </div>
-           {subjects.every(s => getSubjectPerformance(s.id).totalQuestions === 0) && (
-             <p className="text-xs text-center text-gray-400 mt-4 italic">
-               Nenhuma questão registrada. Bora praticar, guerreiro!
-             </p>
+              </div>
+              
+              <div className="flex justify-between mt-2 text-[10px] font-bold text-gray-400 uppercase">
+                <span>0h</span>
+                <span>{Math.floor(dailyGoal / 60)}h</span>
+              </div>
+            </div>
+          )}
+
+          {/* 1. Card: Progresso do Ciclo */}
+          {subjects.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Progresso do Ciclo Atual</h2>
+              </div>
+
+              <div className="space-y-4">
+                {subjects.map((subject) => {
+                  const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);
+                  return (
+                    <div key={subject.id}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: subject.color }} />
+                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{subject.name}</span>
+                        </div>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          {totalMinutes}/{subject.goalMinutes} min
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full transition-all duration-300 rounded-full"
+                          style={{ width: `${percentage}%`, backgroundColor: subject.color }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
-      )}
 
-      {/* 3. Card: Atividades Recentes */}
-      {recentActivities.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Atividades Recentes</h2>
-          </div>
+        {/* COLUNA DIREITA (PC): Desempenho + Atividades */}
+        <div className="space-y-6">
 
-          <div className="space-y-3">
-            {recentActivities.map((log) => {
-              const subject = subjects.find((s) => s.id === log.subjectId);
-              const logMinutes = log.hours * 60 + log.minutes;
+          {/* 2. Card: Desempenho Geral (Com Gaveta) */}
+          {subjects.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho (Ciclo Atual)</h2>
+              </div>
 
-              return (
-                <div
-                  key={log.id}
-                  className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"
-                >
-                  <div
-                    className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
-                    style={{ backgroundColor: subject?.color || '#6b7280' }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-                      {subject?.name || 'Matéria Excluída'}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {getTypeLabel(log.type)} • {logMinutes} min
-                    </p>
-                    {log.notes && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">
-                        {log.notes}
-                      </p>
-                    )}
-                  </div>
-                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                      {new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                    </span>
-                    <button
-                      onClick={() => onDeleteLog(log.id)}
-                      className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+              <div className="space-y-5">
+                {subjects.map((subject) => {
+                  const { totalQuestions, totalCorrect, totalWrong, totalBlank, correctPct, wrongPct, blankPct, accuracy } = getSubjectPerformance(subject.id);
+                  const isExpanded = expandedPerformanceId === subject.id;
+
+                  return (
+                    <div key={`perf-${subject.id}`}>
+                      {/* Linha Principal (Clicável) */}
+                      <button 
+                        onClick={() => setExpandedPerformanceId(isExpanded ? null : subject.id)}
+                        className="w-full flex items-center justify-between mb-1 group"
+                      >
+                        <div className="flex items-center gap-2">
+                           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate text-left">
+                             {subject.name}
+                           </span>
+                           {isExpanded ? <ChevronUp size={14} className="text-gray-400"/> : <ChevronDown size={14} className="text-gray-400 group-hover:text-emerald-500 transition-colors"/>}
+                        </div>
+                        
+                        <div className="text-right">
+                          <span className={`text-sm font-bold ${totalQuestions === 0 ? 'text-gray-400' : getAccuracyTextColor(accuracy)}`}>
+                            {totalQuestions > 0 ? `${accuracy}%` : '-'}
+                          </span>
+                          {totalQuestions > 0 && (
+                            <p className="text-[10px] text-gray-400">{totalQuestions} questões</p>
+                          )}
+                        </div>
+                      </button>
+
+                      {/* Barra de Progresso Principal (Acurácia) - Só aparece se NÃO estiver expandido */}
+                      {!isExpanded && (
+                         <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                           {totalQuestions > 0 ? (
+                             <div 
+                               className={`h-full transition-all duration-500 rounded-full ${getAccuracyColor(accuracy)}`} 
+                               style={{ width: `${accuracy}%` }} 
+                             />
+                           ) : (
+                             <div className="h-full w-full bg-gray-100 dark:bg-gray-700" /> 
+                           )}
+                         </div>
+                      )}
+
+                      {/* GAVETA DETALHADA (Aparece ao clicar) */}
+                      {isExpanded && totalQuestions > 0 && (
+                        <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl animate-in slide-in-from-top-1 fade-in duration-200">
+                          
+                          {/* Barra Tricolor */}
+                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 overflow-hidden flex mb-2">
+                            {/* Certas (Verde) */}
+                            <div style={{ width: `${correctPct}%` }} className="h-full bg-emerald-500" />
+                            {/* Erradas (Vermelho) */}
+                            <div style={{ width: `${wrongPct}%` }} className="h-full bg-red-500" />
+                            {/* Em Branco (Azul Claro) */}
+                            <div style={{ width: `${blankPct}%` }} className="h-full bg-blue-400" />
+                          </div>
+
+                          {/* Legenda Numérica */}
+                          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                            <div className="text-emerald-600 dark:text-emerald-400 flex flex-col items-center">
+                              <span>Certas</span>
+                              <span className="text-sm">{totalCorrect}</span>
+                            </div>
+                            <div className="text-red-600 dark:text-red-400 flex flex-col items-center">
+                              <span>Erradas</span>
+                              <span className="text-sm">{totalWrong}</span>
+                            </div>
+                            <div className="text-blue-500 dark:text-blue-300 flex flex-col items-center">
+                              <span>Branco</span>
+                              <span className="text-sm">{totalBlank}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {isExpanded && totalQuestions === 0 && (
+                         <p className="text-xs text-center text-gray-400 py-2 italic">Nenhuma questão neste ciclo.</p>
+                      )}
+
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {subjects.every(s => getSubjectPerformance(s.id).totalQuestions === 0) && (
+                 <p className="text-xs text-center text-gray-400 mt-4 italic">
+                   Nenhuma questão registrada no ciclo atual.
+                 </p>
+              )}
+            </div>
+          )}
+
+          {/* 3. Card: Atividades Recentes */}
+          {recentActivities.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Atividades Recentes</h2>
+              </div>
+
+              <div className="space-y-3">
+                {recentActivities.map((log) => {
+                  const subject = subjects.find((s) => s.id === log.subjectId);
+                  const logMinutes = log.hours * 60 + log.minutes;
+
+                  return (
+                    <div
+                      key={log.id}
+                      className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"
                     >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                      <div
+                        className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
+                        style={{ backgroundColor: subject?.color || '#6b7280' }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+                          {subject?.name || 'Matéria Excluída'}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {getTypeLabel(log.type)} • {logMinutes} min
+                        </p>
+                        {log.notes && (
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">
+                            {log.notes}
+                          </p>
+                        )}
+                      </div>
+                       <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                          {new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                        </span>
+                        <button
+                          onClick={() => onDeleteLog(log.id)}
+                          className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-          <button
-            onClick={() => setShowHistoryModal(true)}
-            className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-          >
-            <History size={18} />
-            Ver histórico completo
-          </button>
+              <button
+                onClick={() => setShowHistoryModal(true)}
+                className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                <History size={18} />
+                Ver histórico completo
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Estado Vazio */}
       {subjects.length === 0 && logs.length === 0 && (

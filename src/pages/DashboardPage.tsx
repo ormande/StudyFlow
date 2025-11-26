@@ -172,43 +172,60 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </button>
       </div>
 
-      {/* Cards de Resumo (KPIs) - Sempre no topo */}
+      {/* Cards de Resumo (KPIs) - Estilo Marca d'Água */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <Flame className="w-5 h-5" />
-            <span className="text-xs font-semibold">Ofensiva</span>
+        
+        {/* Card 1: Ofensiva */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
+          {/* Marca d'água (Ícone Fundo) */}
+          <Flame className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-1 opacity-90">
+              <Flame className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wide">Ofensiva</span>
+            </div>
+            <p className="text-3xl font-black tracking-tight">{streak}</p>
+            <p className="text-[10px] font-medium opacity-80">dias consecutivos</p>
           </div>
-          <p className="text-3xl font-bold">{streak}</p>
-          <p className="text-[11px] opacity-90 mt-1">dias</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5" />
-            <span className="text-xs font-semibold">Hoje</span>
+        {/* Card 2: Hoje */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
+          {/* Marca d'água (Ícone Fundo) */}
+          <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-1 opacity-90">
+              <Clock className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wide">Hoje</span>
+            </div>
+            <p className="text-3xl font-black tracking-tight">
+              {hours > 0 ? `${hours}h` : `${minutes}m`}
+            </p>
+            <p className="text-[10px] font-medium opacity-80">
+              {hours > 0 && minutes > 0 ? `${minutes}m adicionais` : 'Foco total!'}
+            </p>
           </div>
-          <p className="text-3xl font-bold">
-            {hours > 0 ? `${hours}h` : `${minutes}m`}
-          </p>
-          <p className="text-[11px] opacity-90 mt-1">
-            {hours > 0 && minutes > 0 && `${minutes}m`}
-            {hours === 0 && minutes === 0 && 'Comece!'}
-          </p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-5 h-5" />
-            <span className="text-xs font-semibold">Total</span>
+        {/* Card 3: Total */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
+          {/* Marca d'água (Ícone Fundo) */}
+          <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-1 opacity-90">
+              <Zap className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wide">Total</span>
+            </div>
+            <p className="text-3xl font-black tracking-tight">
+              {totalHours > 0 ? `${totalHours}h` : '0h'}
+            </p>
+            <p className="text-[10px] font-medium opacity-80">
+              {totalHours > 0 ? 'acumuladas no app' : 'Vamos começar?'}
+            </p>
           </div>
-          <p className="text-3xl font-bold">
-            {totalHours > 0 ? `${totalHours}h` : '0h'}
-          </p>
-          <p className="text-[11px] opacity-90 mt-1">
-            {totalHours > 0 && totalMin > 0 && `${totalMin}m`}
-            {totalHours === 0 && totalMin === 0 && 'Sem dados'}
-          </p>
         </div>
       </div>
 

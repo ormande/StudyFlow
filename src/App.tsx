@@ -95,7 +95,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
-// Lógica de Tema Manual + Pintura do Body (Correção Mobile)
+  // Lógica de Tema Manual + Pintura do Body
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('studyflow_theme');
@@ -106,9 +106,8 @@ function App() {
   });
 
   useEffect(() => {
-    // Cores exatas do Tailwind: gray-900 (#111827) e gray-50 (#f9fafb)
     const color = isDarkMode ? '#111827' : '#f9fafb';
-    document.body.style.backgroundColor = color; // <--- O TRUQUE ESTÁ AQUI
+    document.body.style.backgroundColor = color;
     
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -216,7 +215,7 @@ function App() {
   const handleReorderSubjects = (newSubjects: Subject[]) => {
     setSubjects(newSubjects);
   };
-  
+
   const handleRestartCycle = () => {
     if (confirm("Tem certeza, Guerreiro? Isso vai zerar as barras de progresso para começar um novo ciclo. Seu histórico de horas continua salvo.")) {
       setCycleStartDate(Date.now());
@@ -232,6 +231,7 @@ function App() {
         localStorage.removeItem('studyflow_subjects');
         localStorage.removeItem('studyflow_logs');
         localStorage.removeItem('studyflow_cycle_start');
+        localStorage.removeItem('studyflow_daily_goal');
         window.location.reload();
       }
     }
@@ -270,20 +270,16 @@ function App() {
         onSetDailyGoal={setDailyGoal}
       />
 
-      <div className="bg-white dark:bg-gray-800 p-4 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-40 flex justify-between items-center shadow-sm transition-colors duration-300">
-        <div className="flex items-center gap-2 text-gray-800 dark:text-white font-black text-xl tracking-tight">
-          <BookOpen className="text-emerald-500" size={24} />
-          STUDYFLOW
-        </div>
-        <button 
-          onClick={() => setShowSettings(true)}
-          className="h-10 w-10 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-gray-600 transition-all"
-        >
-           <Settings size={20} />
-        </button>
-      </div>
+      {/* BOTÃO FLUTUANTE DE CONFIGURAÇÕES (FAB) */}
+      <button 
+        onClick={() => setShowSettings(true)}
+        className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"
+      >
+         <Settings size={24} />
+      </button>
 
-      <div className="pb-24"> 
+      {/* ÁREA DE CONTEÚDO (Sem header fixo, layout limpo) */}
+      <div className="pb-24 pt-2"> 
         {renderPage()}
       </div>
 

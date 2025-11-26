@@ -48,7 +48,7 @@ export default function TimerPage({
 
   return (
     // ALTERAÇÃO AQUI: h-[calc(100vh-140px)] força a altura exata e overflow-hidden trava o scroll
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-140px)] overflow-hidden px-4 md:px-6">
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-140px)] overflow-hidden px-4 md:px-6 animate-in fade-in duration-300">
       <div className="text-center mb-8 md:mb-12">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 transition-colors">Cronômetro</h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Acompanhe seu tempo de estudo</p>

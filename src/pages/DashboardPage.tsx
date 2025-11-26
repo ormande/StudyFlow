@@ -142,7 +142,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     return 'text-red-600 dark:text-red-400';
   };
 
-  // --- LÓGICA DA META DIÁRIA ---
   const goalPercentage = dailyGoal > 0 ? Math.min((totalMinutes / dailyGoal) * 100, 100) : 0;
   
   const getMotivationalMessage = () => {
@@ -154,15 +153,14 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
   };
 
   return (
-    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24">
-      {/* Header - MODIFICADO: Botão Share agora fica à esquerda do título */}
+    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in duration-500">
+      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
         </div>
         
-        {/* Botão Share Redondo e Verde (Estilo App) */}
         <button
           onClick={() => setShowShareModal(true)}
           className="h-10 w-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-md hover:bg-emerald-600 transition-all active:scale-95"
@@ -172,11 +170,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </button>
       </div>
 
-      {/* Cards de Resumo (KPIs) - Estilo Marca d'Água */}
+      {/* Cards de Resumo (KPIs) */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         
-        {/* Card 1: Ofensiva */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
+        <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
           <Flame className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1 opacity-90">
@@ -188,8 +185,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
           </div>
         </div>
 
-        {/* Card 2: Hoje */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
           <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1 opacity-90">
@@ -205,8 +201,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
           </div>
         </div>
 
-        {/* Card 3: Total */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
           <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1 opacity-90">
@@ -223,13 +218,12 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </div>
       </div>
 
-      {/* LAYOUT GRID PARA PC */}
+      {/* GRID: Esquerda / Direita */}
       <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-6">
         
         {/* COLUNA ESQUERDA */}
         <div className="space-y-6">
           
-          {/* BARRA DE META DIÁRIA */}
           {dailyGoal > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
               <div className="flex justify-between items-end mb-2">
@@ -267,7 +261,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             </div>
           )}
 
-          {/* Progresso do Ciclo */}
           {subjects.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
               <div className="flex items-center gap-2 mb-4">
@@ -306,7 +299,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         {/* COLUNA DIREITA */}
         <div className="space-y-6">
 
-          {/* Desempenho Geral */}
+          {/* DESEMPENHO COM ANIMAÇÃO SUAVE */}
           {subjects.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
               <div className="flex items-center gap-2 mb-4">
@@ -323,13 +316,17 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                     <div key={`perf-${subject.id}`}>
                       <button 
                         onClick={() => setExpandedPerformanceId(isExpanded ? null : subject.id)}
-                        className="w-full flex items-center justify-between mb-1 group"
+                        className="w-full flex items-center justify-between mb-1 group outline-none"
                       >
                         <div className="flex items-center gap-2">
                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate text-left">
                              {subject.name}
                            </span>
-                           {isExpanded ? <ChevronUp size={14} className="text-gray-400"/> : <ChevronDown size={14} className="text-gray-400 group-hover:text-emerald-500 transition-colors"/>}
+                           {/* Ícone Gira Suavemente */}
+                           <ChevronDown 
+                              size={14} 
+                              className={`text-gray-400 group-hover:text-emerald-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                           />
                         </div>
                         
                         <div className="text-right">
@@ -342,46 +339,55 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                         </div>
                       </button>
 
-                      {!isExpanded && (
-                         <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
-                           {totalQuestions > 0 ? (
-                             <div 
-                               className={`h-full transition-all duration-500 rounded-full ${getAccuracyColor(accuracy)}`} 
-                               style={{ width: `${accuracy}%` }} 
-                             />
-                           ) : (
-                             <div className="h-full w-full bg-gray-100 dark:bg-gray-700" /> 
-                           )}
-                         </div>
-                      )}
+                      {/* Barra de Progresso Principal (Some suavemente) */}
+                      <div 
+                        className={`w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'opacity-0 h-0 mb-0' : 'opacity-100 h-1.5'}`}
+                      >
+                         {totalQuestions > 0 ? (
+                           <div 
+                             className={`h-full transition-all duration-500 rounded-full ${getAccuracyColor(accuracy)}`} 
+                             style={{ width: `${accuracy}%` }} 
+                           />
+                         ) : (
+                           <div className="h-full w-full bg-gray-100 dark:bg-gray-700" /> 
+                         )}
+                      </div>
 
-                      {isExpanded && totalQuestions > 0 && (
-                        <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl animate-in slide-in-from-top-1 fade-in duration-200">
-                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 overflow-hidden flex mb-2">
-                            <div style={{ width: `${correctPct}%` }} className="h-full bg-emerald-500" />
-                            <div style={{ width: `${wrongPct}%` }} className="h-full bg-red-500" />
-                            <div style={{ width: `${blankPct}%` }} className="h-full bg-blue-400" />
-                          </div>
-                          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                            <div className="text-emerald-600 dark:text-emerald-400 flex flex-col items-center">
-                              <span>Certas</span>
-                              <span className="text-sm">{totalCorrect}</span>
+                      {/* GAVETA ANIMADA (ACORDEÃO) */}
+                      <div 
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          isExpanded ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0 mt-0'
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          {totalQuestions > 0 ? (
+                            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                              <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 overflow-hidden flex mb-2">
+                                <div style={{ width: `${correctPct}%` }} className="h-full bg-emerald-500" />
+                                <div style={{ width: `${wrongPct}%` }} className="h-full bg-red-500" />
+                                <div style={{ width: `${blankPct}%` }} className="h-full bg-blue-400" />
+                              </div>
+                              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                                <div className="text-emerald-600 dark:text-emerald-400 flex flex-col items-center">
+                                  <span>Certas</span>
+                                  <span className="text-sm">{totalCorrect}</span>
+                                </div>
+                                <div className="text-red-600 dark:text-red-400 flex flex-col items-center">
+                                  <span>Erradas</span>
+                                  <span className="text-sm">{totalWrong}</span>
+                                </div>
+                                <div className="text-blue-500 dark:text-blue-300 flex flex-col items-center">
+                                  <span>Branco</span>
+                                  <span className="text-sm">{totalBlank}</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-red-600 dark:text-red-400 flex flex-col items-center">
-                              <span>Erradas</span>
-                              <span className="text-sm">{totalWrong}</span>
-                            </div>
-                            <div className="text-blue-500 dark:text-blue-300 flex flex-col items-center">
-                              <span>Branco</span>
-                              <span className="text-sm">{totalBlank}</span>
-                            </div>
-                          </div>
+                          ) : (
+                            <p className="text-xs text-center text-gray-400 py-2 italic">Nenhuma questão neste ciclo.</p>
+                          )}
                         </div>
-                      )}
-                      
-                      {isExpanded && totalQuestions === 0 && (
-                         <p className="text-xs text-center text-gray-400 py-2 italic">Nenhuma questão neste ciclo.</p>
-                      )}
+                      </div>
+
                     </div>
                   );
                 })}
@@ -436,7 +442,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                         </span>
                         <button
                           onClick={() => onDeleteLog(log.id)}
-                          className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                          className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -448,7 +454,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 
               <button
                 onClick={() => setShowHistoryModal(true)}
-                className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 <History size={18} />
                 Ver histórico completo
@@ -458,7 +464,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </div>
       </div>
 
-      {/* Estado Vazio */}
       {subjects.length === 0 && logs.length === 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 text-center transition-colors duration-300">
           <p className="text-gray-600 dark:text-gray-300 mb-2">Bem-vindo ao StudyFlow!</p>

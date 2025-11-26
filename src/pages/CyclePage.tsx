@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Check, X, ChevronDown, ChevronUp, RefreshCw, Target, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown } from 'lucide-react';
 import { Subject, StudyLog, Subtopic } from '../types';
 import { getRandomColor } from '../utils/colors';
 
@@ -101,8 +101,8 @@ export default function CyclePage({
   const totalCycleProgress = getTotalCycleProgress();
 
   return (
-    // Layout ajustado: max-w-5xl para PC
-    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in duration-300">
+    // ADICIONEI slide-in-from-bottom-4 PARA SENTIR A TROCA DE ABA
+    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
       {/* Header */}
       <div className="mb-6">
@@ -110,12 +110,11 @@ export default function CyclePage({
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Gerencie suas matérias e acompanhe o progresso</p>
       </div>
 
-      {/* GRID PRINCIPAL: Coluna Status (Esq) + Coluna Lista (Dir) */}
+      {/* GRID PRINCIPAL */}
       <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
         
-        {/* COLUNA ESQUERDA: Status (Sticky no PC) */}
+        {/* COLUNA ESQUERDA */}
         <div className="md:sticky md:top-6 space-y-6">
-          {/* CARD DE STATUS DO CICLO */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-lg transition-colors duration-300 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -142,7 +141,6 @@ export default function CyclePage({
             </button>
           </div>
 
-          {/* Dica para PC (só aparece em telas médias pra cima) */}
           <div className="hidden md:block bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl text-xs text-blue-700 dark:text-blue-300">
             <p className="font-bold mb-1">💡 Dica de Organização</p>
             Use as setas para colocar as matérias prioritárias no topo da lista.
@@ -166,20 +164,19 @@ export default function CyclePage({
                           <button 
                             onClick={() => moveSubject(index, 'up')}
                             disabled={index === 0}
-                            className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
+                            className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
                           >
                             <ArrowUp size={14} strokeWidth={3} />
                           </button>
                           <button 
                             onClick={() => moveSubject(index, 'down')}
                             disabled={index === subjects.length - 1}
-                            className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
+                            className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
                           >
                             <ArrowDown size={14} strokeWidth={3} />
                           </button>
                         </div>
 
-                        {/* TÍTULO E COR */}
                         <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
                       </div>
@@ -187,12 +184,9 @@ export default function CyclePage({
                         Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
                       </p>
                     </div>
-                    <button 
-                    onClick={() => { if (confirm(`Excluir "${subject.name}"?`)) onDeleteSubject(subject.id); }} 
-                    className="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-90"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                    <button onClick={() => { if (confirm(`Excluir "${subject.name}"?`)) onDeleteSubject(subject.id); }} className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </div>
 
                   <div className="mb-3">
@@ -202,63 +196,70 @@ export default function CyclePage({
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 text-right">{percentage.toFixed(1)}%</p>
                   </div>
 
-                  <button onClick={() => setExpandedSubject(isExpanded ? null : subject.id)} className="w-full flex items-center justify-between py-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300">
+                  <button 
+                    onClick={() => setExpandedSubject(isExpanded ? null : subject.id)} 
+                    className="w-full flex items-center justify-between py-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 group"
+                  >
                     <span>Subtópicos ({subject.subtopics.filter((st) => st.completed).length}/{subject.subtopics.length})</span>
-                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    {/* SETINHA GIRATÓRIA AQUI */}
+                    <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
 
-                {isExpanded && (
-                  <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4">
-                    <div className="space-y-2 mb-4">
-                      {subject.subtopics.map((subtopic) => (
-                        <div key={subtopic.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50">
-                          <button
-                            onClick={() => handleToggleSubtopic(subject.id, subtopic.id)}
-                            className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                              subtopic.completed ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-gray-500 hover:border-emerald-400'
-                            }`}
-                          >
-                            {subtopic.completed && <Check className="w-4 h-4 text-white" />}
-                          </button>
-                          <span className={`flex-1 text-sm ${subtopic.completed ? 'text-gray-500 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200 font-medium'}`}>
-                            {subtopic.name}
-                          </span>
-                          <button onClick={() => handleDeleteSubtopic(subject.id, subtopic.id)} className="text-red-500 hover:text-red-600 p-1">
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                {/* EFEITO ACORDEÃO NOS SUBTÓPICOS */}
+                <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                  <div className="overflow-hidden">
+                    <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4">
+                      <div className="space-y-2 mb-4">
+                        {subject.subtopics.map((subtopic) => (
+                          <div key={subtopic.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+                            <button
+                              onClick={() => handleToggleSubtopic(subject.id, subtopic.id)}
+                              className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all active:scale-90 ${
+                                subtopic.completed ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-gray-500 hover:border-emerald-400'
+                              }`}
+                            >
+                              {subtopic.completed && <Check className="w-4 h-4 text-white" />}
+                            </button>
+                            <span className={`flex-1 text-sm ${subtopic.completed ? 'text-gray-500 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200 font-medium'}`}>
+                              {subtopic.name}
+                            </span>
+                            <button onClick={() => handleDeleteSubtopic(subject.id, subtopic.id)} className="text-red-500 hover:text-red-600 p-1 active:scale-90 transition-transform">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
 
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newSubtopic}
-                        onChange={(e) => setNewSubtopic(e.target.value)}
-                        placeholder="Novo subtópico..."
-                        className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
-                        onKeyPress={(e) => { if (e.key === 'Enter') handleAddSubtopic(subject.id); }}
-                      />
-                      <button onClick={() => handleAddSubtopic(subject.id)} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all">
-                        <Plus className="w-5 h-5" />
-                      </button>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newSubtopic}
+                          onChange={(e) => setNewSubtopic(e.target.value)}
+                          placeholder="Novo subtópico..."
+                          className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
+                          onKeyPress={(e) => { if (e.key === 'Enter') handleAddSubtopic(subject.id); }}
+                        />
+                        <button onClick={() => handleAddSubtopic(subject.id)} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95">
+                          <Plus className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}
 
           {!isAdding ? (
             <button
-            onClick={() => setIsAdding(true)}
-            className="w-full py-5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-          >
-            <Plus className="w-5 h-5" /> Adicionar Matéria
-          </button>
+              onClick={() => setIsAdding(true)}
+              className="w-full py-5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Plus className="w-5 h-5" /> Adicionar Matéria
+            </button>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 transition-colors border border-gray-100 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 transition-colors border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nome da Matéria</label>
                 <input
@@ -271,7 +272,7 @@ export default function CyclePage({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Meta do Ciclo (minutos)</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-2">Meta do Ciclo (minutos)</label>
                 <input
                   type="number"
                   min="1"
@@ -282,19 +283,9 @@ export default function CyclePage({
                 />
               </div>
               <div className="flex gap-3">
-              <button 
-                onClick={handleAddSubject} 
-                className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
-              >
-                Salvar
-              </button>
-              <button 
-                onClick={() => { setIsAdding(false); setNewName(''); setNewGoal(''); }} 
-                className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95"
-              >
-                Cancelar
-              </button>
-            </div>
+                <button onClick={handleAddSubject} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all active:scale-95 shadow-md">Salvar</button>
+                <button onClick={() => { setIsAdding(false); setNewName(''); setNewGoal(''); }} className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95">Cancelar</button>
+              </div>
             </div>
           )}
         </div>

@@ -123,20 +123,23 @@ export default function RegisterPage({
   ];
 
   return (
-    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-      <div className="mb-8">
+    // ALTERAÇÃO: Altura travada (calc), sem scroll global, flex column
+    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 h-[calc(100vh-90px)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+      
+      {/* Header Fixo (não rola) */}
+      <div className="mb-4 flex-shrink-0">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 transition-colors">Registrar</h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
-      {/* GRID PRINCIPAL: Removi 'items-start' para as colunas terem a mesma altura (stretch) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/* Grid preenche o espaço restante (flex-1) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 flex-1 min-h-0">
         
-        {/* COLUNA 1: Matéria, Tipo, Observações (ELÁSTICA) */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col">
+        {/* COLUNA 1: Matéria, Tipo, Observações (Rolagem Interna se precisar) */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col overflow-y-auto custom-scrollbar">
           
           {/* Matéria */}
-          <div>
+          <div className="flex-shrink-0">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Matéria</label>
             <select
               value={subjectId}
@@ -154,7 +157,7 @@ export default function RegisterPage({
 
           {/* Subtópico */}
           {selectedSubject && selectedSubject.subtopics.length > 0 && (
-             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+             <div className="animate-in fade-in slide-in-from-top-2 duration-300 flex-shrink-0">
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
                 <Layers size={14} /> Subtópico <span className="text-[10px] font-normal opacity-70 normal-case">(Opcional)</span>
               </label>
@@ -174,7 +177,7 @@ export default function RegisterPage({
           )}
 
           {/* Tipo de Estudo */}
-          <div>
+          <div className="flex-shrink-0">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">
               Tipo de Estudo
             </label>
@@ -200,23 +203,23 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Observações - AGORA É FLEXÍVEL (Estica para preencher o buraco) */}
-          <div className="flex-1 flex flex-col">
+          {/* Observações (Flexível) */}
+          <div className="flex-1 flex flex-col min-h-[120px]">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors h-full min-h-[100px]"
+              className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors h-full"
               placeholder="Ex: Art. 5º, Inciso XI..."
             ></textarea>
           </div>
         </div>
 
-        {/* COLUNA 2: Tempo, Páginas, Desempenho */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col">
+        {/* COLUNA 2: Tempo, Páginas, Desempenho (Rolagem Interna se precisar) */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col overflow-y-auto custom-scrollbar">
           
           {/* Tempo */}
-          <div>
+          <div className="flex-shrink-0">
              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Tempo Estudado</label>
              <div className="grid grid-cols-3 gap-3">
               {['Horas', 'Minutos', 'Segundos'].map((label, idx) => (
@@ -245,7 +248,7 @@ export default function RegisterPage({
           </div>
 
           {/* Páginas Lidas */}
-          <div>
+          <div className="flex-shrink-0">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
             <div className="relative">
               <BookOpen className="absolute left-3 top-3.5 text-gray-400" size={20} />
@@ -260,7 +263,7 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Desempenho */}
+          {/* Desempenho (Ocupa o resto se precisar, mas geralmente é fixo) */}
           <div className="flex-1">
             <div className="flex justify-between items-center mb-3">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
@@ -322,10 +325,10 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Botão Salvar */}
+          {/* Botão Salvar (Fixo na base do flex) */}
           <button
             onClick={handleSubmit}
-            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-auto"
+            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-auto flex-shrink-0"
           >
             <Save size={20} />
             <span>Salvar Registro</span>

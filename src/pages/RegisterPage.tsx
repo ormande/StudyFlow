@@ -189,7 +189,7 @@ export default function RegisterPage({
                     key={btn.id}
                     type="button"
                     onClick={() => setType(btn.id as any)}
-                    className={`py-4 rounded-xl font-semibold text-sm transition-all flex flex-col items-center gap-2 ${
+                    className={`py-4 rounded-xl font-semibold text-sm transition-all active:scale-95 flex flex-col items-center gap-2 ${
                       type === btn.id
                         ? 'bg-emerald-500 text-white shadow-lg scale-105'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'

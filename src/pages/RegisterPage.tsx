@@ -262,7 +262,7 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Desempenho (Preenche o espaço) */}
+          {/* Desempenho (Agora em linha única) */}
           <div className="flex-1 flex flex-col justify-center">
             <div className="flex justify-between items-center mb-2">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
@@ -274,7 +274,9 @@ export default function RegisterPage({
               </button>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
+            {/* GRID MÁGICO: Vira 3 colunas se tiver "Em Branco", senão 2 */}
+            <div className={`grid gap-3 transition-all duration-300 ${showBlank ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              
               {/* Certas */}
               <div>
                 <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
@@ -305,10 +307,10 @@ export default function RegisterPage({
                 </div>
               </div>
               
-              {/* Em Branco */}
+              {/* Em Branco (Aparece na 3ª coluna) */}
               {showBlank && (
-                <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
-                  <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">EM BRANCO</label>
+                <div className="animate-in fade-in zoom-in-95 duration-200">
+                  <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg">
                       <HelpCircle size={16} className="text-white" />

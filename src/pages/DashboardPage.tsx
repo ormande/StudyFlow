@@ -17,7 +17,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   
-  // Estado para controlar qual matéria está expandida no card de desempenho
   const [expandedPerformanceId, setExpandedPerformanceId] = useState<string | null>(null);
 
   // --- LÓGICA DE ESTATÍSTICAS ---
@@ -84,12 +83,11 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     return { totalMinutes, percentage };
   };
 
-  // ATUALIZADO: Filtra pelo Ciclo Atual e calcula acertos/erros/branco
   const getSubjectPerformance = (subjectId: string) => {
     const subjectLogs = logs.filter(log => 
       log.subjectId === subjectId && 
       log.type === 'questoes' &&
-      log.timestamp >= cycleStartDate // Filtro do Ciclo Atual
+      log.timestamp >= cycleStartDate 
     );
     
     const totalQuestions = subjectLogs.reduce((sum, log) => sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0), 0);
@@ -97,7 +95,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     const totalWrong = subjectLogs.reduce((sum, log) => sum + (log.wrong || 0), 0);
     const totalBlank = subjectLogs.reduce((sum, log) => sum + (log.blank || 0), 0);
 
-    // Evita divisão por zero
     const correctPct = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
     const wrongPct = totalQuestions > 0 ? (totalWrong / totalQuestions) * 100 : 0;
     const blankPct = totalQuestions > 0 ? (totalBlank / totalQuestions) * 100 : 0;
@@ -156,19 +153,21 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
   };
 
   return (
-    // ALTERAÇÃO: max-w-5xl para permitir layout largo no PC
     <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      {/* Header - MODIFICADO: Botão Share agora fica à esquerda do título */}
+      <div className="flex items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
         </div>
+        
+        {/* Botão Share movido para cá */}
         <button
           onClick={() => setShowShareModal(true)}
-          className="p-3 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg active:scale-95"
+          className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-all shadow-sm active:scale-95"
+          title="Compartilhar Progresso"
         >
-          <Share2 className="w-6 h-6" />
+          <Share2 className="w-5 h-5" />
         </button>
       </div>
 
@@ -177,9 +176,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         
         {/* Card 1: Ofensiva */}
         <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
-          {/* Marca d'água (Ícone Fundo) */}
           <Flame className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-          
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1 opacity-90">
               <Flame className="w-4 h-4" />
@@ -192,9 +189,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 
         {/* Card 2: Hoje */}
         <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
-          {/* Marca d'água (Ícone Fundo) */}
           <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-          
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1 opacity-90">
               <Clock className="w-4 h-4" />
@@ -211,9 +206,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 
         {/* Card 3: Total */}
         <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02]">
-          {/* Marca d'água (Ícone Fundo) */}
           <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-          
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1 opacity-90">
               <Zap className="w-4 h-4" />
@@ -229,10 +222,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </div>
       </div>
 
-      {/* LAYOUT GRID PARA PC: Duas colunas em telas médias (md) ou maiores */}
+      {/* LAYOUT GRID PARA PC */}
       <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-6">
         
-        {/* COLUNA ESQUERDA (PC): Meta Diária + Ciclo */}
+        {/* COLUNA ESQUERDA */}
         <div className="space-y-6">
           
           {/* BARRA DE META DIÁRIA */}
@@ -273,7 +266,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             </div>
           )}
 
-          {/* 1. Card: Progresso do Ciclo */}
+          {/* Progresso do Ciclo */}
           {subjects.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
               <div className="flex items-center gap-2 mb-4">
@@ -309,10 +302,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
           )}
         </div>
 
-        {/* COLUNA DIREITA (PC): Desempenho + Atividades */}
+        {/* COLUNA DIREITA */}
         <div className="space-y-6">
 
-          {/* 2. Card: Desempenho Geral (Com Gaveta) */}
+          {/* Desempenho Geral */}
           {subjects.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
               <div className="flex items-center gap-2 mb-4">
@@ -327,7 +320,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 
                   return (
                     <div key={`perf-${subject.id}`}>
-                      {/* Linha Principal (Clicável) */}
                       <button 
                         onClick={() => setExpandedPerformanceId(isExpanded ? null : subject.id)}
                         className="w-full flex items-center justify-between mb-1 group"
@@ -349,7 +341,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                         </div>
                       </button>
 
-                      {/* Barra de Progresso Principal (Acurácia) - Só aparece se NÃO estiver expandido */}
                       {!isExpanded && (
                          <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                            {totalQuestions > 0 ? (
@@ -363,21 +354,13 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                          </div>
                       )}
 
-                      {/* GAVETA DETALHADA (Aparece ao clicar) */}
                       {isExpanded && totalQuestions > 0 && (
                         <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl animate-in slide-in-from-top-1 fade-in duration-200">
-                          
-                          {/* Barra Tricolor */}
                           <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 overflow-hidden flex mb-2">
-                            {/* Certas (Verde) */}
                             <div style={{ width: `${correctPct}%` }} className="h-full bg-emerald-500" />
-                            {/* Erradas (Vermelho) */}
                             <div style={{ width: `${wrongPct}%` }} className="h-full bg-red-500" />
-                            {/* Em Branco (Azul Claro) */}
                             <div style={{ width: `${blankPct}%` }} className="h-full bg-blue-400" />
                           </div>
-
-                          {/* Legenda Numérica */}
                           <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
                             <div className="text-emerald-600 dark:text-emerald-400 flex flex-col items-center">
                               <span>Certas</span>
@@ -398,7 +381,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                       {isExpanded && totalQuestions === 0 && (
                          <p className="text-xs text-center text-gray-400 py-2 italic">Nenhuma questão neste ciclo.</p>
                       )}
-
                     </div>
                   );
                 })}
@@ -412,7 +394,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             </div>
           )}
 
-          {/* 3. Card: Atividades Recentes */}
+          {/* Atividades Recentes */}
           {recentActivities.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
               <div className="flex items-center gap-2 mb-4">
@@ -485,7 +467,6 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         </div>
       )}
 
-      {/* Modal de Compartilhamento */}
       <ShareModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}

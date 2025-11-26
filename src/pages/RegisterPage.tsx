@@ -123,9 +123,7 @@ export default function RegisterPage({
   ];
 
   return (
-    // ALTERAÇÃO AQUI: Mudei para h-[calc(100vh-140px)] igual ao TimerPage
-    // Isso compensa o padding do App e evita a barra de rolagem externa
-    <div className="max-w-lg md:max-w-5xl mx-auto px-6 h-[calc(100vh-140px)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="max-w-lg md:max-w-5xl mx-auto px-6 h-[calc(100vh-140px)] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
       {/* Header Fixo */}
       <div className="mb-4 flex-shrink-0 pt-6">
@@ -136,7 +134,7 @@ export default function RegisterPage({
       {/* Grid Principal */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 flex-1 min-h-0 pb-2">
         
-        {/* COLUNA 1: Matéria, Tipo, Observações (TRAVADA) */}
+        {/* COLUNA 1: Matéria, Tipo, Observações */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col overflow-hidden">
           
           {/* Matéria */}
@@ -204,7 +202,7 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Observações (Flexível) */}
+          {/* Observações */}
           <div className="flex-1 flex flex-col min-h-[100px]">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
             <textarea
@@ -216,12 +214,12 @@ export default function RegisterPage({
           </div>
         </div>
 
-        {/* COLUNA 2: Tempo, Páginas, Desempenho (TRAVADA) */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col overflow-hidden">
+        {/* COLUNA 2: COMPACTADA (p-4 e space-y-3) para caber na tela */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 space-y-3 transition-colors duration-300 h-full flex flex-col overflow-y-auto">
           
           {/* Tempo */}
           <div className="flex-shrink-0">
-             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Tempo Estudado</label>
+             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Tempo Estudado</label>
              <div className="grid grid-cols-3 gap-3">
               {['Horas', 'Minutos', 'Segundos'].map((label, idx) => (
                 <div key={label}>
@@ -250,7 +248,7 @@ export default function RegisterPage({
 
           {/* Páginas Lidas */}
           <div className="flex-shrink-0">
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Páginas Lidas</label>
             <div className="relative">
               <BookOpen className="absolute left-3 top-3.5 text-gray-400" size={20} />
               <input
@@ -264,13 +262,13 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Desempenho (Preenche o espaço restante até o botão) */}
+          {/* Desempenho (Preenche o espaço) */}
           <div className="flex-1 flex flex-col justify-center">
-            <div className="flex justify-between items-center mb-3">
+            <div className="flex justify-between items-center mb-2">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
               <button 
                 onClick={() => setShowBlank(!showBlank)}
-                className="text-[10px] font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm active:scale-95"
+                className="text-[10px] font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded-lg transition-colors shadow-sm active:scale-95"
               >
                 {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
               </button>
@@ -326,7 +324,7 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Botão Salvar (Fixo na base) */}
+          {/* Botão Salvar */}
           <button
             onClick={handleSubmit}
             className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-auto flex-shrink-0"

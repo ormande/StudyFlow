@@ -102,7 +102,7 @@ export default function CyclePage({
 
   return (
     // Layout ajustado: max-w-5xl para PC
-    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24">
+    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in duration-300">
       
       {/* Header */}
       <div className="mb-6">

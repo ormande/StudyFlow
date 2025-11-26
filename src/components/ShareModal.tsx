@@ -19,6 +19,7 @@ interface ShareModalProps {
   todayPages: number;
   todayQuestions: number;
   todayCorrect: number;
+  showPerformance: boolean;
 }
 
 export default function ShareModal({
@@ -27,7 +28,8 @@ export default function ShareModal({
   todayMinutes,
   todayPages,
   todayQuestions,
-  todayCorrect
+  todayCorrect,
+  showPerformance
 }: ShareModalProps) {
   if (!isOpen) return null;
 
@@ -101,7 +103,7 @@ export default function ShareModal({
           </div>
 
           {/* Card Desempenho (Amarelo Sólido) */}
-          {todayQuestions > 0 && (
+          {todayQuestions > 0 && showPerformance && (
             <div className="bg-amber-500 rounded-2xl p-4 flex items-center justify-between text-white shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-white/20 rounded-xl">

@@ -161,10 +161,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
           <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
         </div>
         
-        {/* Botão Share movido para cá */}
+        {/* Botão Share Redondo e Verde (Estilo App) */}
         <button
           onClick={() => setShowShareModal(true)}
-          className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-all shadow-sm active:scale-95"
+          className="h-10 w-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-md hover:bg-emerald-600 transition-all active:scale-95"
           title="Compartilhar Progresso"
         >
           <Share2 className="w-5 h-5" />

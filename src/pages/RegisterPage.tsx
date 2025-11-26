@@ -123,16 +123,18 @@ export default function RegisterPage({
   ];
 
   return (
-    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 h-[calc(100vh-90px)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    // ALTERAÇÃO AQUI: Mudei para h-[calc(100vh-140px)] igual ao TimerPage
+    // Isso compensa o padding do App e evita a barra de rolagem externa
+    <div className="max-w-lg md:max-w-5xl mx-auto px-6 h-[calc(100vh-140px)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
       {/* Header Fixo */}
-      <div className="mb-4 flex-shrink-0">
+      <div className="mb-4 flex-shrink-0 pt-6">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 transition-colors">Registrar</h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
       {/* Grid Principal */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 flex-1 min-h-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 flex-1 min-h-0 pb-2">
         
         {/* COLUNA 1: Matéria, Tipo, Observações (TRAVADA) */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300 h-full flex flex-col overflow-hidden">
@@ -202,7 +204,7 @@ export default function RegisterPage({
             </div>
           </div>
 
-          {/* Observações (Flexível, mas contida) */}
+          {/* Observações (Flexível) */}
           <div className="flex-1 flex flex-col min-h-[100px]">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
             <textarea

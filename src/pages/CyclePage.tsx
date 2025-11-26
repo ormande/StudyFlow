@@ -249,11 +249,11 @@ export default function CyclePage({
 
           {!isAdding ? (
             <button
-              onClick={() => setIsAdding(true)}
-              className="w-full py-5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center gap-2"
-            >
-              <Plus className="w-5 h-5" /> Adicionar Matéria
-            </button>
+            onClick={() => setIsAdding(true)}
+            className="w-full py-5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+          >
+            <Plus className="w-5 h-5" /> Adicionar Matéria
+          </button>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 transition-colors border border-gray-100 dark:border-gray-700">
               <div>

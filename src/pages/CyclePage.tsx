@@ -187,9 +187,12 @@ export default function CyclePage({
                         Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
                       </p>
                     </div>
-                    <button onClick={() => { if (confirm(`Excluir "${subject.name}"?`)) onDeleteSubject(subject.id); }} className="text-red-500 hover:text-red-600 p-2">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    <button 
+                    onClick={() => { if (confirm(`Excluir "${subject.name}"?`)) onDeleteSubject(subject.id); }} 
+                    className="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all active:scale-90"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                   </div>
 
                   <div className="mb-3">
@@ -279,9 +282,19 @@ export default function CyclePage({
                 />
               </div>
               <div className="flex gap-3">
-                <button onClick={handleAddSubject} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all">Salvar</button>
-                <button onClick={() => { setIsAdding(false); setNewName(''); setNewGoal(''); }} className="flex-1 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">Cancelar</button>
-              </div>
+              <button 
+                onClick={handleAddSubject} 
+                className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all active:scale-95 shadow-md"
+              >
+                Salvar
+              </button>
+              <button 
+                onClick={() => { setIsAdding(false); setNewName(''); setNewGoal(''); }} 
+                className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95"
+              >
+                Cancelar
+              </button>
+            </div>
             </div>
           )}
         </div>

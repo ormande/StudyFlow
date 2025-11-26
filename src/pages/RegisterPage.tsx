@@ -20,7 +20,7 @@ export default function RegisterPage({
   isTimerRunning,
 }: RegisterPageProps) {
   const [subjectId, setSubjectId] = useState('');
-  const [subtopicId, setSubtopicId] = useState(''); // Novo estado para subtópico
+  const [subtopicId, setSubtopicId] = useState('');
   const [type, setType] = useState<'teoria' | 'questoes' | 'revisao'>('teoria');
   const [hours, setHours] = useState('');
   const [seconds, setSeconds] = useState('');
@@ -33,10 +33,8 @@ export default function RegisterPage({
   const [blank, setBlank] = useState('');
   const [showBlank, setShowBlank] = useState(false);
 
-  // Encontra a matéria selecionada para puxar os subtópicos
   const selectedSubject = subjects.find(s => s.id === subjectId);
 
-  // Reseta o subtópico se trocar a matéria
   useEffect(() => {
     setSubtopicId('');
   }, [subjectId]);
@@ -75,14 +73,13 @@ export default function RegisterPage({
       return;
     }
 
-    // Busca o nome do subtópico se tiver sido selecionado
     const subtopicName = selectedSubject?.subtopics.find(st => st.id === subtopicId)?.name;
 
     const newLog: any = {
       subjectId,
       subject: selectedSubject?.name || 'Desconhecida',
-      subtopicId: subtopicId || undefined,     // Salva o ID (opcional)
-      subtopic: subtopicName || undefined,     // Salva o Nome (opcional)
+      subtopicId: subtopicId || undefined,
+      subtopic: subtopicName || undefined,
       type,
       hours: h,
       minutes: m,
@@ -104,7 +101,6 @@ export default function RegisterPage({
 
     onAddLog(newLog);
     
-    // Limpeza do formulário
     setSubjectId('');
     setSubtopicId('');
     setHours('');
@@ -117,7 +113,6 @@ export default function RegisterPage({
     setBlank('');
     onTimeClear();
     
-    // Vibração tátil (Feedback)
     if (navigator.vibrate) {
       navigator.vibrate(200);
     }
@@ -132,20 +127,18 @@ export default function RegisterPage({
   ];
 
   return (
-    // Layout ajustado: max-w-5xl para PC, grid de 2 colunas
     <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 transition-colors">Registrar</h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
-      {/* GRID PRINCIPAL: 1 coluna no mobile, 2 no PC */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         
-        {/* COLUNA 1: Configuração (Matéria, Tipo, Subtópico) */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-colors duration-300 h-full">
+        {/* COLUNA 1: Configuração + Observações */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-colors duration-300 h-full flex flex-col">
           
-          {/* Seleção de Matéria */}
+          {/* Matéria */}
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Matéria</label>
             <select
@@ -162,7 +155,7 @@ export default function RegisterPage({
             </select>
           </div>
 
-          {/* Seleção de Subtópico (Aparece só se a matéria tiver subtópicos) */}
+          {/* Subtópico */}
           {selectedSubject && selectedSubject.subtopics.length > 0 && (
              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
@@ -209,137 +202,140 @@ export default function RegisterPage({
               })}
             </div>
           </div>
-        </div>
 
-        {/* COLUNA 2: Dados (Tempo, Quantidade, Notas) */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-colors duration-300 h-full">
-          
-          {/* Tempo */}
-          <div>
-             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Tempo Estudado</label>
-             <div className="grid grid-cols-3 gap-3">
-              {['Horas', 'Minutos', 'Segundos'].map((label, idx) => (
-                <div key={label}>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min="0"
-                      max={idx > 0 ? 59 : undefined}
-                      value={idx === 0 ? hours : idx === 1 ? minutes : seconds}
-                      onChange={(e) => {
-                        if (idx === 0) setHours(e.target.value);
-                        else if (idx === 1) setMinutes(e.target.value);
-                        else setSeconds(e.target.value);
-                      }}
-                      disabled={isTimerRunning}
-                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors"
-                      placeholder="00"
-                    />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">{label[0]}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Condicional: Teoria (Páginas) */}
-          {type === 'teoria' && (
-            <div className="animate-in slide-in-from-top-2 fade-in duration-200">
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Páginas Lidas</label>
-              <div className="relative">
-                <BookOpen className="absolute left-3 top-3.5 text-gray-400" size={20} />
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={pages}
-                  onChange={(e) => setPages(e.target.value)}
-                  className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-base text-gray-900 dark:text-white transition-colors"
-                  placeholder="Quantidade de páginas"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Condicional: Questões */}
-          {type === 'questoes' && (
-            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200 transition-colors">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
-                <button 
-                  onClick={() => setShowBlank(!showBlank)}
-                  className="text-[10px] font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm active:scale-95"
-                >
-                  {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                {/* Certas */}
-                <div>
-                  <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg">
-                      <Check size={16} className="text-white" />
-                    </div>
-                    <input 
-                      type="number" inputMode="numeric" placeholder="0" 
-                      className="w-full pl-10 p-2 border border-emerald-500 bg-white dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
-                      value={correct} onChange={e => setCorrect(e.target.value)} 
-                    />
-                  </div>
-                </div>
-                
-                {/* Erradas */}
-                <div>
-                  <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg">
-                      <X size={16} className="text-white" />
-                    </div>
-                    <input 
-                      type="number" inputMode="numeric" placeholder="0" 
-                      className="w-full pl-10 p-2 border border-red-500 bg-white dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
-                      value={wrong} onChange={e => setWrong(e.target.value)} 
-                    />
-                  </div>
-                </div>
-                
-                {/* Em Branco */}
-                {showBlank && (
-                  <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
-                    <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1 block">EM BRANCO</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-gray-500 rounded-l-lg">
-                        <HelpCircle size={16} className="text-white" />
-                      </div>
-                      <input 
-                        type="number" inputMode="numeric" placeholder="0" 
-                        className="w-full pl-10 p-2 border border-gray-500 bg-white dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-200 font-bold outline-none focus:ring-2 focus:ring-gray-400 text-base transition-colors" 
-                        value={blank} onChange={e => setBlank(e.target.value)} 
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Observações */}
-          <div>
+          {/* Observações (Movi para cá) */}
+          <div className="flex-1">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
             <textarea
-              rows={2}
+              rows={4}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors"
+              className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors h-full min-h-[100px]"
               placeholder="Ex: Art. 5º, Inciso XI..."
             ></textarea>
           </div>
+        </div>
 
+        {/* COLUNA 2: Dados Numéricos + Ação */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-8 transition-colors duration-300 h-full flex flex-col justify-between">
+          
+          <div className="space-y-8">
+            {/* Tempo */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Tempo Estudado</label>
+              <div className="grid grid-cols-3 gap-3">
+                {['Horas', 'Minutos', 'Segundos'].map((label, idx) => (
+                  <div key={label}>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min="0"
+                        max={idx > 0 ? 59 : undefined}
+                        value={idx === 0 ? hours : idx === 1 ? minutes : seconds}
+                        onChange={(e) => {
+                          if (idx === 0) setHours(e.target.value);
+                          else if (idx === 1) setMinutes(e.target.value);
+                          else setSeconds(e.target.value);
+                        }}
+                        disabled={isTimerRunning}
+                        className="w-full p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors"
+                        placeholder="00"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">{label[0]}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Condicional: Teoria (Páginas) - LIMPO */}
+            {type === 'teoria' && (
+              <div className="animate-in slide-in-from-top-2 fade-in duration-200">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
+                <div className="relative">
+                  <BookOpen className="absolute left-3 top-3.5 text-gray-400" size={20} />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={pages}
+                    onChange={(e) => setPages(e.target.value)}
+                    className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-base text-gray-900 dark:text-white transition-colors"
+                    placeholder="Quantidade de páginas"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Condicional: Questões - LIMPO E ALINHADO */}
+            {type === 'questoes' && (
+              <div className="animate-in slide-in-from-top-2 fade-in duration-200">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
+                  <button 
+                    onClick={() => setShowBlank(!showBlank)}
+                    className="text-[10px] font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm active:scale-95"
+                  >
+                    {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Certas */}
+                  <div>
+                    <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg">
+                        <Check size={16} className="text-white" />
+                      </div>
+                      <input 
+                        type="number" inputMode="numeric" placeholder="0" 
+                        className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
+                        value={correct} onChange={e => setCorrect(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Erradas */}
+                  <div>
+                    <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg">
+                        <X size={16} className="text-white" />
+                      </div>
+                      <input 
+                        type="number" inputMode="numeric" placeholder="0" 
+                        className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
+                        value={wrong} onChange={e => setWrong(e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Em Branco */}
+                  {showBlank && (
+                    <div className="col-span-2 animate-in fade-in slide-in-from-top-1">
+                      <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">EM BRANCO</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg">
+                          <HelpCircle size={16} className="text-white" />
+                        </div>
+                        <input 
+                          type="number" inputMode="numeric" placeholder="0" 
+                          className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:ring-2 focus:ring-blue-400 text-base transition-colors" 
+                          value={blank} onChange={e => setBlank(e.target.value)} 
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Botão Salvar (Fica no rodapé da coluna da direita) */}
           <button
             onClick={handleSubmit}
-            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2"
+            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-auto"
           >
             <Save size={20} />
             <span>Salvar Registro</span>

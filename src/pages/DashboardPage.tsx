@@ -11,9 +11,10 @@ interface DashboardPageProps {
   onDeleteLog: (id: string) => void;
   onEditLog: (id: string, updates: Partial<StudyLog>) => void;
   dailyGoal: number;
+  showPerformance: boolean;
 }
 
-export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog, dailyGoal }: DashboardPageProps) {
+export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog, dailyGoal, showPerformance }: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   
@@ -474,6 +475,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         todayPages={totalPages}
         todayQuestions={todayQuestions}
         todayCorrect={totalCorrect}
+        showPerformance={showPerformance}
       />
 
       <HistoryModal

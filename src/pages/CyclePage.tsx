@@ -238,7 +238,7 @@ export default function CyclePage({
                           onChange={(e) => setNewSubtopic(e.target.value)}
                           placeholder="Novo subtópico..."
                           className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
-                          onKeyPress={(e) => { if (e.key === 'Enter') handleAddSubtopic(subject.id); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleAddSubtopic(subject.id); }}
                         />
                         <button onClick={() => handleAddSubtopic(subject.id)} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95">
                           <Plus className="w-5 h-5" />

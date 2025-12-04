@@ -358,6 +358,17 @@ export default function RegisterPage({
           </button>
         </div>
       </div>
+      {/* Modal de Alerta */}
+{alertModal && (
+  <AlertModal
+    isOpen={alertModal.isOpen}
+    title={alertModal.title}
+    message={alertModal.message}
+    buttonText="OK"
+    variant={alertModal.variant}
+    onClose={() => setAlertModal(null)}
+  />
+)}
     </div>
   );
 }

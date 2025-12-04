@@ -227,39 +227,69 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         <div className="space-y-6">
           
           {dailyGoal > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
-              <div className="flex justify-between items-end mb-2">
-                <div>
-                  <h2 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    <Target size={16} className={goalPercentage >= 100 ? "text-yellow-500" : "text-emerald-500"} />
-                    Meta Diária
-                  </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {getMotivationalMessage()}
-                  </p>
-                </div>
-                <span className="text-lg font-black text-gray-800 dark:text-white">
-                  {Math.floor(goalPercentage)}%
-                </span>
-              </div>
+  <div className={`rounded-2xl shadow-md p-5 border transition-all duration-500 ${
+    goalPercentage >= 100 
+      ? 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-700' 
+      : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+  }`}>
+    <div className="flex justify-between items-start mb-3">
+      <div>
+        <h2 className="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
+          {goalPercentage >= 100 ? (
+            <span className="animate-trophy text-lg">🏆</span>
+          ) : (
+            <Target size={16} className="text-emerald-500" />
+          )}
+          Meta Diária
+        </h2>
+        <p className={`text-xs mt-1 ${
+          goalPercentage >= 100 
+            ? 'text-amber-600 dark:text-amber-400 font-semibold animate-bounce-subtle' 
+            : 'text-gray-500 dark:text-gray-400'
+        }`}>
+          {getMotivationalMessage()}
+        </p>
+      </div>
+      <div className={`text-right ${goalPercentage >= 100 ? 'animate-pulse-scale' : ''}`}>
+        <span className={`text-2xl font-black ${
+          goalPercentage >= 100 
+            ? 'text-amber-500' 
+            : 'text-gray-800 dark:text-white'
+        }`}>
+          {Math.floor(goalPercentage)}%
+        </span>
+      </div>
+    </div>
 
-              <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
-                <div 
-                  className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${
-                    goalPercentage >= 100 
-                      ? 'bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-pulse' 
-                      : 'bg-emerald-500'
-                  }`}
-                  style={{ width: `${goalPercentage > 0 ? goalPercentage : 0}%` }}
-                >
-                  {goalPercentage > 0 && <div className="w-1 h-1 bg-white/50 rounded-full" />}
-                </div>
-              </div>
-              
-              <div className="flex justify-between mt-2 text-[10px] font-bold text-gray-400 uppercase">
-                <span>0h</span>
-                <span>{Math.floor(dailyGoal / 60)}h</span>
-              </div>
+    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-5 overflow-hidden shadow-inner">
+      <div 
+        className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${
+          goalPercentage >= 100 
+            ? 'animate-gradient-flow animate-shine shadow-[0_0_20px_rgba(245,158,11,0.5)]' 
+            : 'bg-emerald-500'
+        }`}
+        style={{ width: `${Math.min(goalPercentage, 100)}%` }}
+      >
+        {goalPercentage > 0 && goalPercentage < 100 && (
+          <div className="w-1.5 h-1.5 bg-white/60 rounded-full" />
+        )}
+        {goalPercentage >= 100 && (
+          <span className="text-[10px] font-bold text-white drop-shadow-md mr-1">MAX</span>
+        )}
+      </div>
+    </div>
+    
+    <div className="flex justify-between mt-2 text-[10px] font-bold text-gray-400 uppercase">
+      <span>0h</span>
+      {goalPercentage >= 100 && (
+        <span className="text-amber-500 normal-case font-semibold animate-bounce-subtle">
+          🔥 Meta batida!
+        </span>
+      )}
+      <span>{Math.floor(dailyGoal / 60)}h</span>
+    </div>
+  </div>
+)}
             </div>
           )}
 

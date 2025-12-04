@@ -8,6 +8,8 @@ import RegisterPage from './pages/RegisterPage';
 import CyclePage from './pages/CyclePage';
 import SettingsModal from './components/SettingsModal';
 import { Lock, Mail, ArrowRight, BookOpen, Settings } from 'lucide-react';
+import ConfirmModal from './components/ConfirmModal';
+import AlertModal from './components/AlertModal';
 
 // --- TELA DE LOGIN ---
 const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {

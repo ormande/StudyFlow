@@ -164,10 +164,52 @@ const cycleStats = getCycleStats();
             </button>
           </div>
 
-          <div className="hidden md:block bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl text-xs text-blue-700 dark:text-blue-300">
-            <p className="font-bold mb-1">💡 Dica de Organização</p>
-            Use as setas para colocar as matérias prioritárias no topo da lista.
-          </div>
+          {/* Estatísticas do Ciclo */}
+<div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+  <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-3">📊 Este Ciclo</p>
+  
+  <div className="space-y-3">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+        <Calendar size={14} />
+        <span className="text-xs font-medium">Dias ativos</span>
+      </div>
+      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+        {cycleStats.daysSinceStart}
+      </span>
+    </div>
+    
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+        <Clock size={14} />
+        <span className="text-xs font-medium">Horas estudadas</span>
+      </div>
+      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+        {cycleStats.totalHours}h
+      </span>
+    </div>
+    
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+        <BookOpen size={14} />
+        <span className="text-xs font-medium">Matérias</span>
+      </div>
+      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+        {subjects.length}
+      </span>
+    </div>
+    
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+        <Target size={14} />
+        <span className="text-xs font-medium">Questões feitas</span>
+      </div>
+      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+        {cycleStats.totalQuestions}
+      </span>
+    </div>
+  </div>
+</div>
         </div>
 
         {/* COLUNA DIREITA: Lista de Matérias */}

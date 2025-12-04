@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
+import AlertModal from '../components/AlertModal';
 import { Subject, StudyLog, Subtopic } from '../types';
 import { getRandomColor } from '../utils/colors';
 

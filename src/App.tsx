@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TabType, Subject, StudyLog } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import BottomNav from './components/BottomNav';
@@ -361,8 +362,18 @@ const confirmHardResetFinal = () => {
       </button>
 
       <div className="pb-24 pt-2"> 
-        {renderPage()}
-      </div>
+  <AnimatePresence mode="wait">
+    <motion.div
+      key={activeTab}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+    >
+      {renderPage()}
+    </motion.div>
+  </AnimatePresence>
+</div>
 
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 pb-6 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

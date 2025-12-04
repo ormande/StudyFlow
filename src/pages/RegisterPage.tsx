@@ -66,62 +66,77 @@ export default function RegisterPage({
   }, [timerSeconds, isTimerRunning]);
 
   const handleSubmit = () => {
-    if (!subjectId) {
-      alert('Selecione uma matéria, guerreiro!');
-      return;
-    }
+  if (!subjectId) {
+    setAlertModal({
+      isOpen: true,
+      title: 'Atenção!',
+      message: 'Selecione uma matéria, guerreiro!',
+      variant: 'warning',
+    });
+    return;
+  }
 
-    const h = parseInt(hours) || 0;
-    const m = parseInt(minutes) || 0;
-    const s = parseInt(seconds) || 0;
+  const h = parseInt(hours) || 0;
+  const m = parseInt(minutes) || 0;
+  const s = parseInt(seconds) || 0;
 
-    if (h === 0 && m === 0 && s === 0) {
-      alert('O tempo de estudo não pode ser zero.');
-      return;
-    }
+  if (h === 0 && m === 0 && s === 0) {
+    setAlertModal({
+      isOpen: true,
+      title: 'Tempo Inválido',
+      message: 'O tempo de estudo não pode ser zero.',
+      variant: 'warning',
+    });
+    return;
+  }
 
-    const subtopicName = selectedSubject?.subtopics.find(st => st.id === subtopicId)?.name;
+  const subtopicName = selectedSubject?.subtopics.find(st => st.id === subtopicId)?.name;
 
-    const newLog: Omit<StudyLog, 'id' | 'timestamp'> = {
-      subjectId,
-      subject: selectedSubject?.name || 'Desconhecida',
-      subtopicId: subtopicId || undefined,
-      subtopic: subtopicName || undefined,
-      type,
-      hours: h,
-      minutes: m,
-      seconds: s,
-      date: (() => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      })(),
-      notes: notes.trim(),
-      pages: parseInt(pages) || 0,
-      correct: parseInt(correct) || 0,
-      wrong: parseInt(wrong) || 0,
-      blank: parseInt(blank) || 0,
-    };
-
-    onAddLog(newLog);
-    
-    setSubjectId('');
-    setSubtopicId('');
-    setHours('');
-    setSeconds('');
-    setMinutes('');
-    setNotes('');
-    setPages('');
-    setCorrect('');
-    setWrong('');
-    setBlank('');
-    onTimeClear();
-    
-    if (navigator.vibrate) {
-      navigator.vibrate(200);
-    }
-    
-    alert('Estudo registrado! 🚀');
+  const newLog: Omit<StudyLog, 'id' | 'timestamp'> = {
+    subjectId,
+    subject: selectedSubject?.name || 'Desconhecida',
+    subtopicId: subtopicId || undefined,
+    subtopic: subtopicName || undefined,
+    type,
+    hours: h,
+    minutes: m,
+    seconds: s,
+    date: (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })(),
+    notes: notes.trim(),
+    pages: parseInt(pages) || 0,
+    correct: parseInt(correct) || 0,
+    wrong: parseInt(wrong) || 0,
+    blank: parseInt(blank) || 0,
   };
+
+  onAddLog(newLog);
+  
+  setSubjectId('');
+  setSubtopicId('');
+  setHours('');
+  setSeconds('');
+  setMinutes('');
+  setNotes('');
+  setPages('');
+  setCorrect('');
+  setWrong('');
+  setBlank('');
+  onTimeClear();
+  
+  if (navigator.vibrate) {
+    navigator.vibrate(200);
+  }
+  
+  setAlertModal({
+    isOpen: true,
+    title: 'Missão Cumprida!',
+    message: 'Estudo registrado! 🚀',
+    variant: 'success',
+  });
+};
 
   const typeButtons = [
     { id: 'teoria', label: 'Teoria', icon: BookOpen },

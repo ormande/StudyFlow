@@ -188,7 +188,7 @@ export default function CyclePage({
                         Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
                       </p>
                     </div>
-                    <button onClick={() => { if (confirm(`Excluir "${subject.name}"?`)) onDeleteSubject(subject.id); }} className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform">
+                    <button onClick={() => setDeleteSubjectId(subject.id)} className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>

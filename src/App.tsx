@@ -231,11 +231,14 @@ const confirmDeleteLog = () => {
   };
 
   const handleRestartCycle = () => {
-    if (confirm("Tem certeza, Guerreiro? Isso vai zerar as barras de progresso para começar um novo ciclo. Seu histórico de horas continua salvo.")) {
-      setCycleStartDate(Date.now());
-      alert("Ciclo reiniciado! Foco na missão! 👊");
-    }
-  };
+  setShowRestartConfirm(true);
+};
+
+const confirmRestartCycle = () => {
+  setCycleStartDate(Date.now());
+  setShowRestartConfirm(false);
+  setShowRestartSuccess(true);
+};
 
   const handleHardReset = () => {
     const confirm1 = confirm("⚠️ ATENÇÃO GUERREIRO! ⚠️\n\nIsso vai apagar TODAS as matérias, histórico e estatísticas.\n\nVocê vai começar o app do zero absoluto. Tem certeza?");

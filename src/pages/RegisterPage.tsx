@@ -75,7 +75,7 @@ export default function RegisterPage({
 
     const subtopicName = selectedSubject?.subtopics.find(st => st.id === subtopicId)?.name;
 
-    const newLog: any = {
+    const newLog: Omit<StudyLog, 'id' | 'timestamp'> = {
       subjectId,
       subject: selectedSubject?.name || 'Desconhecida',
       subtopicId: subtopicId || undefined,

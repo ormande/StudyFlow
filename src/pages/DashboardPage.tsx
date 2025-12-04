@@ -217,7 +217,8 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
           </div>
         </div>
       </div>
-
+)}
+  
       {/* GRID: Esquerda / Direita */}
       <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-6">
         

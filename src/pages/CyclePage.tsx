@@ -294,6 +294,32 @@ export default function CyclePage({
           )}
         </div>
       </div>
+      {/* Modal: Validação */}
+<AlertModal
+  isOpen={showValidationAlert}
+  title="Campos Obrigatórios"
+  message="Preencha todos os campos!"
+  buttonText="Entendi"
+  variant="warning"
+  onClose={() => setShowValidationAlert(false)}
+/>
+
+{/* Modal: Excluir Matéria */}
+<ConfirmModal
+  isOpen={deleteSubjectId !== null}
+  title="Excluir Matéria"
+  message={`Tem certeza que deseja excluir "${subjects.find(s => s.id === deleteSubjectId)?.name}"?`}
+  confirmText="Excluir"
+  cancelText="Cancelar"
+  variant="danger"
+  onConfirm={() => {
+    if (deleteSubjectId) {
+      onDeleteSubject(deleteSubjectId);
+      setDeleteSubjectId(null);
+    }
+  }}
+  onCancel={() => setDeleteSubjectId(null)}
+/>
     </div>
   );
 }

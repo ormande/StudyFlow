@@ -146,6 +146,11 @@ function App() {
   const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [showRestartSuccess, setShowRestartSuccess] = useState(false);
+  const [showHardResetConfirm, setShowHardResetConfirm] = useState(false);
+  const [showHardResetFinal, setShowHardResetFinal] = useState(false);
   const timerIntervalRef = useRef<number | null>(null);
   const timerStartRef = useRef<number | null>(null);
   const timerBaseRef = useRef<number>(0);

@@ -48,23 +48,23 @@ export default function RegisterPage({
   }, [subjectId]);
 
   useEffect(() => {
-    if (prefilledTime) {
-      setHours(prefilledTime.hours.toString());
-      setMinutes(prefilledTime.minutes.toString());
-      setSeconds(prefilledTime.seconds.toString());
-    }
-  }, [prefilledTime]);
+  if (prefilledTime) {
+    setHours(prefilledTime.hours > 0 ? prefilledTime.hours.toString() : '');
+    setMinutes(prefilledTime.minutes > 0 ? prefilledTime.minutes.toString() : '');
+    setSeconds(prefilledTime.seconds > 0 ? prefilledTime.seconds.toString() : '');
+  }
+}, [prefilledTime]);
 
-  useEffect(() => {
-    if (isTimerRunning && timerSeconds > 0) {
-      const h = Math.floor(timerSeconds / 3600);
-      const m = Math.floor((timerSeconds % 3600) / 60);
-      const s = timerSeconds % 60;
-      setHours(h.toString());
-      setMinutes(m.toString());
-      setSeconds(s.toString());
-    }
-  }, [timerSeconds, isTimerRunning]);
+useEffect(() => {
+  if (isTimerRunning && timerSeconds > 0) {
+    const h = Math.floor(timerSeconds / 3600);
+    const m = Math.floor((timerSeconds % 3600) / 60);
+    const s = timerSeconds % 60;
+    setHours(h > 0 ? h.toString() : '');
+    setMinutes(m > 0 ? m.toString() : '');
+    setSeconds(s > 0 ? s.toString() : '');
+  }
+}, [timerSeconds, isTimerRunning]);
 
   const handleSubmit = () => {
     if (!subjectId) {

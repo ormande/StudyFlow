@@ -160,10 +160,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
   <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
 </div>
 
-{/* Botão Compartilhar - Fixo */}
+{/* Botão Compartilhar - Fixo à esquerda do botão de config */}
 <button
   onClick={() => setShowShareModal(true)}
-  className="fixed top-6 left-6 z-50 h-12 w-12 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-all duration-300 active:scale-95 hover:scale-110"
+  className="fixed top-6 right-20 z-50 h-12 w-12 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-all duration-300 active:scale-95 hover:scale-110"
   title="Compartilhar Progresso"
 >
   <Share2 className="w-5 h-5" />

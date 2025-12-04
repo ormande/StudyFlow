@@ -354,9 +354,9 @@ const confirmHardResetFinal = () => {
 />
       
       <button 
-        onClick={() => setShowSettings(true)}
-        className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"
-      >
+  onClick={() => setShowSettings(true)}
+  className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:scale-110 duration-300"
+>
          <Settings size={24} />
       </button>
 

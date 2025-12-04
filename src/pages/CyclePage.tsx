@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown, BookOpen, Clock, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmModal from '../components/ConfirmModal';
 import AlertModal from '../components/AlertModal';
 import { Subject, StudyLog, Subtopic } from '../types';
@@ -36,20 +35,20 @@ export default function CyclePage({
   const [deleteSubjectId, setDeleteSubjectId] = useState<string | null>(null);
 
   const handleAddSubject = () => {
-  if (!newName.trim() || !newGoal) {
-    setShowValidationAlert(true);
-    return;
-  }
-  onAddSubject({
-    name: newName.trim(),
-    goalMinutes: parseInt(newGoal),
-    subtopics: [],
-    color: getRandomColor(),
-  });
-  setNewName('');
-  setNewGoal('');
-  setIsAdding(false);
-};
+    if (!newName.trim() || !newGoal) {
+      setShowValidationAlert(true);
+      return;
+    }
+    onAddSubject({
+      name: newName.trim(),
+      goalMinutes: parseInt(newGoal),
+      subtopics: [],
+      color: getRandomColor(),
+    });
+    setNewName('');
+    setNewGoal('');
+    setIsAdding(false);
+  };
 
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
     const totalMinutes = logs
@@ -69,23 +68,23 @@ export default function CyclePage({
   };
 
   const getCycleStats = () => {
-  const daysSinceStart = Math.floor((Date.now() - cycleStartDate) / (1000 * 60 * 60 * 24));
-  
-  const cycleLogs = logs.filter(log => log.timestamp >= cycleStartDate);
-  const totalMinutes = cycleLogs.reduce(
-    (sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60), 
-    0
-  );
-  const totalHours = Math.floor(totalMinutes / 60);
-  
-  const totalQuestions = cycleLogs
-    .filter(log => log.type === 'questoes')
-    .reduce((sum, log) => sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0), 0);
+    const daysSinceStart = Math.floor((Date.now() - cycleStartDate) / (1000 * 60 * 60 * 24));
+    
+    const cycleLogs = logs.filter(log => log.timestamp >= cycleStartDate);
+    const totalMinutes = cycleLogs.reduce(
+      (sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60), 
+      0
+    );
+    const totalHours = Math.floor(totalMinutes / 60);
+    
+    const totalQuestions = cycleLogs
+      .filter(log => log.type === 'questoes')
+      .reduce((sum, log) => sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0), 0);
 
-  return { daysSinceStart, totalHours, totalMinutes, totalQuestions };
-};
+    return { daysSinceStart, totalHours, totalMinutes, totalQuestions };
+  };
 
-const cycleStats = getCycleStats();
+  const cycleStats = getCycleStats();
 
   const handleAddSubtopic = (subjectId: string) => {
     if (!newSubtopic.trim()) return;
@@ -125,7 +124,6 @@ const cycleStats = getCycleStats();
   const totalCycleProgress = getTotalCycleProgress();
 
   return (
-    // ADICIONEI slide-in-from-bottom-4 PARA SENTIR A TROCA DE ABA
     <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
       {/* Header */}
@@ -152,65 +150,63 @@ const cycleStats = getCycleStats();
               <span className="text-5xl font-black text-emerald-500">{totalCycleProgress}%</span>
               <span className="text-sm text-gray-400 mb-2">concluído</span>
             </div>
-
             <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 mb-6">
               <div 
                 className="bg-emerald-500 h-2 rounded-full transition-all duration-1000" 
                 style={{ width: `${totalCycleProgress}%` }}
               ></div>
             </div>
-
             <button onClick={onRestartCycle} className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2">
               <RefreshCw size={18} /> REINICIAR CICLO
             </button>
           </div>
 
           {/* Estatísticas do Ciclo */}
-<div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800">
-  <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-3">📊 Este Ciclo</p>
-  
-  <div className="space-y-3">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-        <Calendar size={14} />
-        <span className="text-xs font-medium">Dias ativos</span>
-      </div>
-      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-        {cycleStats.daysSinceStart}
-      </span>
-    </div>
-    
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-        <Clock size={14} />
-        <span className="text-xs font-medium">Horas estudadas</span>
-      </div>
-      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-        {cycleStats.totalHours}h
-      </span>
-    </div>
-    
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-        <BookOpen size={14} />
-        <span className="text-xs font-medium">Matérias</span>
-      </div>
-      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-        {subjects.length}
-      </span>
-    </div>
-    
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-        <Target size={14} />
-        <span className="text-xs font-medium">Questões feitas</span>
-      </div>
-      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-        {cycleStats.totalQuestions}
-      </span>
-    </div>
-  </div>
-</div>
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-3">📊 Este Ciclo</p>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <Calendar size={14} />
+                  <span className="text-xs font-medium">Dias ativos</span>
+                </div>
+                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                  {cycleStats.daysSinceStart}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <Clock size={14} />
+                  <span className="text-xs font-medium">Horas estudadas</span>
+                </div>
+                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                  {cycleStats.totalHours}h
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <BookOpen size={14} />
+                  <span className="text-xs font-medium">Matérias</span>
+                </div>
+                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                  {subjects.length}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <Target size={14} />
+                  <span className="text-xs font-medium">Questões feitas</span>
+                </div>
+                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                  {cycleStats.totalQuestions}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* COLUNA DIREITA: Lista de Matérias */}
@@ -242,7 +238,6 @@ const cycleStats = getCycleStats();
                             <ArrowDown size={14} strokeWidth={3} />
                           </button>
                         </div>
-
                         <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
                       </div>
@@ -257,7 +252,10 @@ const cycleStats = getCycleStats();
 
                   <div className="mb-3">
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                      <div className="h-full transition-all duration-300 rounded-full" style={{ width: `${percentage}%`, backgroundColor: percentage >= 100 ? '#10b981' : subject.color }} />
+                      <div 
+                        className="h-full transition-all duration-300 rounded-full" 
+                        style={{ width: `${percentage}%`, backgroundColor: percentage >= 100 ? '#10b981' : subject.color }} 
+                      />
                     </div>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 text-right">{percentage.toFixed(1)}%</p>
                   </div>
@@ -267,7 +265,6 @@ const cycleStats = getCycleStats();
                     className="w-full flex items-center justify-between py-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 group"
                   >
                     <span>Subtópicos ({subject.subtopics.filter((st) => st.completed).length}/{subject.subtopics.length})</span>
-                    {/* SETINHA GIRATÓRIA AQUI */}
                     <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
@@ -296,7 +293,6 @@ const cycleStats = getCycleStats();
                           </div>
                         ))}
                       </div>
-
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -317,70 +313,73 @@ const cycleStats = getCycleStats();
             );
           })}
 
-  {!isAdding ? (
-  <button
-    onClick={() => setIsAdding(true)}
-    className="w-full py-5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2"
-  >
-    <Plus className="w-5 h-5" /> Adicionar Matéria
-  </button>
-) : (
-  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nome da Matéria</label>
-      <input
-        type="text"
-        value={newName}
-        onChange={(e) => setNewName(e.target.value)}
-        placeholder="Ex: Matemática"
-        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
-        autoFocus
-      />
-    </div>
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-2">Meta do Ciclo (minutos)</label>
-      <input
-        type="number"
-        min="1"
-        value={newGoal}
-        onChange={(e) => setNewGoal(e.target.value)}
-        placeholder="Ex: 300"
-        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
-      />
-    </div>
-    <div className="flex gap-3">
-      <button onClick={handleAddSubject} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all active:scale-95 shadow-md">Salvar</button>
-      <button onClick={() => { setIsAdding(false); setNewName(''); setNewGoal(''); }} className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95">Cancelar</button>
-    </div>
-  </div>
-)}
-      
-      {/* Modal: Validação */}
-<AlertModal
-  isOpen={showValidationAlert}
-  title="Campos Obrigatórios"
-  message="Preencha todos os campos!"
-  buttonText="Entendi"
-  variant="warning"
-  onClose={() => setShowValidationAlert(false)}
-/>
+          {/* BOTÃO / FORMULÁRIO ADICIONAR MATÉRIA */}
+          {!isAdding ? (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="w-full py-5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Plus className="w-5 h-5" /> Adicionar Matéria
+            </button>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nome da Matéria</label>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Ex: Matemática"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-2">Meta do Ciclo (minutos)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newGoal}
+                  onChange={(e) => setNewGoal(e.target.value)}
+                  placeholder="Ex: 300"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button onClick={handleAddSubject} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all active:scale-95 shadow-md">Salvar</button>
+                <button onClick={() => { setIsAdding(false); setNewName(''); setNewGoal(''); }} className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95">Cancelar</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
-{/* Modal: Excluir Matéria */}
-<ConfirmModal
-  isOpen={deleteSubjectId !== null}
-  title="Excluir Matéria"
-  message={`Tem certeza que deseja excluir "${subjects.find(s => s.id === deleteSubjectId)?.name}"?`}
-  confirmText="Excluir"
-  cancelText="Cancelar"
-  variant="danger"
-  onConfirm={() => {
-    if (deleteSubjectId) {
-      onDeleteSubject(deleteSubjectId);
-      setDeleteSubjectId(null);
-    }
-  }}
-  onCancel={() => setDeleteSubjectId(null)}
-/>
+      {/* Modal: Validação */}
+      <AlertModal
+        isOpen={showValidationAlert}
+        title="Campos Obrigatórios"
+        message="Preencha todos os campos!"
+        buttonText="Entendi"
+        variant="warning"
+        onClose={() => setShowValidationAlert(false)}
+      />
+
+      {/* Modal: Excluir Matéria */}
+      <ConfirmModal
+        isOpen={deleteSubjectId !== null}
+        title="Excluir Matéria"
+        message={`Tem certeza que deseja excluir "${subjects.find(s => s.id === deleteSubjectId)?.name}"?`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="danger"
+        onConfirm={() => {
+          if (deleteSubjectId) {
+            onDeleteSubject(deleteSubjectId);
+            setDeleteSubjectId(null);
+          }
+        }}
+        onCancel={() => setDeleteSubjectId(null)}
+      />
     </div>
   );
 }

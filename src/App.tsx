@@ -295,6 +295,64 @@ const confirmHardResetFinal = () => {
         onTogglePerformance={() => setShowPerformance(!showPerformance)}
       />
 
+      {/* Modal: Excluir Registro */}
+<ConfirmModal
+  isOpen={deleteLogId !== null}
+  title="Excluir Registro"
+  message="Tem certeza que deseja excluir este registro?"
+  confirmText="Excluir"
+  cancelText="Cancelar"
+  variant="danger"
+  onConfirm={confirmDeleteLog}
+  onCancel={() => setDeleteLogId(null)}
+/>
+
+{/* Modal: Reiniciar Ciclo - Confirmação */}
+<ConfirmModal
+  isOpen={showRestartConfirm}
+  title="Reiniciar Ciclo?"
+  message="Isso vai zerar as barras de progresso para começar um novo ciclo. Seu histórico de horas continua salvo."
+  confirmText="Reiniciar"
+  cancelText="Cancelar"
+  variant="warning"
+  onConfirm={confirmRestartCycle}
+  onCancel={() => setShowRestartConfirm(false)}
+/>
+
+{/* Modal: Reiniciar Ciclo - Sucesso */}
+<AlertModal
+  isOpen={showRestartSuccess}
+  title="Ciclo Reiniciado!"
+  message="Foco na missão! 👊"
+  buttonText="Bora!"
+  variant="success"
+  onClose={() => setShowRestartSuccess(false)}
+/>
+
+{/* Modal: Hard Reset - Passo 1 */}
+<ConfirmModal
+  isOpen={showHardResetConfirm}
+  title="⚠️ ATENÇÃO GUERREIRO!"
+  message="Isso vai apagar TODAS as matérias, histórico e estatísticas. Você vai começar o app do zero absoluto."
+  confirmText="Continuar"
+  cancelText="Cancelar"
+  variant="danger"
+  onConfirm={confirmHardResetStep1}
+  onCancel={() => setShowHardResetConfirm(false)}
+/>
+
+{/* Modal: Hard Reset - Passo 2 (Final) */}
+<ConfirmModal
+  isOpen={showHardResetFinal}
+  title="Última Chance!"
+  message="Confirma a exclusão total dos dados? Essa ação não pode ser desfeita."
+  confirmText="Apagar Tudo"
+  cancelText="Voltar"
+  variant="danger"
+  onConfirm={confirmHardResetFinal}
+  onCancel={() => setShowHardResetFinal(false)}
+/>
+      
       <button 
         onClick={() => setShowSettings(true)}
         className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"

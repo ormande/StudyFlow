@@ -241,19 +241,22 @@ const confirmRestartCycle = () => {
 };
 
   const handleHardReset = () => {
-    const confirm1 = confirm("⚠️ ATENÇÃO GUERREIRO! ⚠️\n\nIsso vai apagar TODAS as matérias, histórico e estatísticas.\n\nVocê vai começar o app do zero absoluto. Tem certeza?");
-    if (confirm1) {
-      const confirm2 = confirm("Última chance: Confirma a exclusão total dos dados?");
-      if (confirm2) {
-        localStorage.removeItem('studyflow_subjects');
-        localStorage.removeItem('studyflow_logs');
-        localStorage.removeItem('studyflow_cycle_start');
-        localStorage.removeItem('studyflow_daily_goal');
-        localStorage.removeItem('studyflow_show_performance');
-        window.location.reload();
-      }
-    }
-  };
+  setShowHardResetConfirm(true);
+};
+
+const confirmHardResetStep1 = () => {
+  setShowHardResetConfirm(false);
+  setShowHardResetFinal(true);
+};
+
+const confirmHardResetFinal = () => {
+  localStorage.removeItem('studyflow_subjects');
+  localStorage.removeItem('studyflow_logs');
+  localStorage.removeItem('studyflow_cycle_start');
+  localStorage.removeItem('studyflow_daily_goal');
+  localStorage.removeItem('studyflow_show_performance');
+  window.location.reload();
+};
 
   const renderPage = () => {
     switch (activeTab) {

@@ -317,13 +317,14 @@ const cycleStats = getCycleStats();
             );
           })}
 
+  <AnimatePresence>
   {!isAdding ? (
     <motion.button
       key="add-button"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
       onClick={() => setIsAdding(true)}
       className="w-full py-5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2"
     >
@@ -332,9 +333,9 @@ const cycleStats = getCycleStats();
   ) : (
     <motion.div
       key="add-form"
-      initial={{ opacity: 0, y: 20, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
       className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 transition-colors border border-gray-100 dark:border-gray-700"
     >

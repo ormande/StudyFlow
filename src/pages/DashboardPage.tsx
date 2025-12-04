@@ -220,6 +220,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 )}
   
       {/* GRID: Esquerda / Direita */}
+      {(subjects.length > 0 || logs.length > 0) && (
       <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-6">
         
         {/* COLUNA ESQUERDA */}

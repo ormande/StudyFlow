@@ -35,20 +35,20 @@ export default function CyclePage({
   const [deleteSubjectId, setDeleteSubjectId] = useState<string | null>(null);
 
   const handleAddSubject = () => {
-    if (!newName.trim() || !newGoal) {
-      alert('Preencha todos os campos!');
-      return;
-    }
-    onAddSubject({
-      name: newName.trim(),
-      goalMinutes: parseInt(newGoal),
-      subtopics: [],
-      color: getRandomColor(),
-    });
-    setNewName('');
-    setNewGoal('');
-    setIsAdding(false);
-  };
+  if (!newName.trim() || !newGoal) {
+    setShowValidationAlert(true);
+    return;
+  }
+  onAddSubject({
+    name: newName.trim(),
+    goalMinutes: parseInt(newGoal),
+    subtopics: [],
+    color: getRandomColor(),
+  });
+  setNewName('');
+  setNewGoal('');
+  setIsAdding(false);
+};
 
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
     const totalMinutes = logs

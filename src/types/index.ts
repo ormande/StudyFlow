@@ -14,6 +14,10 @@ export interface StudyLog {
   notes?: string;
   date: string;
   timestamp: number;
+  // Campos opcionais para histórico
+  subject?: string;
+  subtopicId?: string;
+  subtopic?: string;
 }
 
 export interface Subtopic {

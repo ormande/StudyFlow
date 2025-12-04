@@ -31,6 +31,8 @@ export default function CyclePage({
   const [newGoal, setNewGoal] = useState('');
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   const [newSubtopic, setNewSubtopic] = useState('');
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
+  const [deleteSubjectId, setDeleteSubjectId] = useState<string | null>(null);
 
   const handleAddSubject = () => {
     if (!newName.trim() || !newGoal) {

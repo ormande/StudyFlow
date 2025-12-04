@@ -194,10 +194,15 @@ function App() {
     setLogs([...logs, newLog]);
   };
   const handleDeleteLog = (id: string) => {
-    if (confirm('Excluir este registro?')) {
-      setLogs(logs.filter((log) => log.id !== id));
-    }
-  };
+  setDeleteLogId(id);
+};
+
+const confirmDeleteLog = () => {
+  if (deleteLogId) {
+    setLogs(logs.filter((log) => log.id !== deleteLogId));
+    setDeleteLogId(null);
+  }
+};
 
   const handleEditLog = (id: string, updates: Partial<StudyLog>) => {
     setLogs(logs.map((log) => (log.id === id ? { ...log, ...updates } : log)));

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers } from 'lucide-react';
+import AlertModal from '../components/AlertModal';
 import { Subject, StudyLog } from '../types';
 
 interface RegisterPageProps {
@@ -32,6 +33,12 @@ export default function RegisterPage({
   const [wrong, setWrong] = useState('');
   const [blank, setBlank] = useState('');
   const [showBlank, setShowBlank] = useState(false);
+  const [alertModal, setAlertModal] = useState<{
+  isOpen: boolean;
+  title: string;
+  message: string;
+  variant: 'success' | 'warning' | 'info';
+} | null>(null);
 
   const selectedSubject = subjects.find(s => s.id === subjectId);
 

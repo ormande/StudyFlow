@@ -317,7 +317,6 @@ const cycleStats = getCycleStats();
             );
           })}
 
-          <AnimatePresence mode="wait">
   {!isAdding ? (
     <motion.button
       key="add-button"
@@ -370,6 +369,7 @@ const cycleStats = getCycleStats();
 </AnimatePresence>
         </div>
       </div>
+      
       {/* Modal: Validação */}
 <AlertModal
   isOpen={showValidationAlert}

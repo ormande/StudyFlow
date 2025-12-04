@@ -67,6 +67,25 @@ export default function CyclePage({
     return Math.round(totalPercentage / subjects.length);
   };
 
+  const getCycleStats = () => {
+  const daysSinceStart = Math.floor((Date.now() - cycleStartDate) / (1000 * 60 * 60 * 24));
+  
+  const cycleLogs = logs.filter(log => log.timestamp >= cycleStartDate);
+  const totalMinutes = cycleLogs.reduce(
+    (sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60), 
+    0
+  );
+  const totalHours = Math.floor(totalMinutes / 60);
+  
+  const totalQuestions = cycleLogs
+    .filter(log => log.type === 'questoes')
+    .reduce((sum, log) => sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0), 0);
+
+  return { daysSinceStart, totalHours, totalMinutes, totalQuestions };
+};
+
+const cycleStats = getCycleStats();
+
   const handleAddSubtopic = (subjectId: string) => {
     if (!newSubtopic.trim()) return;
     const subject = subjects.find((s) => s.id === subjectId);

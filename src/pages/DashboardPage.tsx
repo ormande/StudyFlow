@@ -465,7 +465,8 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
           )}
         </div>
       </div>
-
+)}
+      
       {subjects.length === 0 && logs.length === 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 text-center transition-colors duration-300">
           <p className="text-gray-600 dark:text-gray-300 mb-2">Bem-vindo ao StudyFlow!</p>

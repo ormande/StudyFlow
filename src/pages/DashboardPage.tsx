@@ -155,20 +155,19 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
   return (
     <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
-        </div>
-        
-        <button
-          onClick={() => setShowShareModal(true)}
-          className="h-10 w-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-md hover:bg-emerald-600 transition-all active:scale-95"
-          title="Compartilhar Progresso"
-        >
-          <Share2 className="w-5 h-5" />
-        </button>
-      </div>
+<div className="mb-8">
+  <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Dashboard</h1>
+  <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
+</div>
+
+{/* Botão Compartilhar - Fixo */}
+<button
+  onClick={() => setShowShareModal(true)}
+  className="fixed top-6 left-6 z-50 h-12 w-12 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-all duration-300 active:scale-95 hover:scale-110"
+  title="Compartilhar Progresso"
+>
+  <Share2 className="w-5 h-5" />
+</button>
 
       {/* Cards de Resumo (KPIs) */}
       <div className="grid grid-cols-3 gap-3 mb-6">

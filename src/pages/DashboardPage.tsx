@@ -468,13 +468,27 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 )}
       
       {subjects.length === 0 && logs.length === 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 text-center transition-colors duration-300">
-          <p className="text-gray-600 dark:text-gray-300 mb-2">Bem-vindo ao StudyFlow!</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Comece adicionando matérias na aba Ciclo e registre seus estudos.
-          </p>
-        </div>
-      )}
+  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 text-center transition-colors duration-300 border border-gray-100 dark:border-gray-700">
+    <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+      <BookOpen className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+    </div>
+    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Bem-vindo ao StudyFlow!</h2>
+    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+      Comece adicionando matérias na aba <strong className="text-emerald-600 dark:text-emerald-400">Ciclo</strong> e registre seus estudos.
+    </p>
+    {dailyGoal > 0 && (
+      <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-4 py-2 rounded-full text-sm font-semibold">
+        <Target size={16} />
+        Meta de {Math.floor(dailyGoal / 60)}h/dia configurada!
+      </div>
+    )}
+    {dailyGoal === 0 && (
+      <p className="text-xs text-gray-400">
+        💡 Dica: Configure sua meta diária nas ⚙️ Configurações
+      </p>
+    )}
+  </div>
+)}
 
       <ShareModal
         isOpen={showShareModal}

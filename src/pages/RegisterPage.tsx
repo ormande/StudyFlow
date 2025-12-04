@@ -252,16 +252,18 @@ useEffect(() => {
                 <div key={field.label}>
                   <div className="relative">
                     <input
-                      type="number"
-                      inputMode="numeric"
-                      min="0"
-                      max={field.max}
-                      value={field.value}
-                      onChange={(e) => field.setter(e.target.value)}
-                      disabled={isTimerRunning}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors"
-                      placeholder="00"
-                    />
+  type="text"
+  inputMode="numeric"
+  maxLength={2}
+  value={field.value}
+  onChange={(e) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+    field.setter(val);
+  }}
+  disabled={isTimerRunning}
+  className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors"
+  placeholder="00"
+/>
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold pointer-events-none">
                       {field.short}
                     </span>

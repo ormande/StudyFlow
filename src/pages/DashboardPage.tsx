@@ -170,6 +170,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 </button>
 
       {/* Cards de Resumo (KPIs) */}
+      {(subjects.length > 0 || logs.length > 0) && (
       <div className="grid grid-cols-3 gap-3 mb-6">
         
         <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">

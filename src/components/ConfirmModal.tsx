@@ -1,4 +1,5 @@
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -21,8 +22,6 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  if (!isOpen) return null;
-
   const variantStyles = {
     danger: {
       icon: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
@@ -41,34 +40,49 @@ export default function ConfirmModal({
   const styles = variantStyles[variant];
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
-        
-        {/* Header */}
-        <div className="p-5 text-center">
-          <div className={`w-14 h-14 rounded-full ${styles.icon} flex items-center justify-center mx-auto mb-4`}>
-            <AlertTriangle size={28} />
-          </div>
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">{title}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">{message}</p>
-        </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
+          >
+            {/* Header */}
+            <div className="p-5 text-center">
+              <div className={`w-14 h-14 rounded-full ${styles.icon} flex items-center justify-center mx-auto mb-4`}>
+                <AlertTriangle size={28} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">{title}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">{message}</p>
+            </div>
 
-        {/* Botões */}
-        <div className="flex gap-3 p-4 bg-gray-50 dark:bg-gray-900/50">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-3 rounded-xl font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all active:scale-95"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`flex-1 py-3 rounded-xl font-semibold text-white ${styles.button} transition-all active:scale-95`}
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
+            {/* Botões */}
+            <div className="flex gap-3 p-4 bg-gray-50 dark:bg-gray-900/50">
+              <button
+                onClick={onCancel}
+                className="flex-1 py-3 rounded-xl font-semibold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all active:scale-95"
+              >
+                {cancelText}
+              </button>
+              <button
+                onClick={onConfirm}
+                className={`flex-1 py-3 rounded-xl font-semibold text-white ${styles.button} transition-all active:scale-95`}
+              >
+                {confirmText}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

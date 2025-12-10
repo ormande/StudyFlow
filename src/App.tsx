@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TabType, Subject, StudyLog } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';

@@ -95,6 +95,23 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
 
 // --- APP PRINCIPAL ---
 function App() {
+
+  // --- TESTE DE CONEXÃO SUPABASE (Temporário) ---
+useEffect(() => {
+  async function testConnection() {
+    console.log('Testando conexão com Supabase...');
+    const { data, error } = await supabase.from('subjects').select('*');
+
+    if (error) {
+      console.error('❌ Erro ao conectar:', error.message);
+    } else {
+      console.log('✅ Conexão Supabase OK! Resposta:', data);
+    }
+  }
+  testConnection();
+}, []);
+// ----------------------------------------------
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);

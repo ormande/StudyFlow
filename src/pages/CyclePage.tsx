@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown, BookOpen, Clock, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown, BookOpen, Clock, Calendar, Pencil, Save } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import AlertModal from '../components/AlertModal';
 import { Subject, StudyLog, Subtopic } from '../types';
@@ -33,6 +33,11 @@ export default function CyclePage({
   const [newSubtopic, setNewSubtopic] = useState('');
   const [showValidationAlert, setShowValidationAlert] = useState(false);
   const [deleteSubjectId, setDeleteSubjectId] = useState<string | null>(null);
+  
+  // Estados para Edição
+  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editGoal, setEditGoal] = useState('');
 
   const handleAddSubject = () => {
     if (!newName.trim() || !newGoal) {
@@ -48,6 +53,25 @@ export default function CyclePage({
     setNewName('');
     setNewGoal('');
     setIsAdding(false);
+  };
+
+  // Função para abrir o modal de edição
+  const openEditModal = (subject: Subject) => {
+    setEditingSubject(subject);
+    setEditName(subject.name);
+    setEditGoal(subject.goalMinutes.toString());
+  };
+
+  // Função para salvar a edição
+  const handleSaveEdit = () => {
+    if (!editingSubject || !editName.trim() || !editGoal) return;
+    
+    onUpdateSubject(editingSubject.id, {
+      name: editName.trim(),
+      goalMinutes: parseInt(editGoal)
+    });
+    
+    setEditingSubject(null);
   };
 
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
@@ -121,6 +145,20 @@ export default function CyclePage({
     onReorderSubjects(newSubjects);
   };
 
+  // Função para mover subtópicos
+  const moveSubtopic = (subjectId: string, subtopicIndex: number, direction: 'up' | 'down') => {
+    const subject = subjects.find((s) => s.id === subjectId);
+    if (!subject) return;
+    
+    const newSubtopics = [...subject.subtopics];
+    if (direction === 'up' && subtopicIndex > 0) {
+      [newSubtopics[subtopicIndex], newSubtopics[subtopicIndex - 1]] = [newSubtopics[subtopicIndex - 1], newSubtopics[subtopicIndex]];
+    } else if (direction === 'down' && subtopicIndex < newSubtopics.length - 1) {
+      [newSubtopics[subtopicIndex], newSubtopics[subtopicIndex + 1]] = [newSubtopics[subtopicIndex + 1], newSubtopics[subtopicIndex]];
+    }
+    onUpdateSubject(subjectId, { subtopics: newSubtopics });
+  };
+
   const totalCycleProgress = getTotalCycleProgress();
 
   return (
@@ -161,10 +199,8 @@ export default function CyclePage({
             </button>
           </div>
 
-          {/* Estatísticas do Ciclo */}
           <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800">
             <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-3">📊 Este Ciclo</p>
-            
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
@@ -175,7 +211,6 @@ export default function CyclePage({
                   {cycleStats.daysSinceStart}
                 </span>
               </div>
-              
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                   <Clock size={14} />
@@ -185,7 +220,6 @@ export default function CyclePage({
                   {cycleStats.totalHours}h
                 </span>
               </div>
-              
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                   <BookOpen size={14} />
@@ -195,7 +229,6 @@ export default function CyclePage({
                   {subjects.length}
                 </span>
               </div>
-              
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                   <Target size={14} />
@@ -245,9 +278,24 @@ export default function CyclePage({
                         Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
                       </p>
                     </div>
-                    <button onClick={() => setDeleteSubjectId(subject.id)} className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform">
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    
+                    {/* Botões de Ação: Editar e Excluir */}
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => openEditModal(subject)} 
+                        className="text-gray-400 hover:text-blue-500 p-2 active:scale-90 transition-transform"
+                        title="Editar Matéria"
+                      >
+                        <Pencil className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => setDeleteSubjectId(subject.id)} 
+                        className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform"
+                        title="Excluir Matéria"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mb-3">
@@ -274,8 +322,26 @@ export default function CyclePage({
                   <div className="overflow-hidden">
                     <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4">
                       <div className="space-y-2 mb-4">
-                        {subject.subtopics.map((subtopic) => (
-                          <div key={subtopic.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+                        {subject.subtopics.map((subtopic, index) => (
+                          <div key={subtopic.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 group">
+                            
+                            <div className="flex flex-col gap-0.5 opacity-50 hover:opacity-100 transition-opacity">
+                               <button 
+                                 onClick={() => moveSubtopic(subject.id, index, 'up')}
+                                 disabled={index === 0}
+                                 className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
+                               >
+                                 <ArrowUp size={10} strokeWidth={3} />
+                               </button>
+                               <button 
+                                 onClick={() => moveSubtopic(subject.id, index, 'down')}
+                                 disabled={index === subject.subtopics.length - 1}
+                                 className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
+                               >
+                                 <ArrowDown size={10} strokeWidth={3} />
+                               </button>
+                            </div>
+
                             <button
                               onClick={() => handleToggleSubtopic(subject.id, subtopic.id)}
                               className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all active:scale-90 ${
@@ -293,16 +359,18 @@ export default function CyclePage({
                           </div>
                         ))}
                       </div>
-                      <div className="flex gap-2">
+                      
+                      {/* Container do Input de Subtópico Corrigido */}
+                      <div className="flex gap-2 w-full pr-1">
                         <input
                           type="text"
                           value={newSubtopic}
                           onChange={(e) => setNewSubtopic(e.target.value)}
                           placeholder="Novo subtópico..."
-                          className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
+                          className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base min-w-0"
                           onKeyDown={(e) => { if (e.key === 'Enter') handleAddSubtopic(subject.id); }}
                         />
-                        <button onClick={() => handleAddSubtopic(subject.id)} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95">
+                        <button onClick={() => handleAddSubtopic(subject.id)} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95 flex-shrink-0">
                           <Plus className="w-5 h-5" />
                         </button>
                       </div>
@@ -313,7 +381,6 @@ export default function CyclePage({
             );
           })}
 
-          {/* BOTÃO / FORMULÁRIO ADICIONAR MATÉRIA */}
           {!isAdding ? (
             <button
               onClick={() => setIsAdding(true)}
@@ -322,7 +389,7 @@ export default function CyclePage({
               <Plus className="w-5 h-5" /> Adicionar Matéria
             </button>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 transition-colors border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nome da Matéria</label>
                 <input
@@ -380,6 +447,52 @@ export default function CyclePage({
         }}
         onCancel={() => setDeleteSubjectId(null)}
       />
+
+      {/* NOVO: Modal de Edição */}
+      {editingSubject && (
+        <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Editar Matéria</h3>
+            
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nome</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none text-base"
+                autoFocus
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-2">Meta (min)</label>
+              <input
+                type="number"
+                min="1"
+                value={editGoal}
+                onChange={(e) => setEditGoal(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none text-base"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button 
+                onClick={handleSaveEdit} 
+                className="flex-1 py-3 rounded-xl bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
+              >
+                <Save size={18} /> Salvar
+              </button>
+              <button 
+                onClick={() => setEditingSubject(null)} 
+                className="flex-1 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all active:scale-95"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

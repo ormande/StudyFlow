@@ -20,7 +20,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
   
   const [expandedPerformanceId, setExpandedPerformanceId] = useState<string | null>(null);
 
-  // --- LÓGICA MANTIDA ---
+  // --- LÓGICA ---
   const calculateStreak = () => {
     if (logs.length === 0) return 0;
     const studyDates = new Set(logs.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR')));
@@ -102,22 +102,20 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
   return (
     <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
-      {/* Header com Botão Share INLINE (Não fixo) */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
-        </div>
-        
-        {/* Botão Share movido para cá, ao lado do título */}
-        <button
-          onClick={() => setShowShareModal(true)}
-          className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-md hover:bg-blue-600 transition-all active:scale-95"
-          title="Compartilhar Progresso"
-        >
-          <Share2 className="w-5 h-5" />
-        </button>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
       </div>
+
+      {/* Botão Compartilhar - Posicionado ao lado do botão de Configurações */}
+      <button
+        onClick={() => setShowShareModal(true)}
+        className="fixed top-6 right-20 z-50 h-12 w-12 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-500/30 hover:bg-blue-600 transition-all duration-300 active:scale-95 hover:scale-110"
+        title="Compartilhar Progresso"
+      >
+        <Share2 className="w-5 h-5" />
+      </button>
 
       {/* Cards de Resumo */}
       {(subjects.length > 0 || logs.length > 0) && (
@@ -201,8 +199,9 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 
         {/* Direita */}
         <div className="space-y-6">
+          {/* Card Desempenho - REMOVIDA A BORDA AQUI */}
           {subjects.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
               <div className="flex items-center gap-2 mb-4"><BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /><h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho (Ciclo Atual)</h2></div>
               <div className="space-y-5">{subjects.map((subject) => { const { totalQuestions, totalCorrect, totalWrong, totalBlank, correctPct, wrongPct, blankPct, accuracy } = getSubjectPerformance(subject.id); const isExpanded = expandedPerformanceId === subject.id; return ( <div key={`perf-${subject.id}`}> <button onClick={() => setExpandedPerformanceId(isExpanded ? null : subject.id)} className="w-full flex items-center justify-between mb-1 group outline-none"> <div className="flex items-center gap-2"> <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate text-left">{subject.name}</span> <ChevronDown size={14} className={`text-gray-400 group-hover:text-emerald-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} /> </div> <div className="text-right"> <span className={`text-sm font-bold ${totalQuestions === 0 ? 'text-gray-400' : getAccuracyTextColor(accuracy)}`}>{totalQuestions > 0 ? `${accuracy}%` : '-'}</span> {totalQuestions > 0 && (<p className="text-[10px] text-gray-400">{totalQuestions} questões</p>)} </div> </button> <div className={`w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'opacity-0 h-0 mb-0' : 'opacity-100 h-1.5'}`}> {totalQuestions > 0 ? (<div className={`h-full transition-all duration-500 rounded-full ${getAccuracyColor(accuracy)}`} style={{ width: `${accuracy}%` }} />) : (<div className="h-full w-full bg-gray-100 dark:bg-gray-700" />)} </div> <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0 mt-0'}`}> <div className="overflow-hidden"> {totalQuestions > 0 ? (<div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl"> <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3 overflow-hidden flex mb-2"> <div style={{ width: `${correctPct}%` }} className="h-full bg-emerald-500" /> <div style={{ width: `${wrongPct}%` }} className="h-full bg-red-500" /> <div style={{ width: `${blankPct}%` }} className="h-full bg-blue-400" /> </div> <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider"> <div className="text-emerald-600 dark:text-emerald-400 flex flex-col items-center"> <span>Certas</span> <span className="text-sm">{totalCorrect}</span> </div> <div className="text-red-600 dark:text-red-400 flex flex-col items-center"> <span>Erradas</span> <span className="text-sm">{totalWrong}</span> </div> <div className="text-blue-500 dark:text-blue-300 flex flex-col items-center"> <span>Branco</span> <span className="text-sm">{totalBlank}</span> </div> </div> </div>) : (<p className="text-xs text-center text-gray-400 py-2 italic">Nenhuma questão neste ciclo.</p>)} </div> </div> </div> ); })}</div>
               {subjects.every(s => getSubjectPerformance(s.id).totalQuestions === 0) && (<p className="text-xs text-center text-gray-400 mt-4 italic">Nenhuma questão registrada no ciclo atual.</p>)}

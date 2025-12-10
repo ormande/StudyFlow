@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers } from 'lucide-react';
+import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import AlertModal from '../components/AlertModal';
 
@@ -23,6 +23,7 @@ export default function RegisterPage({
   const [subjectId, setSubjectId] = useState('');
   const [subtopicId, setSubtopicId] = useState('');
   const [type, setType] = useState<'teoria' | 'questoes' | 'revisao'>('teoria');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // HOJE (YYYY-MM-DD)
   const [hours, setHours] = useState('');
   const [seconds, setSeconds] = useState('');
   const [minutes, setMinutes] = useState('');
@@ -48,23 +49,25 @@ export default function RegisterPage({
   }, [subjectId]);
 
   useEffect(() => {
-  if (prefilledTime) {
-    setHours(prefilledTime.hours > 0 ? prefilledTime.hours.toString() : '');
-    setMinutes(prefilledTime.minutes > 0 ? prefilledTime.minutes.toString() : '');
-    setSeconds(prefilledTime.seconds > 0 ? prefilledTime.seconds.toString() : '');
-  }
-}, [prefilledTime]);
+    if (prefilledTime) {
+      setHours(prefilledTime.hours > 0 ? prefilledTime.hours.toString() : '');
+      setMinutes(prefilledTime.minutes > 0 ? prefilledTime.minutes.toString() : '');
+      setSeconds(prefilledTime.seconds > 0 ? prefilledTime.seconds.toString() : '');
+    }
+  }, [prefilledTime]);
 
-useEffect(() => {
-  if (isTimerRunning && timerSeconds > 0) {
-    const h = Math.floor(timerSeconds / 3600);
-    const m = Math.floor((timerSeconds % 3600) / 60);
-    const s = timerSeconds % 60;
-    setHours(h > 0 ? h.toString() : '');
-    setMinutes(m > 0 ? m.toString() : '');
-    setSeconds(s > 0 ? s.toString() : '');
-  }
-}, [timerSeconds, isTimerRunning]);
+  useEffect(() => {
+    if (isTimerRunning && timerSeconds > 0) {
+      const h = Math.floor(timerSeconds / 3600);
+      const m = Math.floor((timerSeconds % 3600) / 60);
+      const s = timerSeconds % 60;
+      setHours(h > 0 ? h.toString() : '');
+      setMinutes(m > 0 ? m.toString() : '');
+      setSeconds(s > 0 ? s.toString() : '');
+      // Se vier do timer, assume a data de hoje
+      setDate(new Date().toISOString().split('T')[0]);
+    }
+  }, [timerSeconds, isTimerRunning]);
 
   const handleSubmit = () => {
     if (!subjectId) {
@@ -102,10 +105,7 @@ useEffect(() => {
       hours: h,
       minutes: m,
       seconds: s,
-      date: (() => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      })(),
+      date: date, // USA A DATA SELECIONADA
       notes: notes.trim(),
       pages: parseInt(pages) || 0,
       correct: parseInt(correct) || 0,
@@ -115,6 +115,7 @@ useEffect(() => {
 
     onAddLog(newLog);
     
+    // Limpeza (Mantém a data como hoje para o próximo)
     setSubjectId('');
     setSubtopicId('');
     setHours('');
@@ -125,6 +126,7 @@ useEffect(() => {
     setCorrect('');
     setWrong('');
     setBlank('');
+    setDate(new Date().toISOString().split('T')[0]);
     onTimeClear();
     
     if (navigator.vibrate) {
@@ -154,10 +156,10 @@ useEffect(() => {
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
-      {/* Grid Principal - 1 coluna no mobile/tablet, 2 em desktop grande */}
+      {/* Grid Principal */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         
-        {/* COLUNA 1: Matéria, Tipo, Observações */}
+        {/* COLUNA 1: Configuração */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300">
           
           {/* Matéria */}
@@ -175,6 +177,21 @@ useEffect(() => {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* NOVO: Data do Registro */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Data</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-3.5 text-gray-400 pointer-events-none" size={20} />
+              <input 
+                type="date" 
+                value={date}
+                max={new Date().toISOString().split('T')[0]} // Impede datas futuras (opcional)
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-base text-gray-900 dark:text-white transition-colors appearance-none"
+              />
+            </div>
           </div>
 
           {/* Subtópico */}
@@ -225,7 +242,7 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Observações - Só em desktop fica aqui */}
+          {/* Observações */}
           <div className="hidden lg:block">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
             <textarea
@@ -237,7 +254,7 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* COLUNA 2: Tempo, Páginas, Desempenho, Botão */}
+        {/* COLUNA 2: Dados */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5 transition-colors duration-300">
           
           {/* Tempo */}
@@ -245,25 +262,25 @@ useEffect(() => {
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Tempo Estudado</label>
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {[
-                { label: 'Horas', short: 'H', value: hours, setter: setHours, max: undefined },
-                { label: 'Minutos', short: 'M', value: minutes, setter: setMinutes, max: 59 },
-                { label: 'Segundos', short: 'S', value: seconds, setter: setSeconds, max: 59 },
+                { label: 'Horas', short: 'H', value: hours, setter: setHours },
+                { label: 'Minutos', short: 'M', value: minutes, setter: setMinutes },
+                { label: 'Segundos', short: 'S', value: seconds, setter: setSeconds },
               ].map((field) => (
                 <div key={field.label}>
                   <div className="relative">
                     <input
-  type="text"
-  inputMode="numeric"
-  maxLength={2}
-  value={field.value}
-  onChange={(e) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 2);
-    field.setter(val);
-  }}
-  disabled={isTimerRunning}
-  className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors"
-  placeholder="00"
-/>
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={field.value}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+                        field.setter(val);
+                      }}
+                      disabled={isTimerRunning}
+                      className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors"
+                      placeholder="00"
+                    />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold pointer-events-none">
                       {field.short}
                     </span>
@@ -301,11 +318,8 @@ useEffect(() => {
               </button>
             </div>
             
-            {/* Grid de Desempenho com animação */}
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              
-              {/* Certas */}
-              <div className={`transition-all duration-300 ${showBlank ? 'col-span-1' : 'col-span-1'}`}>
+              <div className={`transition-all duration-300 col-span-1`}>
                 <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 w-9 flex items-center justify-center bg-emerald-500 rounded-l-xl">
@@ -322,8 +336,7 @@ useEffect(() => {
                 </div>
               </div>
               
-              {/* Erradas */}
-              <div className={`transition-all duration-300 ${showBlank ? 'col-span-1' : 'col-span-1'}`}>
+              <div className={`transition-all duration-300 col-span-1`}>
                 <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 w-9 flex items-center justify-center bg-red-500 rounded-l-xl">
@@ -340,7 +353,6 @@ useEffect(() => {
                 </div>
               </div>
               
-              {/* Em Branco - Aparece embaixo com animação */}
               <div 
                 className={`col-span-2 grid transition-all duration-300 ease-out ${
                   showBlank 
@@ -368,7 +380,7 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Observações - Mobile fica aqui */}
+          {/* Observações - Mobile */}
           <div className="lg:hidden">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
             <textarea
@@ -390,7 +402,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Modal de Alerta */}
       {alertModal && (
         <AlertModal
           isOpen={alertModal.isOpen}

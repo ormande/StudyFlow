@@ -1,5 +1,4 @@
-import { X, Instagram, AlertTriangle, Moon, Sun, Download, Upload, Target, Settings, Eye, EyeOff, Palette, Database, Shield } from 'lucide-react';
-import { useRef } from 'react';
+import { X, Instagram, AlertTriangle, Moon, Sun, Target, Settings, Eye, EyeOff, Palette, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SettingsModalProps {
@@ -25,72 +24,8 @@ export default function SettingsModal({
   showPerformance,
   onTogglePerformance
 }: SettingsModalProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = () => {
-    const data = {
-      subjects: JSON.parse(localStorage.getItem('studyflow_subjects') || '[]'),
-      logs: JSON.parse(localStorage.getItem('studyflow_logs') || '[]'),
-      cycleStartDate: JSON.parse(localStorage.getItem('studyflow_cycle_start') || 'null'),
-      dailyGoal: JSON.parse(localStorage.getItem('studyflow_daily_goal') || '0'),
-      showPerformance: JSON.parse(localStorage.getItem('studyflow_show_performance') || 'true'),
-      exportedAt: new Date().toISOString(),
-      version: '1.3.0'
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `studyflow-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target?.result as string);
-
-        if (!data.subjects || !data.logs) {
-          alert('Arquivo inválido! Verifique se é um backup do StudyFlow.');
-          return;
-        }
-
-        const confirmImport = confirm(
-          `Isso vai substituir seus dados atuais por:\n\n` +
-          `• ${data.subjects.length} matéria(s)\n` +
-          `• ${data.logs.length} registro(s)\n\n` +
-          `Deseja continuar?`
-        );
-
-        if (confirmImport) {
-          localStorage.setItem('studyflow_subjects', JSON.stringify(data.subjects));
-          localStorage.setItem('studyflow_logs', JSON.stringify(data.logs));
-          if (data.cycleStartDate) localStorage.setItem('studyflow_cycle_start', JSON.stringify(data.cycleStartDate));
-          if (data.dailyGoal) localStorage.setItem('studyflow_daily_goal', JSON.stringify(data.dailyGoal));
-          if (data.showPerformance !== undefined) localStorage.setItem('studyflow_show_performance', JSON.stringify(data.showPerformance));
-          
-          alert('Dados importados com sucesso! O app vai recarregar.');
-          window.location.reload();
-        }
-      } catch {
-        alert('Erro ao ler o arquivo. Verifique se é um JSON válido.');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -187,7 +122,7 @@ export default function SettingsModal({
                         <div>
                           <p className="font-semibold text-gray-800 dark:text-white text-sm">Privacidade</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {showPerformance ? 'Desempenho visível ao compartilhar' : 'Desempenho oculto ao compartilhar'}
+                            {showPerformance ? 'Desempenho visível' : 'Desempenho oculto'}
                           </p>
                         </div>
                       </div>
@@ -205,57 +140,25 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                {/* COLUNA 2: Dados */}
+                {/* COLUNA 2: Conta e Perigo */}
                 <div className="space-y-5">
                   
-                  {/* Título da Seção */}
-                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                    <Database size={16} />
-                    <span className="text-xs font-bold uppercase tracking-wider">Seus Dados</span>
+                  {/* Zona de Perigo (Mantivemos para Logout/Reset) */}
+                  <div className="flex items-center gap-2 text-red-500">
+                    <AlertTriangle size={16} />
+                    <span className="text-xs font-bold uppercase tracking-wider">Zona de Perigo</span>
                   </div>
 
-                  {/* Card: Backup */}
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 space-y-3">
-                    <div>
-                      <p className="font-semibold text-gray-800 dark:text-white text-sm">Backup</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Salve ou restaure seus dados</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      <button 
-                        onClick={handleExport} 
-                        className="py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white active:scale-95"
-                      >
-                        <Download size={16} /> Exportar
-                      </button>
-                      <button 
-                        onClick={handleImportClick} 
-                        className="py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white active:scale-95"
-                      >
-                        <Upload size={16} /> Importar
-                      </button>
-                    </div>
-                    <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileChange} className="hidden" />
-                    
-                    <p className="text-[10px] text-gray-400 text-center">
-                      Use para backup ou trocar de dispositivo
-                    </p>
-                  </div>
-
-                  {/* Card: Zona de Perigo */}
                   <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
-                    <div className="flex items-center gap-2 mb-3">
-                      <AlertTriangle size={16} className="text-red-500" />
-                      <p className="font-semibold text-red-600 dark:text-red-400 text-sm">Zona de Perigo</p>
-                    </div>
+                    <p className="font-semibold text-red-600 dark:text-red-400 text-sm mb-3">Sair da Conta</p>
                     <button 
                       onClick={onHardReset} 
                       className="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
-                      <AlertTriangle size={16} /> Resetar Tudo
+                      <AlertTriangle size={16} /> Sair / Deslogar
                     </button>
                     <p className="text-[10px] text-red-400 mt-2 text-center">
-                      Apaga todas as matérias e histórico
+                      Você será desconectado deste dispositivo
                     </p>
                   </div>
                 </div>
@@ -274,7 +177,7 @@ export default function SettingsModal({
                 >
                   <Instagram size={14} /> @paiao.kayke
                 </a>
-                <p className="text-[10px] text-gray-400 mt-1">Versão 1.3.0 • StudyFlow</p>
+                <p className="text-[10px] text-gray-400 mt-1">Versão 1.4.0 • StudyFlow</p>
               </div>
             </div>
           </motion.div>

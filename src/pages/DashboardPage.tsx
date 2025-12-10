@@ -191,6 +191,48 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
       </div>
       )}
 
+      {/* GRÁFICO SEMANAL (Novo) */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-6 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-emerald-500" />
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Ritmo da Semana</h2>
+          </div>
+          <span className="text-xs text-gray-400 font-medium">Últimos 7 dias</span>
+        </div>
+
+        {/* Área do Gráfico */}
+        <div className="flex items-end justify-between h-32 sm:h-40 gap-2">
+          {weeklyStats.map((day, index) => (
+            <div key={index} className="flex flex-col items-center justify-end flex-1 h-full group cursor-pointer">
+              
+              {/* Tooltip flutuante (Aparece no hover) */}
+              <div className="mb-2 opacity-0 group-hover:opacity-100 transition-opacity absolute -mt-8 bg-gray-900 text-white text-[10px] py-1 px-2 rounded-lg whitespace-nowrap z-10 pointer-events-none">
+                {Math.floor(day.minutes / 60)}h {day.minutes % 60}m
+              </div>
+
+              {/* A Barra */}
+              <div 
+                className={`w-full max-w-[30px] rounded-t-lg transition-all duration-700 ease-out relative ${
+                  day.label === 'Hoje' 
+                    ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' // Destaque para Hoje
+                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-emerald-300 dark:hover:bg-emerald-700'
+                }`}
+                style={{ height: `${day.heightPercentage > 0 ? day.heightPercentage : 4}%` }} // Mínimo 4% visual
+              >
+              </div>
+
+              {/* Legenda do Dia (Seg, Ter...) */}
+              <span className={`text-[10px] mt-2 font-medium ${
+                day.label === 'Hoje' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-gray-400'
+              }`}>
+                {day.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Grid Inferior */}
       {(subjects.length > 0 || logs.length > 0) && (
       <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8 gap-6">

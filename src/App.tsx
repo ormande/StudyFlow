@@ -9,7 +9,7 @@ import TimerPage from './pages/TimerPage';
 import RegisterPage from './pages/RegisterPage';
 import CyclePage from './pages/CyclePage';
 import SettingsModal from './components/SettingsModal';
-import { Lock, Mail, ArrowRight, BookOpen, Settings, LogOut, UserPlus, Loader2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, BookOpen, Settings, UserPlus, Loader2 } from 'lucide-react';
 import ConfirmModal from './components/ConfirmModal';
 import AlertModal from './components/AlertModal';
 
@@ -172,14 +172,13 @@ function App() {
     setActiveTab('register');
   };
 
-  // --- AQUI ESTAVA O PROBLEMA: Definindo explicitamente o handleDeleteLog ---
   const handleDeleteLog = (id: string) => {
     setDeleteLogId(id);
   };
 
   const confirmDeleteLog = () => {
     if (deleteLogId) {
-      deleteLog(deleteLogId); // Chama a função do hook
+      deleteLog(deleteLogId);
       setDeleteLogId(null);
     }
   };
@@ -193,7 +192,6 @@ function App() {
   const handleHardReset = () => setShowHardResetConfirm(true);
   const confirmHardResetStep1 = () => { setShowHardResetConfirm(false); setShowHardResetFinal(true); };
   const confirmHardResetFinal = () => {
-    // Apenas logout
     handleLogout();
     setShowHardResetFinal(false);
   };
@@ -203,7 +201,6 @@ function App() {
 
     switch (activeTab) {
       case 'dashboard':
-         // Agora onDeleteLog recebe a função handleDeleteLog que DEFINIMOS acima
          return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={editLog} dailyGoal={dailyGoal} showPerformance={showPerformance} />;
       case 'timer':
         return <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} />;
@@ -240,10 +237,13 @@ function App() {
       <ConfirmModal isOpen={showHardResetConfirm} title="Sair do App?" message="Deseja deslogar da sua conta?" confirmText="Sair" cancelText="Cancelar" variant="danger" onConfirm={confirmHardResetStep1} onCancel={() => setShowHardResetConfirm(false)} />
       <ConfirmModal isOpen={showHardResetFinal} title="Confirmar Saída" message="Você será desconectado." confirmText="Sim, Sair" cancelText="Voltar" variant="danger" onConfirm={confirmHardResetFinal} onCancel={() => setShowHardResetFinal(false)} />
       
-      <div className="fixed top-6 right-6 z-50 flex gap-3">
-        <button onClick={handleLogout} className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 shadow-lg hover:bg-red-100 hover:text-red-500 transition-all active:scale-95" title="Sair"><LogOut size={20} /></button>
-        <button onClick={() => setShowSettings(true)} className="h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"><Settings size={24} /></button>
-      </div>
+      {/* Botão de Configurações (Fixo) - O botão Sair foi removido daqui */}
+      <button 
+        onClick={() => setShowSettings(true)}
+        className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"
+      >
+         <Settings size={24} />
+      </button>
 
       <div className="pb-24 pt-2"> 
         <AnimatePresence mode="wait">
@@ -253,9 +253,8 @@ function App() {
         </AnimatePresence>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 pb-6 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-      </div>
+      {/* Barra de Navegação sem wrapper extra */}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }

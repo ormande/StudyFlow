@@ -79,6 +79,41 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     return { totalMinutes, hours, minutes };
   };
 
+  // --- NOVA FUNÇÃO: Dados do Gráfico Semanal ---
+  const getLast7DaysStats = () => {
+    const days = [];
+    const today = new Date();
+    
+    // Loop para os últimos 7 dias (do 6º dia atrás até hoje)
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      
+      // Formato YYYY-MM-DD para comparar com os logs
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      
+      // Filtra logs desse dia
+      const dayLogs = logs.filter(l => l.date === dateKey);
+      const minutes = dayLogs.reduce((acc, log) => acc + (log.hours * 60) + log.minutes, 0);
+      
+      days.push({
+        label: i === 0 ? 'Hoje' : d.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3), // "Seg", "Ter", "Hoje"
+        fullDate: d.toLocaleDateString('pt-BR'),
+        minutes,
+        heightPercentage: 0 // Vamos calcular depois
+      });
+    }
+
+    // Normaliza a altura das barras (A maior barra será 100%)
+    const maxMinutes = Math.max(...days.map(d => d.minutes), 1); // Evita divisão por zero
+    return days.map(d => ({
+      ...d,
+      heightPercentage: Math.round((d.minutes / maxMinutes) * 100)
+    }));
+  };
+
+  const weeklyStats = getLast7DaysStats();
+  
   const streak = calculateStreak();
   const { totalMinutes, totalPages, todayQuestions, totalCorrect } = getTodayStats();
   const { hours: totalHours, minutes: totalMin } = getTotalHours();

@@ -79,7 +79,7 @@ export default function RegisterPage({
     }
   }, [timerSeconds, isTimerRunning]);
 
-  // ✅ HANDLERS COM VALIDAÇÃO - Impedem valores negativos na digitação
+  // ✅ HANDLERS COM VALIDAÇÃO
   const handleHoursChange = (value: string) => setHours(sanitizeNumericInput(value));
   const handleMinutesChange = (value: string) => setMinutes(sanitizeNumericInput(value, 59));
   const handleSecondsChange = (value: string) => setSeconds(sanitizeNumericInput(value, 59));
@@ -94,7 +94,6 @@ export default function RegisterPage({
       return;
     }
 
-    // ✅ VALIDAÇÃO FINAL - Math.max garante não-negativo mesmo se algo escapar
     const h = Math.max(0, parseInt(hours) || 0);
     const m = Math.max(0, parseInt(minutes) || 0);
     const s = Math.max(0, parseInt(seconds) || 0);
@@ -117,7 +116,6 @@ export default function RegisterPage({
       seconds: s,
       date: date,
       notes: notes.trim(),
-      // ✅ VALIDAÇÃO - Todos os campos numéricos sanitizados
       pages: Math.max(0, parseInt(pages) || 0),
       correct: Math.max(0, parseInt(correct) || 0),
       wrong: Math.max(0, parseInt(wrong) || 0),
@@ -126,7 +124,6 @@ export default function RegisterPage({
 
     onAddLog(newLog);
     
-    // Limpeza
     setSubjectId('');
     setSubtopicId('');
     setHours('');
@@ -220,7 +217,6 @@ export default function RegisterPage({
           <div className="flex-shrink-0">
              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Tempo Estudado</label>
              <div className="grid grid-cols-3 gap-3">
-              {/* ✅ INPUTS COM VALIDAÇÃO onChange */}
               <div>
                 <div className="relative">
                   <input 
@@ -275,7 +271,6 @@ export default function RegisterPage({
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
             <div className="relative">
               <BookOpen className="absolute left-3 top-3.5 text-gray-400" size={20} />
-              {/* ✅ INPUT COM VALIDAÇÃO */}
               <input 
                 type="number" 
                 inputMode="numeric" 
@@ -288,6 +283,7 @@ export default function RegisterPage({
             </div>
           </div>
 
+          {/* ÁREA DE DESEMPENHO (Com Animação Slide Sólida) */}
           <div className="flex-1 flex flex-col justify-center">
             <div className="flex justify-between items-center mb-3">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
@@ -296,12 +292,12 @@ export default function RegisterPage({
               </button>
             </div>
             
-{/* INÍCIO DO BLOCO SUBSTITUÍDO */}
             <div className="flex gap-3 overflow-hidden">
               <AnimatePresence mode='popLayout' initial={false}>
                 {/* BLOCO CERTAS */}
                 <motion.div 
                   layout 
+                  key="correct"
                   className="flex-1 min-w-[80px]"
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 >
@@ -323,6 +319,7 @@ export default function RegisterPage({
                 {/* BLOCO ERRADAS */}
                 <motion.div 
                   layout 
+                  key="wrong"
                   className="flex-1 min-w-[80px]"
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 >
@@ -345,6 +342,7 @@ export default function RegisterPage({
                 {showBlank && (
                   <motion.div 
                     layout
+                    key="blank"
                     initial={{ width: 0, opacity: 1, scale: 1 }} 
                     animate={{ width: "auto", opacity: 1, scale: 1 }} 
                     exit={{ width: 0, opacity: 1, scale: 1 }}
@@ -368,7 +366,7 @@ export default function RegisterPage({
                 )}
               </AnimatePresence>
             </div>
-            {/* FIM DO BLOCO SUBSTITUÍDO */}
+          </div>
 
           <button onClick={handleSubmit} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-auto flex-shrink-0">
             <Save size={20} /> <span>Salvar Registro</span>

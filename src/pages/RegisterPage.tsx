@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Subject, StudyLog } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import AlertModal from '../components/AlertModal';

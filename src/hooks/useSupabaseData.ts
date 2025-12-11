@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Subject, StudyLog } from '../types';
 
+// ✅ FUNÇÃO DE VALIDAÇÃO - Garante que números nunca sejam negativos
+const sanitizeNumber = (value: number | undefined | null, defaultValue = 0): number => {
+  if (value === undefined || value === null || isNaN(value)) return defaultValue;
+  return Math.max(0, Math.floor(value)); // Nunca negativo, sempre inteiro
+};
+
 export function useSupabaseData(session: any) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [logs, setLogs] = useState<StudyLog[]>([]);
@@ -25,11 +31,10 @@ export function useSupabaseData(session: any) {
         
         if (subError) console.error('Erro matérias:', subError);
         
-        // TRADUÇÃO (MAPPING) DO BANCO PARA O APP
+        // TRADUÇÃO DO BANCO PARA O APP (snake_case -> camelCase)
         const mappedSubjects = (subData || []).map((s: any) => ({
           ...s,
-          goalMinutes: s.goal_minutes, // Traduz snake_case para camelCase
-          // Subtópicos já vêm no formato certo
+          goalMinutes: sanitizeNumber(s.goal_minutes),
         }));
         setSubjects(mappedSubjects);
 
@@ -41,12 +46,18 @@ export function useSupabaseData(session: any) {
 
         if (logError) console.error('Erro logs:', logError);
 
-        // TRADUÇÃO (MAPPING) DO BANCO PARA O APP
+        // TRADUÇÃO DO BANCO PARA O APP
         const mappedLogs = (logData || []).map((l: any) => ({
           ...l,
-          subjectId: l.subject_id,   // O ERRO ESTAVA AQUI!
+          subjectId: l.subject_id,
           subtopicId: l.subtopic_id,
-          // Mantemos compatibility com timestamp se existir, senão usa created_at
+          hours: sanitizeNumber(l.hours),
+          minutes: sanitizeNumber(l.minutes),
+          seconds: sanitizeNumber(l.seconds),
+          pages: sanitizeNumber(l.pages),
+          correct: sanitizeNumber(l.correct),
+          wrong: sanitizeNumber(l.wrong),
+          blank: sanitizeNumber(l.blank),
         }));
         setLogs(mappedLogs);
 
@@ -59,7 +70,7 @@ export function useSupabaseData(session: any) {
 
         if (settingsData) {
           setCycleStartDate(settingsData.cycle_start_date || Date.now());
-          setDailyGoal(settingsData.daily_goal || 0);
+          setDailyGoal(sanitizeNumber(settingsData.daily_goal));
           setShowPerformance(settingsData.show_performance ?? true);
         } else {
           // Se não existir, cria agora
@@ -85,13 +96,11 @@ export function useSupabaseData(session: any) {
   const addSubject = async (subject: Omit<Subject, 'id'>) => {
     if (!session?.user) return;
     try {
+      // ✅ CORRIGIDO: Removida duplicação de goal_minutes + validação
       const newSubject = {
         user_id: session.user.id,
         name: subject.name,
-        goal_minutes: subject.goalMinutes, // Envia como snake_case automaticamente se a coluna existir, mas o Supabase JS client lida bem com insert objects se as chaves baterem com colunas.
-        // Espere! O insert precisa bater com o nome da coluna no banco.
-        // Vamos corrigir o objeto de envio:
-        goal_minutes: subject.goalMinutes, 
+        goal_minutes: sanitizeNumber(subject.goalMinutes),
         color: subject.color,
         position: subjects.length
       };
@@ -99,8 +108,12 @@ export function useSupabaseData(session: any) {
       const { data, error } = await supabase.from('subjects').insert([newSubject]).select().single();
       if (error) throw error;
 
-      // Adiciona localmente JÁ TRADUZIDO
-      setSubjects([...subjects, { ...data, goalMinutes: data.goal_minutes, subtopics: [] }]);
+      // Adiciona localmente já traduzido
+      setSubjects([...subjects, { 
+        ...data, 
+        goalMinutes: sanitizeNumber(data.goal_minutes), 
+        subtopics: [] 
+      }]);
     } catch (error) {
       console.error('Erro ao adicionar matéria:', error);
     }
@@ -117,14 +130,22 @@ export function useSupabaseData(session: any) {
     try {
       const { subtopics, goalMinutes, ...otherFields } = updates;
       
-      // Prepara objeto para o banco (Snake Case)
+      // Prepara objeto para o banco (snake_case) com validação
       const dbUpdates: any = { ...otherFields };
-      if (goalMinutes !== undefined) dbUpdates.goal_minutes = goalMinutes;
+      if (goalMinutes !== undefined) {
+        dbUpdates.goal_minutes = sanitizeNumber(goalMinutes);
+      }
 
       if (Object.keys(dbUpdates).length > 0) {
         await supabase.from('subjects').update(dbUpdates).eq('id', id);
       }
-      setSubjects(subjects.map(s => s.id === id ? { ...s, ...updates } : s));
+      
+      // Atualiza estado local com valor validado
+      const validatedUpdates = { ...updates };
+      if (goalMinutes !== undefined) {
+        validatedUpdates.goalMinutes = sanitizeNumber(goalMinutes);
+      }
+      setSubjects(subjects.map(s => s.id === id ? { ...s, ...validatedUpdates } : s));
     } catch (error) { console.error(error); }
   };
 
@@ -141,18 +162,19 @@ export function useSupabaseData(session: any) {
   const addLog = async (log: any) => {
     if (!session?.user) return;
     try {
+      // ✅ VALIDAÇÃO: Todos os campos numéricos são sanitizados
       const dbLog = {
         user_id: session.user.id,
-        subject_id: log.subjectId, // Envia subjectId como subject_id
+        subject_id: log.subjectId,
         subtopic_id: log.subtopicId || null,
         type: log.type,
-        hours: log.hours,
-        minutes: log.minutes,
-        seconds: log.seconds,
-        pages: log.pages,
-        correct: log.correct,
-        wrong: log.wrong,
-        blank: log.blank,
+        hours: sanitizeNumber(log.hours),
+        minutes: sanitizeNumber(log.minutes),
+        seconds: sanitizeNumber(log.seconds),
+        pages: sanitizeNumber(log.pages),
+        correct: sanitizeNumber(log.correct),
+        wrong: sanitizeNumber(log.wrong),
+        blank: sanitizeNumber(log.blank),
         notes: log.notes,
         date: log.date,
         timestamp: log.timestamp || Date.now()
@@ -161,12 +183,19 @@ export function useSupabaseData(session: any) {
       const { data, error } = await supabase.from('study_logs').insert([dbLog]).select().single();
       if (error) throw error;
 
-      // Adiciona localmente JÁ TRADUZIDO
+      // Adiciona localmente já traduzido e validado
       const newLocalLog = {
         ...data,
         id: data.id,
         subjectId: data.subject_id,
-        subtopicId: data.subtopic_id
+        subtopicId: data.subtopic_id,
+        hours: sanitizeNumber(data.hours),
+        minutes: sanitizeNumber(data.minutes),
+        seconds: sanitizeNumber(data.seconds),
+        pages: sanitizeNumber(data.pages),
+        correct: sanitizeNumber(data.correct),
+        wrong: sanitizeNumber(data.wrong),
+        blank: sanitizeNumber(data.blank),
       };
       setLogs([...logs, newLocalLog]);
     } catch (error) {
@@ -183,10 +212,18 @@ export function useSupabaseData(session: any) {
 
   const editLog = async (id: string, updates: Partial<StudyLog>) => {
      try {
-       // Mapear updates se necessário (ex: subjectId -> subject_id)
-       // Para edição simples de texto/números, geralmente ok.
-       await supabase.from('study_logs').update(updates).eq('id', id);
-       setLogs(logs.map(l => l.id === id ? { ...l, ...updates } : l));
+       // ✅ VALIDAÇÃO: Sanitiza campos numéricos na edição
+       const sanitizedUpdates: any = { ...updates };
+       if (updates.hours !== undefined) sanitizedUpdates.hours = sanitizeNumber(updates.hours);
+       if (updates.minutes !== undefined) sanitizedUpdates.minutes = sanitizeNumber(updates.minutes);
+       if (updates.seconds !== undefined) sanitizedUpdates.seconds = sanitizeNumber(updates.seconds);
+       if (updates.pages !== undefined) sanitizedUpdates.pages = sanitizeNumber(updates.pages);
+       if (updates.correct !== undefined) sanitizedUpdates.correct = sanitizeNumber(updates.correct);
+       if (updates.wrong !== undefined) sanitizedUpdates.wrong = sanitizeNumber(updates.wrong);
+       if (updates.blank !== undefined) sanitizedUpdates.blank = sanitizeNumber(updates.blank);
+
+       await supabase.from('study_logs').update(sanitizedUpdates).eq('id', id);
+       setLogs(logs.map(l => l.id === id ? { ...l, ...sanitizedUpdates } : l));
      } catch(error) { console.error(error); }
   }
 
@@ -195,13 +232,13 @@ export function useSupabaseData(session: any) {
     try {
       const dbUpdates: any = {};
       if (updates.cycleStartDate !== undefined) dbUpdates.cycle_start_date = updates.cycleStartDate;
-      if (updates.dailyGoal !== undefined) dbUpdates.daily_goal = updates.dailyGoal;
+      if (updates.dailyGoal !== undefined) dbUpdates.daily_goal = sanitizeNumber(updates.dailyGoal);
       if (updates.showPerformance !== undefined) dbUpdates.show_performance = updates.showPerformance;
 
       await supabase.from('user_settings').update(dbUpdates).eq('user_id', session.user.id);
 
       if (updates.cycleStartDate !== undefined) setCycleStartDate(updates.cycleStartDate);
-      if (updates.dailyGoal !== undefined) setDailyGoal(updates.dailyGoal);
+      if (updates.dailyGoal !== undefined) setDailyGoal(sanitizeNumber(updates.dailyGoal));
       if (updates.showPerformance !== undefined) setShowPerformance(updates.showPerformance);
     } catch (error) { console.error(error); }
   };

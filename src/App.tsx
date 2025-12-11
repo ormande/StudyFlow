@@ -9,17 +9,16 @@ import TimerPage from './pages/TimerPage';
 import RegisterPage from './pages/RegisterPage';
 import CyclePage from './pages/CyclePage';
 import SettingsModal from './components/SettingsModal';
-import { Lock, Mail, ArrowRight, BookOpen, Settings, LogOut, UserPlus, Loader2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, BookOpen, Settings, UserPlus, Loader2 } from 'lucide-react';
 import ConfirmModal from './components/ConfirmModal';
 import AlertModal from './components/AlertModal';
-import { useToast } from './contexts/ToastContext'; // <--- IMPORTANTE
+import { useToast } from './contexts/ToastContext';
 
-// --- TELA DE LOGIN 2.0 (Com Recuperação) ---
+// --- TELA DE LOGIN ---
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  // Agora aceita 'forgot' também
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const { addToast } = useToast();
 
@@ -39,14 +38,12 @@ const LoginScreen = () => {
         addToast('Conta criada! Bem-vindo ao time.', 'success');
       } 
       else if (mode === 'forgot') {
-        // Lógica de recuperar senha
-        // O redirectTo garante que ele volte para o seu site (importante em produção)
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin, 
+          redirectTo: window.location.href, // Garante que volta para a URL atual (Vercel/Bolt)
         });
         if (error) throw error;
         addToast('Link de recuperação enviado para seu e-mail!', 'success');
-        setMode('login'); // Volta para login
+        setMode('login');
       }
     } catch (err: any) {
       let msg = err.message;
@@ -75,7 +72,6 @@ const LoginScreen = () => {
 
         <form onSubmit={handleAuth} className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 space-y-6 transition-colors duration-300">
           
-          {/* E-MAIL (Sempre aparece) */}
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Seu E-mail</label>
             <div className="relative">
@@ -91,7 +87,6 @@ const LoginScreen = () => {
             </div>
           </div>
 
-          {/* SENHA (Só aparece em Login e Signup) */}
           {mode !== 'forgot' && (
             <div className="animate-in fade-in slide-in-from-top-2">
               <div className="flex justify-between items-center mb-2">
@@ -134,7 +129,7 @@ const LoginScreen = () => {
             <span>
               {mode === 'login' && 'Entrar'}
               {mode === 'signup' && 'Criar Conta'}
-              {mode === 'forgot' && 'Enviar Link de Recuperação'}
+              {mode === 'forgot' && 'Enviar Link'}
             </span>
           </button>
         </form>
@@ -144,7 +139,7 @@ const LoginScreen = () => {
           {mode === 'forgot' ? (
              <button onClick={() => setMode('login')} className="ml-2 font-bold text-emerald-600 hover:underline">Voltar para Login</button>
           ) : (
-             <button onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); }} className="ml-2 font-bold text-emerald-600 hover:underline">
+             <button onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); }} className="ml-2 font-bold text-emerald-600 hover:underline">
                {mode === 'login' ? 'Cadastre-se' : 'Faça Login'}
              </button>
           )}
@@ -154,15 +149,13 @@ const LoginScreen = () => {
   );
 };
 
-// --- APP PRINCIPAL (O RESTO SEGUE IGUAL, SÓ CUIDADO AO COPIAR O FINAL) ---
+// --- APP PRINCIPAL ---
 function App() {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
-  // ... (TODOS OS USE EFFECTS E HOOKS MANTIDOS IGUAIS) ...
-  // Vou apenas replicar o final para garantir que nada quebre:
-  
+  // Tema
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('studyflow_theme');
@@ -186,6 +179,7 @@ function App() {
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
+  // Auth Listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -199,12 +193,14 @@ function App() {
 
   const handleLogout = async () => { await supabase.auth.signOut(); };
 
+  // DATA HOOK
   const {
     subjects, logs, cycleStartDate, dailyGoal, showPerformance, loadingData,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
     addLog, deleteLog, editLog, updateSettings
   } = useSupabaseData(session);
 
+  // UI STATE
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -212,13 +208,13 @@ function App() {
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [showRestartSuccess, setShowRestartSuccess] = useState(false);
-  const [showHardResetConfirm, setShowHardResetConfirm] = useState(false);
-  const [showHardResetFinal, setShowHardResetFinal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
   const timerIntervalRef = useRef<number | null>(null);
   const timerStartRef = useRef<number | null>(null);
   const timerBaseRef = useRef<number>(0);
 
+  // TIMER
   useEffect(() => {
     if (isTimerRunning) {
       if (timerStartRef.current === null) {
@@ -257,11 +253,15 @@ function App() {
     setShowRestartSuccess(true);
   };
 
-  const handleHardReset = () => setShowHardResetConfirm(true);
-  const confirmHardResetStep1 = () => { setShowHardResetConfirm(false); setShowHardResetFinal(true); };
-  const confirmHardResetFinal = () => {
+  // Esta função é chamada pelo botão "Sair" dentro do SettingsModal (Zona de Perigo)
+  const handleSettingsLogoutClick = () => {
+    setShowLogoutConfirm(true); // Abre o modal de confirmação
+  };
+
+  const confirmLogout = () => {
     handleLogout();
-    setShowHardResetFinal(false);
+    setShowLogoutConfirm(false);
+    setShowSettings(false);
   };
 
   const renderPage = () => {
@@ -290,7 +290,7 @@ function App() {
       <SettingsModal 
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
-        onHardReset={handleHardReset} 
+        onHardReset={handleSettingsLogoutClick} // Agora chama o modal de logout
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
         dailyGoal={dailyGoal}
@@ -302,13 +302,26 @@ function App() {
       <ConfirmModal isOpen={deleteLogId !== null} title="Excluir Registro" message="Tem certeza?" confirmText="Excluir" cancelText="Cancelar" variant="danger" onConfirm={confirmDeleteLog} onCancel={() => setDeleteLogId(null)} />
       <ConfirmModal isOpen={showRestartConfirm} title="Reiniciar Ciclo?" message="Isso zera as barras de progresso." confirmText="Reiniciar" cancelText="Cancelar" variant="warning" onConfirm={confirmRestartCycle} onCancel={() => setShowRestartConfirm(false)} />
       <AlertModal isOpen={showRestartSuccess} title="Ciclo Reiniciado!" message="Foco na missão! 👊" buttonText="Bora!" variant="success" onClose={() => setShowRestartSuccess(false)} />
-      <ConfirmModal isOpen={showHardResetConfirm} title="Sair do App?" message="Deseja deslogar da sua conta?" confirmText="Sair" cancelText="Cancelar" variant="danger" onConfirm={confirmHardResetStep1} onCancel={() => setShowHardResetConfirm(false)} />
-      <ConfirmModal isOpen={showHardResetFinal} title="Confirmar Saída" message="Você será desconectado." confirmText="Sim, Sair" cancelText="Voltar" variant="danger" onConfirm={confirmHardResetFinal} onCancel={() => setShowHardResetFinal(false)} />
       
-      <div className="fixed top-6 right-6 z-50 flex gap-3">
-        <button onClick={handleLogout} className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 shadow-lg hover:bg-red-100 hover:text-red-500 transition-all active:scale-95" title="Sair"><LogOut size={20} /></button>
-        <button onClick={() => setShowSettings(true)} className="h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"><Settings size={24} /></button>
-      </div>
+      {/* Modal de Confirmação de Logout */}
+      <ConfirmModal 
+        isOpen={showLogoutConfirm} 
+        title="Sair do App?" 
+        message="Você será desconectado da sua conta." 
+        confirmText="Sair" 
+        cancelText="Voltar" 
+        variant="danger" 
+        onConfirm={confirmLogout} 
+        onCancel={() => setShowLogoutConfirm(false)} 
+      />
+      
+      {/* BOTÃO FLUTUANTE ÚNICO: CONFIGURAÇÕES */}
+      <button 
+        onClick={() => setShowSettings(true)}
+        className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"
+      >
+         <Settings size={24} />
+      </button>
 
       <div className="pb-24 pt-2"> 
         <AnimatePresence mode="wait">
@@ -318,9 +331,7 @@ function App() {
         </AnimatePresence>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 pb-6 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-      </div>
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }

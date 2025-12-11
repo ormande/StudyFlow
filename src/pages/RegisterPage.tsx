@@ -329,7 +329,7 @@ export default function RegisterPage({
                 </div>
               </div>
               {showBlank && (
-                <div className="animate-in fade-in zoom-in-95 duration-200">
+                <div className="animate-in slide-in-from-top-4 fade-in duration-300">
                   <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>

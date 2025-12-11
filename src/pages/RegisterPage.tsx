@@ -296,59 +296,79 @@ export default function RegisterPage({
               </button>
             </div>
             
-            <div className={`grid gap-3 transition-all duration-300 ${showBlank ? 'grid-cols-3' : 'grid-cols-2'}`}>
-              <div>
-                <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg"><Check size={16} className="text-white" /></div>
-                  {/* ✅ INPUT COM VALIDAÇÃO */}
-                  <input 
-                    type="number" 
-                    inputMode="numeric" 
-                    min="0" 
-                    placeholder="0" 
-                    className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
-                    value={correct} 
-                    onChange={e => handleCorrectChange(e.target.value)} 
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg"><X size={16} className="text-white" /></div>
-                  {/* ✅ INPUT COM VALIDAÇÃO */}
-                  <input 
-                    type="number" 
-                    inputMode="numeric" 
-                    min="0" 
-                    placeholder="0" 
-                    className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
-                    value={wrong} 
-                    onChange={e => handleWrongChange(e.target.value)} 
-                  />
-                </div>
-              </div>
-              {showBlank && (
-                <div className="animate-in slide-in-from-top-4 fade-in duration-300">
-                  <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
+{/* INÍCIO DO BLOCO SUBSTITUÍDO */}
+            <div className="flex gap-3 overflow-hidden">
+              <AnimatePresence mode='popLayout' initial={false}>
+                {/* BLOCO CERTAS */}
+                <motion.div 
+                  layout 
+                  className="flex-1 min-w-[80px]"
+                  transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                >
+                  <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>
-                    {/* ✅ INPUT COM VALIDAÇÃO */}
+                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg"><Check size={16} className="text-white" /></div>
                     <input 
                       type="number" 
                       inputMode="numeric" 
                       min="0" 
                       placeholder="0" 
-                      className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:ring-2 focus:ring-blue-400 text-base transition-colors" 
-                      value={blank} 
-                      onChange={e => handleBlankChange(e.target.value)} 
+                      className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
+                      value={correct} 
+                      onChange={e => handleCorrectChange(e.target.value)} 
                     />
                   </div>
-                </div>
-              )}
+                </motion.div>
+
+                {/* BLOCO ERRADAS */}
+                <motion.div 
+                  layout 
+                  className="flex-1 min-w-[80px]"
+                  transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                >
+                  <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg"><X size={16} className="text-white" /></div>
+                    <input 
+                      type="number" 
+                      inputMode="numeric" 
+                      min="0" 
+                      placeholder="0" 
+                      className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
+                      value={wrong} 
+                      onChange={e => handleWrongChange(e.target.value)} 
+                    />
+                  </div>
+                </motion.div>
+
+                {/* BLOCO BRANCO (Condicional) */}
+                {showBlank && (
+                  <motion.div 
+                    layout
+                    initial={{ width: 0, opacity: 1, scale: 1 }} 
+                    animate={{ width: "auto", opacity: 1, scale: 1 }} 
+                    exit={{ width: 0, opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                    className="flex-1 min-w-[80px] overflow-hidden whitespace-nowrap"
+                  >
+                    <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>
+                      <input 
+                        type="number" 
+                        inputMode="numeric" 
+                        min="0" 
+                        placeholder="0" 
+                        className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:ring-2 focus:ring-blue-400 text-base transition-colors" 
+                        value={blank} 
+                        onChange={e => handleBlankChange(e.target.value)} 
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
+            {/* FIM DO BLOCO SUBSTITUÍDO */}
 
           <button onClick={handleSubmit} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-auto flex-shrink-0">
             <Save size={20} /> <span>Salvar Registro</span>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
-import { useToast } from '../contexts/ToastContext'; // <--- USAR TOAST
+import { useToast } from '../contexts/ToastContext';
 import AlertModal from '../components/AlertModal';
 
 interface RegisterPageProps {
@@ -13,6 +13,15 @@ interface RegisterPageProps {
   isTimerRunning: boolean;
 }
 
+// ✅ FUNÇÃO DE VALIDAÇÃO - Garante valores não-negativos
+const sanitizeNumericInput = (value: string, max?: number): string => {
+  if (value === '') return '';
+  const num = parseInt(value);
+  if (isNaN(num) || num < 0) return '0';
+  if (max !== undefined && num > max) return max.toString();
+  return num.toString();
+};
+
 export default function RegisterPage({
   subjects,
   onAddLog,
@@ -21,7 +30,7 @@ export default function RegisterPage({
   timerSeconds,
   isTimerRunning,
 }: RegisterPageProps) {
-  const { addToast } = useToast(); // <--- HOOK DO TOAST
+  const { addToast } = useToast();
 
   const [subjectId, setSubjectId] = useState('');
   const [subtopicId, setSubtopicId] = useState('');
@@ -38,8 +47,6 @@ export default function RegisterPage({
   const [blank, setBlank] = useState('');
   const [showBlank, setShowBlank] = useState(false);
 
-  // AlertModal APENAS para erros de validação (ainda útil se quiser bloquear, ou pode trocar por toast warning)
-  // Vou manter o AlertModal só para erros críticos de validação, mas sucesso vai ser toast.
   const [alertModal, setAlertModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -71,18 +78,28 @@ export default function RegisterPage({
     }
   }, [timerSeconds, isTimerRunning]);
 
+  // ✅ HANDLERS COM VALIDAÇÃO - Impedem valores negativos na digitação
+  const handleHoursChange = (value: string) => setHours(sanitizeNumericInput(value));
+  const handleMinutesChange = (value: string) => setMinutes(sanitizeNumericInput(value, 59));
+  const handleSecondsChange = (value: string) => setSeconds(sanitizeNumericInput(value, 59));
+  const handlePagesChange = (value: string) => setPages(sanitizeNumericInput(value));
+  const handleCorrectChange = (value: string) => setCorrect(sanitizeNumericInput(value));
+  const handleWrongChange = (value: string) => setWrong(sanitizeNumericInput(value));
+  const handleBlankChange = (value: string) => setBlank(sanitizeNumericInput(value));
+
   const handleSubmit = () => {
     if (!subjectId) {
-      addToast('Selecione uma matéria, guerreiro!', 'warning'); // Toast de Aviso
+      addToast('Selecione uma matéria, guerreiro!', 'warning');
       return;
     }
 
-    const h = parseInt(hours) || 0;
-    const m = parseInt(minutes) || 0;
-    const s = parseInt(seconds) || 0;
+    // ✅ VALIDAÇÃO FINAL - Math.max garante não-negativo mesmo se algo escapar
+    const h = Math.max(0, parseInt(hours) || 0);
+    const m = Math.max(0, parseInt(minutes) || 0);
+    const s = Math.max(0, parseInt(seconds) || 0);
 
     if (h === 0 && m === 0 && s === 0) {
-      addToast('O tempo de estudo não pode ser zero.', 'warning'); // Toast de Aviso
+      addToast('O tempo de estudo não pode ser zero.', 'warning');
       return;
     }
 
@@ -99,10 +116,11 @@ export default function RegisterPage({
       seconds: s,
       date: date,
       notes: notes.trim(),
-      pages: parseInt(pages) || 0,
-      correct: parseInt(correct) || 0,
-      wrong: parseInt(wrong) || 0,
-      blank: parseInt(blank) || 0,
+      // ✅ VALIDAÇÃO - Todos os campos numéricos sanitizados
+      pages: Math.max(0, parseInt(pages) || 0),
+      correct: Math.max(0, parseInt(correct) || 0),
+      wrong: Math.max(0, parseInt(wrong) || 0),
+      blank: Math.max(0, parseInt(blank) || 0),
     };
 
     onAddLog(newLog);
@@ -123,7 +141,6 @@ export default function RegisterPage({
     
     if (navigator.vibrate) navigator.vibrate(200);
     
-    // FEEDBACK SUAVE! 🍞
     addToast('Estudo registrado com sucesso!', 'success');
   };
 
@@ -202,14 +219,54 @@ export default function RegisterPage({
           <div className="flex-shrink-0">
              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Tempo Estudado</label>
              <div className="grid grid-cols-3 gap-3">
-              {['Horas', 'Minutos', 'Segundos'].map((label, idx) => (
-                <div key={label}>
-                  <div className="relative">
-                    <input type="number" inputMode="numeric" min="0" max={idx > 0 ? 59 : undefined} value={idx === 0 ? hours : idx === 1 ? minutes : seconds} onChange={(e) => { if (idx === 0) setHours(e.target.value); else if (idx === 1) setMinutes(e.target.value); else setSeconds(e.target.value); }} disabled={isTimerRunning} className="w-full p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" placeholder="00" />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">{label[0]}</span>
-                  </div>
+              {/* ✅ INPUTS COM VALIDAÇÃO onChange */}
+              <div>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    inputMode="numeric" 
+                    min="0" 
+                    value={hours} 
+                    onChange={(e) => handleHoursChange(e.target.value)} 
+                    disabled={isTimerRunning} 
+                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
+                    placeholder="00" 
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">H</span>
                 </div>
-              ))}
+              </div>
+              <div>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    inputMode="numeric" 
+                    min="0" 
+                    max="59" 
+                    value={minutes} 
+                    onChange={(e) => handleMinutesChange(e.target.value)} 
+                    disabled={isTimerRunning} 
+                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
+                    placeholder="00" 
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">M</span>
+                </div>
+              </div>
+              <div>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    inputMode="numeric" 
+                    min="0" 
+                    max="59" 
+                    value={seconds} 
+                    onChange={(e) => handleSecondsChange(e.target.value)} 
+                    disabled={isTimerRunning} 
+                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-center font-bold text-lg text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
+                    placeholder="00" 
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-bold">S</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -217,7 +274,16 @@ export default function RegisterPage({
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
             <div className="relative">
               <BookOpen className="absolute left-3 top-3.5 text-gray-400" size={20} />
-              <input type="number" inputMode="numeric" value={pages} onChange={(e) => setPages(e.target.value)} className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-base text-gray-900 dark:text-white transition-colors" placeholder="Quantidade" />
+              {/* ✅ INPUT COM VALIDAÇÃO */}
+              <input 
+                type="number" 
+                inputMode="numeric" 
+                min="0" 
+                value={pages} 
+                onChange={(e) => handlePagesChange(e.target.value)} 
+                className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-base text-gray-900 dark:text-white transition-colors" 
+                placeholder="Quantidade" 
+              />
             </div>
           </div>
 
@@ -234,14 +300,32 @@ export default function RegisterPage({
                 <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg"><Check size={16} className="text-white" /></div>
-                  <input type="number" inputMode="numeric" placeholder="0" className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" value={correct} onChange={e => setCorrect(e.target.value)} />
+                  {/* ✅ INPUT COM VALIDAÇÃO */}
+                  <input 
+                    type="number" 
+                    inputMode="numeric" 
+                    min="0" 
+                    placeholder="0" 
+                    className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
+                    value={correct} 
+                    onChange={e => handleCorrectChange(e.target.value)} 
+                  />
                 </div>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg"><X size={16} className="text-white" /></div>
-                  <input type="number" inputMode="numeric" placeholder="0" className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" value={wrong} onChange={e => setWrong(e.target.value)} />
+                  {/* ✅ INPUT COM VALIDAÇÃO */}
+                  <input 
+                    type="number" 
+                    inputMode="numeric" 
+                    min="0" 
+                    placeholder="0" 
+                    className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
+                    value={wrong} 
+                    onChange={e => handleWrongChange(e.target.value)} 
+                  />
                 </div>
               </div>
               {showBlank && (
@@ -249,7 +333,16 @@ export default function RegisterPage({
                   <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>
-                    <input type="number" inputMode="numeric" placeholder="0" className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:ring-2 focus:ring-blue-400 text-base transition-colors" value={blank} onChange={e => setBlank(e.target.value)} />
+                    {/* ✅ INPUT COM VALIDAÇÃO */}
+                    <input 
+                      type="number" 
+                      inputMode="numeric" 
+                      min="0" 
+                      placeholder="0" 
+                      className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:ring-2 focus:ring-blue-400 text-base transition-colors" 
+                      value={blank} 
+                      onChange={e => handleBlankChange(e.target.value)} 
+                    />
                   </div>
                 </div>
               )}
@@ -262,7 +355,6 @@ export default function RegisterPage({
         </div>
       </div>
       
-      {/* AlertModal mantido apenas para erros se precisar */}
       {alertModal && <AlertModal isOpen={alertModal.isOpen} title={alertModal.title} message={alertModal.message} buttonText="OK" variant={alertModal.variant} onClose={() => setAlertModal(null)} />}
     </div>
   );

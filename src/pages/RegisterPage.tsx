@@ -14,7 +14,7 @@ interface RegisterPageProps {
   isTimerRunning: boolean;
 }
 
-// ✅ FUNÇÃO DE VALIDAÇÃO - Garante valores não-negativos
+// ✅ FUNÇÃO DE VALIDAÇÃO
 const sanitizeNumericInput = (value: string, max?: number): string => {
   if (value === '') return '';
   const num = parseInt(value);
@@ -79,7 +79,6 @@ export default function RegisterPage({
     }
   }, [timerSeconds, isTimerRunning]);
 
-  // ✅ HANDLERS COM VALIDAÇÃO
   const handleHoursChange = (value: string) => setHours(sanitizeNumericInput(value));
   const handleMinutesChange = (value: string) => setMinutes(sanitizeNumericInput(value, 59));
   const handleSecondsChange = (value: string) => setSeconds(sanitizeNumericInput(value, 59));

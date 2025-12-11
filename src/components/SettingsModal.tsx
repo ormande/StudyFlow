@@ -1,5 +1,7 @@
-import { X, Instagram, AlertTriangle, Moon, Sun, Target, Settings, Eye, EyeOff, Palette, Shield } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { X, Instagram, AlertTriangle, Moon, Sun, Target, Settings, Eye, EyeOff, Palette, Shield, Lock, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../lib/supabase'; // Importe o supabase
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -24,8 +26,39 @@ export default function SettingsModal({
   showPerformance,
   onTogglePerformance
 }: SettingsModalProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para a troca de senha
+  const [newPassword, setNewPassword] = useState('');
+  const [loadingPassword, setLoadingPassword] = useState(false);
 
   if (!isOpen) return null;
+
+  // Função para Atualizar Senha (Auth)
+  const handleUpdatePassword = async () => {
+    if (newPassword.length < 6) {
+      alert("A senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    setLoadingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      
+      if (error) throw error;
+      
+      alert("Senha atualizada com sucesso! 🔒");
+      setNewPassword(''); // Limpa o campo
+    } catch (error: any) {
+      alert("Erro ao atualizar senha: " + error.message);
+    } finally {
+      setLoadingPassword(false);
+    }
+  };
+
+  // Funções de Backup (Mantidas apenas na lógica caso precise, mas removidas do visual se quiser)
+  // ... (Código de export/import que já existia mantido por segurança, mas não exibido se não quiser) ...
+  // Vou manter apenas a estrutura visual limpa conforme seu pedido anterior (sem botões de backup)
 
   return (
     <AnimatePresence>
@@ -140,22 +173,50 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                {/* COLUNA 2: Conta e Perigo */}
+                {/* COLUNA 2: Conta e Segurança */}
                 <div className="space-y-5">
                   
-                  {/* Zona de Perigo (Mantivemos para Logout/Reset) */}
-                  <div className="flex items-center gap-2 text-red-500">
-                    <AlertTriangle size={16} />
-                    <span className="text-xs font-bold uppercase tracking-wider">Zona de Perigo</span>
+                  {/* Título da Seção */}
+                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                    <Lock size={16} />
+                    <span className="text-xs font-bold uppercase tracking-wider">Segurança</span>
                   </div>
 
-                  <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800">
-                    <p className="font-semibold text-red-600 dark:text-red-400 text-sm mb-3">Sair da Conta</p>
+                  {/* NOVO: Card Alterar Senha */}
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                    <p className="font-semibold text-gray-800 dark:text-white text-sm mb-3">Alterar Senha</p>
+                    <div className="flex gap-2">
+                      <input 
+                        type="password" 
+                        placeholder="Nova senha"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="flex-1 p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg text-sm outline-none focus:border-emerald-500 transition-colors dark:text-white"
+                      />
+                      <button 
+                        onClick={handleUpdatePassword}
+                        disabled={loadingPassword || !newPassword}
+                        className="p-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                      >
+                        <Check size={18} />
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-2">
+                      Use para redefinir após recuperação ou trocar senha.
+                    </p>
+                  </div>
+
+                  {/* Zona de Perigo */}
+                  <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 border border-red-200 dark:border-red-800 mt-4">
+                    <div className="flex items-center gap-2 mb-3 text-red-600 dark:text-red-400">
+                       <AlertTriangle size={16} />
+                       <p className="font-semibold text-sm">Zona de Perigo</p>
+                    </div>
                     <button 
                       onClick={onHardReset} 
                       className="w-full py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
-                      <AlertTriangle size={16} /> Sair / Deslogar
+                      Sair / Deslogar
                     </button>
                     <p className="text-[10px] text-red-400 mt-2 text-center">
                       Você será desconectado deste dispositivo
@@ -177,7 +238,7 @@ export default function SettingsModal({
                 >
                   <Instagram size={14} /> @paiao.kayke
                 </a>
-                <p className="text-[10px] text-gray-400 mt-1">Versão 1.4.0 • StudyFlow</p>
+                <p className="text-[10px] text-gray-400 mt-1">Versão 1.5.0 • StudyFlow</p>
               </div>
             </div>
           </motion.div>

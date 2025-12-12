@@ -170,8 +170,8 @@ export default function GamificationPage({ logs, streak, isLoading }: Gamificati
             })}
           </div>
         </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

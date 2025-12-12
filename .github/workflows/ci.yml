@@ -12,6 +12,12 @@ jobs:
   build_and_test:
     name: Build & Type Check
     runs-on: ubuntu-latest
+    env:
+      # Variáveis dummy necessárias para o build passar
+      # O código verifica se essas variáveis existem em src/lib/supabase.ts
+      # Valores reais serão configurados no Vercel durante o deploy
+      VITE_SUPABASE_URL: 'https://dummy.supabase.co'
+      VITE_SUPABASE_ANON_KEY: 'dummy_key_for_ci_build'
     
     steps:
       - name: ⬇️ Checkout do Código
@@ -34,9 +40,3 @@ jobs:
       - name: 🏗️ Fazer Build para Produção
         # Executa o build final (e verifica se ele passa)
         run: npm run build
-        env:
-          # Variáveis dummy necessárias para o build passar
-          # O código verifica se essas variáveis existem em src/lib/supabase.ts
-          # Valores reais serão configurados no Vercel durante o deploy
-          VITE_SUPABASE_URL: 'https://dummy.supabase.co'
-          VITE_SUPABASE_ANON_KEY: 'dummy_key_for_ci_build'

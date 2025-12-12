@@ -96,6 +96,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 onClick={handleClose}
                 disabled={loading}
                 className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Fechar Modal"
+                title="Fechar Modal"
               >
                 <X size={18} />
               </button>
@@ -117,6 +119,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                     placeholder="Mínimo 6 caracteres"
                     minLength={6}
                     required
+                    autoFocus
                     className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-3 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                     disabled={loading}
                   />

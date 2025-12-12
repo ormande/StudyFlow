@@ -109,6 +109,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
                 placeholder="Mínimo 6 caracteres"
                 minLength={6}
                 required
+                autoFocus
                 className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-3 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                 disabled={loading}
               />

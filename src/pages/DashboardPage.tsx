@@ -385,7 +385,14 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                         </div> 
                         <div className="flex items-center gap-2 flex-shrink-0"> 
                           <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span> 
-                          <button onClick={() => onDeleteLog(log.id)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"> <Trash2 size={16} /> </button> 
+                          <button 
+                            onClick={() => onDeleteLog(log.id)} 
+                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"
+                            aria-label="Excluir registro"
+                            title="Excluir registro"
+                          > 
+                            <Trash2 size={16} /> 
+                          </button> 
                         </div> 
                       </div> 
                     ); 
@@ -401,7 +408,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             {/* LINHA 1 - Desktop: Hoje, Total, Meta Diária */}
             <div className="grid grid-cols-3 gap-6">
               {/* Card Hoje */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
                 <button
                   onClick={() => setShowShareModal(true)}
                   className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 active:scale-95"
@@ -410,26 +417,30 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                   <Share2 size={18} />
                 </button>
                 <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-1 opacity-90">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wide">Hoje</span>
+                <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
+                  <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
+                    <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Hoje</span>
                   </div>
-                  <p className="text-3xl font-black tracking-tight">{hours > 0 ? `${hours}h` : `${minutes}m`}</p>
-                  <p className="text-[10px] font-medium opacity-80">{hours > 0 && minutes > 0 ? `${minutes}m adicionais` : 'Foco total!'}</p>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <p className="text-3xl md:text-6xl font-black tracking-tight leading-none mb-1 md:mb-2">{hours > 0 ? `${hours}h` : `${minutes}m`}</p>
+                    <p className="text-[10px] md:text-xs font-medium opacity-80">{hours > 0 && minutes > 0 ? `${minutes}m adicionais` : 'Foco total!'}</p>
+                  </div>
                 </div>
               </div>
 
               {/* Card Total */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
                 <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-1 opacity-90">
-                    <Zap className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wide">Total</span>
+                <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
+                  <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
+                    <Zap className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Total</span>
                   </div>
-                  <p className="text-3xl font-black tracking-tight">{totalHours > 0 ? `${totalHours}h` : '0h'}</p>
-                  <p className="text-[10px] font-medium opacity-80">{totalHours > 0 ? 'acumuladas no app' : 'Vamos começar?'}</p>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <p className="text-3xl md:text-6xl font-black tracking-tight leading-none mb-1 md:mb-2">{totalHours > 0 ? `${totalHours}h` : '0h'}</p>
+                    <p className="text-[10px] md:text-xs font-medium opacity-80">{totalHours > 0 ? 'acumuladas no app' : 'Vamos começar?'}</p>
+                  </div>
                 </div>
               </div>
 
@@ -623,7 +634,14 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                           </div> 
                           <div className="flex items-center gap-2 flex-shrink-0"> 
                             <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span> 
-                            <button onClick={() => onDeleteLog(log.id)} className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"> <Trash2 size={16} /> </button> 
+                            <button 
+                            onClick={() => onDeleteLog(log.id)} 
+                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"
+                            aria-label="Excluir registro"
+                            title="Excluir registro"
+                          > 
+                            <Trash2 size={16} /> 
+                          </button> 
                           </div> 
                         </div> 
                       ); 

@@ -77,6 +77,8 @@ const SortableSubjectCard = ({
                   }}
                   disabled={index === 0}
                   className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
+                  aria-label="Mover matéria para cima"
+                  title="Mover matéria para cima"
                 >
                   <ArrowUp size={14} strokeWidth={3} />
                 </button>
@@ -90,6 +92,8 @@ const SortableSubjectCard = ({
                   }}
                   disabled={index === subjectsLength - 1}
                   className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
+                  aria-label="Mover matéria para baixo"
+                  title="Mover matéria para baixo"
                 >
                   <ArrowDown size={14} strokeWidth={3} />
                 </button>
@@ -107,6 +111,7 @@ const SortableSubjectCard = ({
             <button 
               onClick={() => onEdit(subject)} 
               className="text-gray-400 hover:text-emerald-500 p-2 active:scale-90 transition-transform"
+              aria-label="Editar Matéria"
               title="Editar Matéria"
             >
               <Pencil className="w-5 h-5" />
@@ -114,6 +119,7 @@ const SortableSubjectCard = ({
             <button 
               onClick={() => onDelete(subject.id)} 
               className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform"
+              aria-label="Excluir Matéria"
               title="Excluir Matéria"
             >
               <Trash2 className="w-5 h-5" />
@@ -153,6 +159,8 @@ const SortableSubjectCard = ({
                        onClick={() => moveSubtopic(subject.id, subtopicIndex, 'up')}
                        disabled={subtopicIndex === 0}
                        className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
+                       aria-label={`Mover subtópico "${subtopic.name}" para cima`}
+                       title="Mover subtópico para cima"
                      >
                        <ArrowUp size={10} strokeWidth={3} />
                      </button>
@@ -160,6 +168,8 @@ const SortableSubjectCard = ({
                        onClick={() => moveSubtopic(subject.id, subtopicIndex, 'down')}
                        disabled={subtopicIndex === subject.subtopics.length - 1}
                        className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
+                       aria-label={`Mover subtópico "${subtopic.name}" para baixo`}
+                       title="Mover subtópico para baixo"
                      >
                        <ArrowDown size={10} strokeWidth={3} />
                      </button>
@@ -170,13 +180,20 @@ const SortableSubjectCard = ({
                     className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all active:scale-90 ${
                       subtopic.completed ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-gray-500 hover:border-emerald-400'
                     }`}
+                    aria-label={subtopic.completed ? `Marcar subtópico "${subtopic.name}" como não concluído` : `Marcar subtópico "${subtopic.name}" como concluído`}
+                    title={subtopic.completed ? "Desmarcar como concluído" : "Marcar como concluído"}
                   >
                     {subtopic.completed && <Check className="w-4 h-4 text-white" />}
                   </button>
                   <span className={`flex-1 text-sm ${subtopic.completed ? 'text-gray-500 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200 font-medium'}`}>
                     {subtopic.name}
                   </span>
-                  <button onClick={() => onDeleteSubtopic(subject.id, subtopic.id)} className="text-red-500 hover:text-red-600 p-1 active:scale-90 transition-transform">
+                  <button 
+                    onClick={() => onDeleteSubtopic(subject.id, subtopic.id)} 
+                    className="text-red-500 hover:text-red-600 p-1 active:scale-90 transition-transform"
+                    aria-label={`Excluir subtópico "${subtopic.name}"`}
+                    title="Excluir subtópico"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -193,7 +210,12 @@ const SortableSubjectCard = ({
                 className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base min-w-0"
                 onKeyDown={(e) => { if (e.key === 'Enter') onAddSubtopic(subject.id); }}
               />
-              <button onClick={() => onAddSubtopic(subject.id)} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95 flex-shrink-0">
+              <button 
+                onClick={() => onAddSubtopic(subject.id)} 
+                className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95 flex-shrink-0"
+                aria-label="Adicionar subtópico"
+                title="Adicionar subtópico"
+              >
                 <Plus className="w-5 h-5" />
               </button>
             </div>

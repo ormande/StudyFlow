@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TabType } from './types';
 import { supabase } from './lib/supabase';
@@ -6,10 +6,11 @@ import { useSupabaseData } from './hooks/useSupabaseData';
 import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar'; // <--- Importação Nova
 import DashboardPage from './pages/DashboardPage';
-import TimerPage from './pages/TimerPage';
 import RegisterPage from './pages/RegisterPage';
-import CyclePage from './pages/CyclePage';
-import GamificationPage from './pages/GamificationPage';
+// Lazy loading para páginas grandes
+const TimerPage = lazy(() => import('./pages/TimerPage'));
+const CyclePage = lazy(() => import('./pages/CyclePage'));
+const GamificationPage = lazy(() => import('./pages/GamificationPage'));
 import SettingsModal from './components/SettingsModal';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import { Lock, Mail, ArrowRight, BookOpen, Settings, Loader2 } from 'lucide-react';
@@ -294,69 +295,148 @@ function App() {
     };
   }, [isTimerRunning, timerMode, sendNotification, setIsTimerRunning, setTimerSeconds]);
 
-  const handleTimerStop = (hours: number, minutes: number, seconds: number) => {
+  // useCallback para funções de callback
+  const handleTimerStop = useCallback((hours: number, minutes: number, seconds: number) => {
     setPrefilledTime({ hours, minutes, seconds });
     setActiveTab('register');
-  };
+  }, []);
 
-  const handleDeleteLog = (id: string) => setDeleteLogId(id);
-  const confirmDeleteLog = () => {
+  const handleDeleteLog = useCallback((id: string) => {
+    setDeleteLogId(id);
+  }, []);
+
+  const confirmDeleteLog = useCallback(() => {
     if (deleteLogId) {
       deleteLog(deleteLogId);
       setDeleteLogId(null);
     }
-  };
+  }, [deleteLogId, deleteLog]);
 
-  const confirmRestartCycle = () => {
+  const confirmRestartCycle = useCallback(() => {
     updateSettings({ cycleStartDate: Date.now() });
     setShowRestartConfirm(false);
     setShowRestartSuccess(true);
-  };
+  }, [updateSettings]);
 
-  const handleSettingsLogoutClick = () => {
+  const handleSettingsLogoutClick = useCallback(() => {
     setShowLogoutConfirm(true); 
-  };
+  }, []);
 
-  const confirmLogout = () => {
+  const confirmLogout = useCallback(() => {
     handleLogout();
     setShowLogoutConfirm(false);
     setShowSettings(false);
-  };
+  }, []);
 
-  // Calcular streak para passar para as páginas que precisam
-  const calculateStreak = () => {
-      if (logs.length === 0) return 0;
-      const studyDates = new Set(logs.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR')));
-      const today = new Date();
-      const todayStr = today.toLocaleDateString('pt-BR');
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toLocaleDateString('pt-BR');
-      let streak = 0;
-      let currentCheckDate = new Date();
-      if (!studyDates.has(todayStr) && !studyDates.has(yesterdayStr)) return 0;
-      for (let i = 0; i < 365; i++) {
-        const dateString = currentCheckDate.toLocaleDateString('pt-BR');
-        if (studyDates.has(dateString)) { streak++; } else { if (i === 0 && !studyDates.has(todayStr)) { currentCheckDate.setDate(currentCheckDate.getDate() - 1); continue; } break; }
-        currentCheckDate.setDate(currentCheckDate.getDate() - 1);
-      }
-      return streak;
-    };
+  const handleRestartCycle = useCallback(() => {
+    setShowRestartConfirm(true);
+  }, []);
 
-  const streak = calculateStreak();
+  const handleTimeClear = useCallback(() => {
+    setPrefilledTime(undefined);
+  }, []);
+
+  // useMemo para calcular streak (evita recálculo desnecessário)
+  const streak = useMemo(() => {
+    if (logs.length === 0) return 0;
+    const studyDates = new Set(logs.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR')));
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('pt-BR');
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString('pt-BR');
+    let streak = 0;
+    let currentCheckDate = new Date();
+    if (!studyDates.has(todayStr) && !studyDates.has(yesterdayStr)) return 0;
+    for (let i = 0; i < 365; i++) {
+      const dateString = currentCheckDate.toLocaleDateString('pt-BR');
+      if (studyDates.has(dateString)) { streak++; } else { if (i === 0 && !studyDates.has(todayStr)) { currentCheckDate.setDate(currentCheckDate.getDate() - 1); continue; } break; }
+      currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+    }
+    return streak;
+  }, [logs]);
+
+  // useCallback para callbacks passados como props
+  const handleAddSubject = useCallback((subject: Omit<import('./types').Subject, 'id'>) => {
+    addSubject(subject);
+  }, [addSubject]);
+
+  const handleDeleteSubject = useCallback((id: string) => {
+    deleteSubject(id);
+  }, [deleteSubject]);
+
+  const handleUpdateSubject = useCallback((id: string, subject: Partial<import('./types').Subject>) => {
+    updateSubject(id, subject);
+  }, [updateSubject]);
+
+  const handleReorderSubjects = useCallback((subjects: import('./types').Subject[]) => {
+    reorderSubjects(subjects);
+  }, [reorderSubjects]);
+
+  const handleAddLog = useCallback((log: Omit<import('./types').StudyLog, 'id' | 'timestamp' | 'date'>) => {
+    addLog(log);
+  }, [addLog]);
+
+  const handleEditLog = useCallback((id: string, updates: Partial<import('./types').StudyLog>) => {
+    editLog(id, updates);
+  }, [editLog]);
+
+  const handleSetDailyGoal = useCallback((val: number) => {
+    updateSettings({ dailyGoal: val });
+  }, [updateSettings]);
+
+  const handleTogglePerformance = useCallback(() => {
+    updateSettings({ showPerformance: !showPerformance });
+  }, [showPerformance, updateSettings]);
+
+  const handleCloseSettings = useCallback(() => {
+    setShowSettings(false);
+  }, []);
+
+  const handleCloseRecoveryModal = useCallback(() => {
+    setIsRecoveryMode(false);
+  }, []);
+
+  const handleCancelDeleteLog = useCallback(() => {
+    setDeleteLogId(null);
+  }, []);
+
+  const handleCancelRestartCycle = useCallback(() => {
+    setShowRestartConfirm(false);
+  }, []);
+
+  const handleCloseRestartSuccess = useCallback(() => {
+    setShowRestartSuccess(false);
+  }, []);
+
+  const handleCancelLogout = useCallback(() => {
+    setShowLogoutConfirm(false);
+  }, []);
 
   const renderPage = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={editLog} dailyGoal={dailyGoal} showPerformance={showPerformance} streak={streak} isLoading={loadingData} />;
+        return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} dailyGoal={dailyGoal} showPerformance={showPerformance} streak={streak} isLoading={loadingData} />;
       case 'timer':
-        return <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} timerMode={timerMode} setTimerMode={setTimerMode} />;
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} timerMode={timerMode} setTimerMode={setTimerMode} />
+          </Suspense>
+        );
       case 'register':
-        return <RegisterPage subjects={subjects} onAddLog={addLog} prefilledTime={prefilledTime} onTimeClear={() => setPrefilledTime(undefined)} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
+        return <RegisterPage subjects={subjects} onAddLog={handleAddLog} prefilledTime={prefilledTime} onTimeClear={handleTimeClear} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
       case 'cycle':
-        return <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={addSubject} onDeleteSubject={deleteSubject} onUpdateSubject={updateSubject} onRestartCycle={() => setShowRestartConfirm(true)} onReorderSubjects={reorderSubjects} isLoading={loadingData} />;
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject} onUpdateSubject={handleUpdateSubject} onRestartCycle={handleRestartCycle} onReorderSubjects={handleReorderSubjects} isLoading={loadingData} />
+          </Suspense>
+        );
       case 'gamification':
-        return <GamificationPage logs={logs} streak={streak} isLoading={loadingData} />;
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <GamificationPage logs={logs} streak={streak} isLoading={loadingData} />
+          </Suspense>
+        );
       default:
         return null;
     }
@@ -371,27 +451,52 @@ function App() {
       {/* Modal de Redefinição de Senha - Bloqueia o app até ser concluído */}
       <ResetPasswordModal 
         isOpen={isRecoveryMode} 
-        onClose={() => setIsRecoveryMode(false)} 
+        onClose={handleCloseRecoveryModal} 
       />
 
       <SettingsModal 
         isOpen={showSettings} 
-        onClose={() => setShowSettings(false)} 
+        onClose={handleCloseSettings} 
         onHardReset={handleSettingsLogoutClick}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
         dailyGoal={dailyGoal}
-        onSetDailyGoal={(val) => updateSettings({ dailyGoal: val })}
+        onSetDailyGoal={handleSetDailyGoal}
         showPerformance={showPerformance}
-        onTogglePerformance={() => updateSettings({ showPerformance: !showPerformance })}
+        onTogglePerformance={handleTogglePerformance}
         subjects={subjects}
         logs={logs}
         userEmail={session?.user?.email}
       />
 
-      <ConfirmModal isOpen={deleteLogId !== null} title="Excluir Registro" message="Tem certeza?" confirmText="Excluir" cancelText="Cancelar" variant="danger" onConfirm={confirmDeleteLog} onCancel={() => setDeleteLogId(null)} />
-      <ConfirmModal isOpen={showRestartConfirm} title="Reiniciar Ciclo?" message="Isso zera as barras de progresso." confirmText="Reiniciar" cancelText="Cancelar" variant="warning" onConfirm={confirmRestartCycle} onCancel={() => setShowRestartConfirm(false)} />
-      <AlertModal isOpen={showRestartSuccess} title="Ciclo Reiniciado!" message="Foco na missão! 👊" buttonText="Bora!" variant="success" onClose={() => setShowRestartSuccess(false)} />
+      <ConfirmModal 
+        isOpen={deleteLogId !== null} 
+        title="Excluir Registro" 
+        message="Tem certeza?" 
+        confirmText="Excluir" 
+        cancelText="Cancelar" 
+        variant="danger" 
+        onConfirm={confirmDeleteLog} 
+        onCancel={handleCancelDeleteLog} 
+      />
+      <ConfirmModal 
+        isOpen={showRestartConfirm} 
+        title="Reiniciar Ciclo?" 
+        message="Isso zera as barras de progresso." 
+        confirmText="Reiniciar" 
+        cancelText="Cancelar" 
+        variant="warning" 
+        onConfirm={confirmRestartCycle} 
+        onCancel={handleCancelRestartCycle} 
+      />
+      <AlertModal 
+        isOpen={showRestartSuccess} 
+        title="Ciclo Reiniciado!" 
+        message="Foco na missão! 👊" 
+        buttonText="Bora!" 
+        variant="success" 
+        onClose={handleCloseRestartSuccess} 
+      />
       
       {/* Modal de Confirmação de Logout */}
       <ConfirmModal 
@@ -402,7 +507,7 @@ function App() {
         cancelText="Voltar" 
         variant="danger" 
         onConfirm={confirmLogout} 
-        onCancel={() => setShowLogoutConfirm(false)} 
+        onCancel={handleCancelLogout} 
       />
       
       {/* Sidebar para Desktop */}

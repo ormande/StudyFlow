@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { ToastProvider } from './contexts/ToastContext'; // <--- Importe aqui
+import './i18n'; // Inicializa o i18next
+import { Analytics } from '@vercel/analytics/react';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ToastProvider> {/* <--- Envolva o App aqui */}
       <App />
+      <Analytics />
     </ToastProvider>
   </StrictMode>
 );

@@ -13,6 +13,17 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Acessibilidade: Foco Visual */
+  *:focus-visible {
+    outline: 2px solid theme('colors.emerald.500') !important;
+    outline-offset: 2px;
+    border-radius: theme('borderRadius.lg');
+  }
+
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+
  input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;

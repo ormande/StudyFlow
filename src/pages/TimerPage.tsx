@@ -444,6 +444,8 @@ export default function TimerPage({
                   ? 'bg-emerald-500 text-white shadow-lg'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
               }`}
+              aria-label={`Selecionar preset Pomodoro: ${preset.label} (${preset.minutes} minutos)`}
+              title={`${preset.label} (${preset.minutes}min)`}
             >
               {preset.label}
               <br />
@@ -555,6 +557,8 @@ export default function TimerPage({
           className={`flex-1 py-6 rounded-2xl font-semibold text-lg text-white shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed ${
             isTimerRunning ? 'bg-orange-500 hover:bg-orange-600' : 'bg-emerald-500 hover:bg-emerald-600'
           }`}
+          aria-label={isTimerRunning ? 'Pausar timer' : 'Iniciar timer'}
+          title={isTimerRunning ? 'Pausar timer' : 'Iniciar timer'}
         >
           {isTimerRunning ? (
             <>
@@ -576,6 +580,8 @@ export default function TimerPage({
               transition={{ duration: 0.2 }}
               onClick={handleReset}
               className="px-6 py-6 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 shadow-lg transition-all"
+              aria-label="Resetar timer"
+              title="Resetar timer"
             >
               <RotateCcw className="w-6 h-6" />
             </motion.button>

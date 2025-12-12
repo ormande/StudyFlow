@@ -8,6 +8,10 @@ import autoTable from 'jspdf-autotable';
 import { useNotification } from '../hooks/useNotification';
 import ConfirmModal from './ConfirmModal';
 import ChangePasswordModal from './ChangePasswordModal';
+// i18n guardado para uso futuro:
+// Para reativar: descomente a linha abaixo e adicione o seletor de idioma na seção "Preferências & Foco"
+// import { useTranslation } from 'react-i18next';
+// import { Globe } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -46,6 +50,9 @@ export default function SettingsModal({
   
   // Hook de notificações
   const { permission, requestPermission, sendNotification } = useNotification();
+  
+  // i18n guardado para uso futuro:
+  // const { t, i18n } = useTranslation();
 
   if (!isOpen) return null;
 
@@ -310,7 +317,12 @@ export default function SettingsModal({
                 <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
                   <Settings size={20} className="text-emerald-500"/> Configurações
                 </h3>
-                <button onClick={onClose} className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                <button 
+                  onClick={onClose} 
+                  className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  aria-label="Fechar Modal"
+                  title="Fechar Modal"
+                >
                   <X size={20} />
                 </button>
               </div>

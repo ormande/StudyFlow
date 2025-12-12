@@ -62,6 +62,8 @@ export default function ShareModal({
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-20 backdrop-blur-sm"
+              aria-label="Fechar Modal"
+              title="Fechar Modal"
             >
               <X className="w-5 h-5" />
             </button>

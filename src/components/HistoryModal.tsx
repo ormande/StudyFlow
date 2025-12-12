@@ -91,7 +91,12 @@ export default function HistoryModal({
             {/* Header */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 flex-shrink-0">
               <h3 className="font-bold text-gray-800 dark:text-white text-lg">Histórico Completo</h3>
-              <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+              <button 
+                onClick={onClose} 
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                aria-label="Fechar Modal"
+                title="Fechar Modal"
+              >
                 <X size={20} />
               </button>
             </div>

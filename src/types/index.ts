@@ -41,4 +41,4 @@ export interface DashboardStats {
   todayQuestions: number;
 }
 
-export type TabType = 'dashboard' | 'timer' | 'register' | 'cycle';
+export type TabType = 'dashboard' | 'timer' | 'register' | 'cycle' | 'gamification';

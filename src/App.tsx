@@ -1,25 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TabType, Subject, StudyLog } from './types';
+import { TabType } from './types';
 import { supabase } from './lib/supabase';
 import { useSupabaseData } from './hooks/useSupabaseData';
 import BottomNav from './components/BottomNav';
+import Sidebar from './components/Sidebar'; // <--- Importação Nova
 import DashboardPage from './pages/DashboardPage';
 import TimerPage from './pages/TimerPage';
 import RegisterPage from './pages/RegisterPage';
 import CyclePage from './pages/CyclePage';
+import GamificationPage from './pages/GamificationPage';
 import SettingsModal from './components/SettingsModal';
-import { Lock, Mail, ArrowRight, BookOpen, Settings, UserPlus, Loader2 } from 'lucide-react';
+import ResetPasswordModal from './components/ResetPasswordModal';
+import { Lock, Mail, ArrowRight, BookOpen, Settings, Loader2 } from 'lucide-react';
 import ConfirmModal from './components/ConfirmModal';
 import AlertModal from './components/AlertModal';
 import { useToast } from './contexts/ToastContext';
+import { useNotification } from './hooks/useNotification';
 
 // --- TELA DE LOGIN ---
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
+  const [mode, setMode] = useState<'login' | 'forgot'>('login');
   const { addToast } = useToast();
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -32,14 +36,9 @@ const LoginScreen = () => {
         if (error) throw error;
         addToast('Login realizado com sucesso!', 'success');
       } 
-      else if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        addToast('Conta criada! Bem-vindo ao time.', 'success');
-      } 
       else if (mode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.href, // Garante que volta para a URL atual (Vercel/Bolt)
+          redirectTo: `${window.location.origin}`,
         });
         if (error) throw error;
         addToast('Link de recuperação enviado para seu e-mail!', 'success');
@@ -48,7 +47,6 @@ const LoginScreen = () => {
     } catch (err: any) {
       let msg = err.message;
       if (msg === 'Invalid login credentials') msg = 'E-mail ou senha incorretos.';
-      if (msg === 'User already registered') msg = 'Este e-mail já está cadastrado.';
       addToast(msg, 'error');
     } finally {
       setLoading(false);
@@ -65,7 +63,6 @@ const LoginScreen = () => {
           <h1 className="text-3xl font-black tracking-tight mb-2 text-gray-900 dark:text-white">STUDYFLOW</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
             {mode === 'login' && 'Entre para sincronizar seus estudos.'}
-            {mode === 'signup' && 'Crie sua conta gratuita.'}
             {mode === 'forgot' && 'Recupere seu acesso.'}
           </p>
         </div>
@@ -75,7 +72,7 @@ const LoginScreen = () => {
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Seu E-mail</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3.5 text-gray-400" size={20} />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input 
                 type="email" 
                 required
@@ -89,28 +86,17 @@ const LoginScreen = () => {
 
           {mode !== 'forgot' && (
             <div className="animate-in fade-in slide-in-from-top-2">
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Senha</label>
-                {mode === 'login' && (
-                  <button 
-                    type="button"
-                    onClick={() => setMode('forgot')}
-                    className="text-xs text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
-                  >
-                    Esqueceu a senha?
-                  </button>
-                )}
-              </div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Senha</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3.5 text-gray-400" size={20} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input 
                   type="password" 
-                  required={mode !== 'forgot'}
+                  required
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
-                  placeholder="******"
+                  className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl pl-10 pr-3 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all h-12"
+                  placeholder="••••••"
                 />
               </div>
             </div>
@@ -122,28 +108,21 @@ const LoginScreen = () => {
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all transform active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 className="animate-spin" /> : (
-              mode === 'login' ? <ArrowRight size={20} /> : 
-              mode === 'signup' ? <UserPlus size={20} /> : 
-              <Mail size={20} />
+              mode === 'login' ? <ArrowRight size={20} /> : <Mail size={20} />
             )}
             <span>
-              {mode === 'login' && 'Entrar'}
-              {mode === 'signup' && 'Criar Conta'}
-              {mode === 'forgot' && 'Enviar Link'}
+              {mode === 'login' ? 'Entrar' : 'Enviar Link'}
             </span>
           </button>
-        </form>
 
-        <p className="text-center text-sm text-gray-500">
-          {mode === 'login' ? 'Não tem conta?' : 'Já tem conta?'}
-          {mode === 'forgot' ? (
-             <button onClick={() => setMode('login')} className="ml-2 font-bold text-emerald-600 hover:underline">Voltar para Login</button>
-          ) : (
-             <button onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); }} className="ml-2 font-bold text-emerald-600 hover:underline">
-               {mode === 'login' ? 'Cadastre-se' : 'Faça Login'}
-             </button>
-          )}
-        </p>
+          <button
+            type="button"
+            onClick={() => setMode(mode === 'login' ? 'forgot' : 'login')}
+            className="text-sm text-gray-500 hover:text-emerald-600 hover:underline mt-6 block text-center transition-colors w-full"
+          >
+            {mode === 'login' ? 'Esqueceu sua senha?' : 'Voltar para o Login'}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -154,6 +133,7 @@ function App() {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   // Tema
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -181,13 +161,37 @@ function App() {
 
   // Auth Listener
   useEffect(() => {
+    // Verificar se há hash de recuperação na URL
+    const checkRecoveryHash = () => {
+      const hash = window.location.hash;
+      if (hash.includes('type=recovery') || hash.includes('access_token')) {
+        setIsRecoveryMode(true);
+        // Limpar hash da URL após detectar
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setAuthLoading(false);
+      // Verificar hash após obter sessão
+      checkRecoveryHash();
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      
+      // Detectar modo de recuperação de senha
+      if (event === 'PASSWORD_RECOVERY' || (session && window.location.hash.includes('type=recovery'))) {
+        setIsRecoveryMode(true);
+        // Limpar hash da URL
+        window.history.replaceState(null, '', window.location.pathname);
+      }
     });
+
+    // Verificar hash na montagem do componente
+    checkRecoveryHash();
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -205,34 +209,90 @@ function App() {
   const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [timerMode, setTimerMode] = useState<'cronometro' | 'temporizador' | 'pomodoro'>('cronometro');
+  const { sendNotification } = useNotification();
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [showRestartSuccess, setShowRestartSuccess] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  
+   
   const timerIntervalRef = useRef<number | null>(null);
   const timerStartRef = useRef<number | null>(null);
   const timerBaseRef = useRef<number>(0);
+  const countdownIntervalRef = useRef<number | null>(null);
+  const countdownSecondsRef = useRef<number>(0);
+  const lastTimerSecondsRef = useRef<number>(0);
 
-  // TIMER
+  // Resetar countdown ao mudar de modo
   useEffect(() => {
-    if (isTimerRunning) {
-      if (timerStartRef.current === null) {
-        timerStartRef.current = Date.now();
-        timerBaseRef.current = timerSeconds;
-      }
-      const tick = () => {
-        const elapsed = Math.floor((Date.now() - timerStartRef.current!) / 1000);
-        setTimerSeconds(timerBaseRef.current + elapsed);
-      };
-      timerIntervalRef.current = window.setInterval(tick, 250);
-      tick();
-    } else {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      timerStartRef.current = null;
+    countdownSecondsRef.current = 0;
+    lastTimerSecondsRef.current = 0;
+  }, [timerMode]);
+
+  // Sincronizar countdownSecondsRef quando timerSeconds muda e está maior (novo tempo configurado)
+  useEffect(() => {
+    if (timerMode !== 'cronometro' && timerSeconds > lastTimerSecondsRef.current) {
+      countdownSecondsRef.current = timerSeconds;
     }
-    return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
-  }, [isTimerRunning]);
+    lastTimerSecondsRef.current = timerSeconds;
+  }, [timerSeconds, timerMode]);
+
+  // TIMER - Cronômetro (incrementa) ou Temporizador/Pomodoro (decrementa)
+  useEffect(() => {
+    // Limpar intervalos anteriores
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    
+    if (isTimerRunning) {
+      if (timerMode === 'cronometro') {
+        // Cronômetro: contagem progressiva
+        if (timerStartRef.current === null) {
+          timerStartRef.current = Date.now();
+          timerBaseRef.current = timerSeconds;
+        }
+        const tick = () => {
+          const elapsed = Math.floor((Date.now() - timerStartRef.current!) / 1000);
+          setTimerSeconds(timerBaseRef.current + elapsed);
+        };
+        timerIntervalRef.current = window.setInterval(tick, 250);
+        tick();
+      } else {
+        // Temporizador/Pomodoro: contagem regressiva
+        // Sincronizar countdownSecondsRef apenas quando inicia pela primeira vez (countdownSecondsRef === 0)
+        // OU quando timerSeconds aumenta (novo tempo configurado)
+        // NÃO sincronizar quando retoma (countdownSecondsRef > 0 e timerSeconds menor)
+        if (countdownSecondsRef.current === 0 || (countdownSecondsRef.current < timerSeconds && timerSeconds > 0)) {
+          countdownSecondsRef.current = timerSeconds;
+        }
+        const tick = () => {
+          if (countdownSecondsRef.current <= 0) {
+            setIsTimerRunning(false);
+            clearInterval(countdownIntervalRef.current!);
+            countdownSecondsRef.current = 0;
+            // Enviar notificação quando timer acaba
+            if (timerMode === 'temporizador') {
+              sendNotification('Tempo Esgotado!', { body: 'Sua sessão de estudos acabou.' });
+            } else if (timerMode === 'pomodoro') {
+              sendNotification('Pomodoro Finalizado!', { body: 'Tempo de foco concluído. Hora de descansar!' });
+            }
+            return;
+          }
+          countdownSecondsRef.current -= 1;
+          setTimerSeconds(countdownSecondsRef.current);
+        };
+        countdownIntervalRef.current = window.setInterval(tick, 1000);
+        tick();
+      }
+    } else {
+      timerStartRef.current = null;
+      // NÃO resetar countdown ref quando pausa - manter o valor atual para continuar de onde parou
+    }
+    
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
+  }, [isTimerRunning, timerMode, sendNotification, setIsTimerRunning, setTimerSeconds]);
 
   const handleTimerStop = (hours: number, minutes: number, seconds: number) => {
     setPrefilledTime({ hours, minutes, seconds });
@@ -253,9 +313,8 @@ function App() {
     setShowRestartSuccess(true);
   };
 
-  // Esta função é chamada pelo botão "Sair" dentro do SettingsModal (Zona de Perigo)
   const handleSettingsLogoutClick = () => {
-    setShowLogoutConfirm(true); // Abre o modal de confirmação
+    setShowLogoutConfirm(true); 
   };
 
   const confirmLogout = () => {
@@ -264,18 +323,40 @@ function App() {
     setShowSettings(false);
   };
 
-  const renderPage = () => {
-    if (loadingData) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>;
+  // Calcular streak para passar para as páginas que precisam
+  const calculateStreak = () => {
+      if (logs.length === 0) return 0;
+      const studyDates = new Set(logs.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR')));
+      const today = new Date();
+      const todayStr = today.toLocaleDateString('pt-BR');
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toLocaleDateString('pt-BR');
+      let streak = 0;
+      let currentCheckDate = new Date();
+      if (!studyDates.has(todayStr) && !studyDates.has(yesterdayStr)) return 0;
+      for (let i = 0; i < 365; i++) {
+        const dateString = currentCheckDate.toLocaleDateString('pt-BR');
+        if (studyDates.has(dateString)) { streak++; } else { if (i === 0 && !studyDates.has(todayStr)) { currentCheckDate.setDate(currentCheckDate.getDate() - 1); continue; } break; }
+        currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+      }
+      return streak;
+    };
 
+  const streak = calculateStreak();
+
+  const renderPage = () => {
     switch (activeTab) {
       case 'dashboard':
-         return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={editLog} dailyGoal={dailyGoal} showPerformance={showPerformance} />;
+        return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={editLog} dailyGoal={dailyGoal} showPerformance={showPerformance} streak={streak} isLoading={loadingData} />;
       case 'timer':
-        return <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} />;
+        return <TimerPage onTimerStop={handleTimerStop} timerSeconds={timerSeconds} setTimerSeconds={setTimerSeconds} isTimerRunning={isTimerRunning} setIsTimerRunning={setIsTimerRunning} timerMode={timerMode} setTimerMode={setTimerMode} />;
       case 'register':
         return <RegisterPage subjects={subjects} onAddLog={addLog} prefilledTime={prefilledTime} onTimeClear={() => setPrefilledTime(undefined)} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
       case 'cycle':
-        return <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={addSubject} onDeleteSubject={deleteSubject} onUpdateSubject={updateSubject} onRestartCycle={() => setShowRestartConfirm(true)} onReorderSubjects={reorderSubjects} />;
+        return <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={addSubject} onDeleteSubject={deleteSubject} onUpdateSubject={updateSubject} onRestartCycle={() => setShowRestartConfirm(true)} onReorderSubjects={reorderSubjects} isLoading={loadingData} />;
+      case 'gamification':
+        return <GamificationPage logs={logs} streak={streak} isLoading={loadingData} />;
       default:
         return null;
     }
@@ -287,16 +368,25 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative transition-colors duration-300">
+      {/* Modal de Redefinição de Senha - Bloqueia o app até ser concluído */}
+      <ResetPasswordModal 
+        isOpen={isRecoveryMode} 
+        onClose={() => setIsRecoveryMode(false)} 
+      />
+
       <SettingsModal 
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
-        onHardReset={handleSettingsLogoutClick} // Agora chama o modal de logout
+        onHardReset={handleSettingsLogoutClick}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
         dailyGoal={dailyGoal}
         onSetDailyGoal={(val) => updateSettings({ dailyGoal: val })}
         showPerformance={showPerformance}
         onTogglePerformance={() => updateSettings({ showPerformance: !showPerformance })}
+        subjects={subjects}
+        logs={logs}
+        userEmail={session?.user?.email}
       />
 
       <ConfirmModal isOpen={deleteLogId !== null} title="Excluir Registro" message="Tem certeza?" confirmText="Excluir" cancelText="Cancelar" variant="danger" onConfirm={confirmDeleteLog} onCancel={() => setDeleteLogId(null)} />
@@ -315,15 +405,20 @@ function App() {
         onCancel={() => setShowLogoutConfirm(false)} 
       />
       
-      {/* BOTÃO FLUTUANTE ÚNICO: CONFIGURAÇÕES */}
+      {/* Sidebar para Desktop */}
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* BOTÃO FLUTUANTE: CONFIGURAÇÕES */}
       <button 
         onClick={() => setShowSettings(true)}
-        className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 hover:rotate-90 duration-300"
+        className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 duration-300 group"
+        title="Configurações"
       >
-         <Settings size={24} />
+        <Settings size={24} className="transition-transform duration-300 group-hover:rotate-90" />
       </button>
 
-      <div className="pb-24 pt-2"> 
+      {/* Conteúdo Principal com Ajuste de Margem para Desktop */}
+      <div className="pb-24 pt-2 md:ml-64 md:pb-8"> 
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
             {renderPage()}
@@ -331,7 +426,10 @@ function App() {
         </AnimatePresence>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* BottomNav - Apenas Mobile */}
+      <div className="md:hidden">
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
     </div>
   );
 }

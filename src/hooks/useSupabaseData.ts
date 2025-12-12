@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Subject, StudyLog } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 // ✅ FUNÇÃO DE VALIDAÇÃO - Garante que números nunca sejam negativos
 const sanitizeNumber = (value: number | undefined | null, defaultValue = 0): number => {
@@ -9,6 +10,7 @@ const sanitizeNumber = (value: number | undefined | null, defaultValue = 0): num
 };
 
 export function useSupabaseData(session: any) {
+  const { addToast } = useToast();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [logs, setLogs] = useState<StudyLog[]>([]);
   const [cycleStartDate, setCycleStartDate] = useState<number>(Date.now());
@@ -18,7 +20,7 @@ export function useSupabaseData(session: any) {
 
   // 1. CARREGAR DADOS INICIAIS
   useEffect(() => {
-    if (!session?.user) return;
+    if (!session?.user?.id) return;
 
     async function fetchData() {
       setLoadingData(true);
@@ -29,7 +31,10 @@ export function useSupabaseData(session: any) {
           .select('*, subtopics(*)')
           .order('position');
         
-        if (subError) console.error('Erro matérias:', subError);
+        if (subError) {
+          console.error('Erro matérias:', subError);
+          addToast('Erro ao carregar dados. Detalhe: ' + subError.message, 'error');
+        }
         
         // TRADUÇÃO DO BANCO PARA O APP (snake_case -> camelCase)
         const mappedSubjects = (subData || []).map((s: any) => ({
@@ -44,7 +49,10 @@ export function useSupabaseData(session: any) {
           .select('*')
           .order('created_at', { ascending: true });
 
-        if (logError) console.error('Erro logs:', logError);
+        if (logError) {
+          console.error('Erro logs:', logError);
+          addToast('Erro ao carregar dados. Detalhe: ' + logError.message, 'error');
+        }
 
         // TRADUÇÃO DO BANCO PARA O APP
         const mappedLogs = (logData || []).map((l: any) => ({
@@ -68,29 +76,39 @@ export function useSupabaseData(session: any) {
           .eq('user_id', session.user.id)
           .maybeSingle();
 
+        if (settingsError) {
+          console.error('Erro configurações:', settingsError);
+          addToast('Erro ao carregar dados. Detalhe: ' + settingsError.message, 'error');
+        }
+
         if (settingsData) {
           setCycleStartDate(settingsData.cycle_start_date || Date.now());
           setDailyGoal(sanitizeNumber(settingsData.daily_goal));
           setShowPerformance(settingsData.show_performance ?? true);
         } else {
           // Se não existir, cria agora
-          await supabase.from('user_settings').insert([{ 
+          const { error: insertError } = await supabase.from('user_settings').insert([{ 
             user_id: session.user.id,
             cycle_start_date: Date.now(),
             daily_goal: 0,
             show_performance: true
           }]);
+          if (insertError) {
+            console.error('Erro ao criar configurações:', insertError);
+            addToast('Erro ao criar configurações. Detalhe: ' + insertError.message, 'error');
+          }
         }
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro geral ao carregar dados:', error);
+        addToast('Erro ao carregar dados. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
       } finally {
         setLoadingData(false);
       }
     }
 
     fetchData();
-  }, [session]);
+  }, [session?.user?.id]);
 
   // --- FUNÇÕES DE MATÉRIAS ---
   const addSubject = async (subject: Omit<Subject, 'id'>) => {
@@ -114,16 +132,21 @@ export function useSupabaseData(session: any) {
         goalMinutes: sanitizeNumber(data.goal_minutes), 
         subtopics: [] 
       }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao adicionar matéria:', error);
+      addToast('Erro ao criar matéria. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
     }
   };
 
   const deleteSubject = async (id: string) => {
     try {
-      await supabase.from('subjects').delete().eq('id', id);
+      const { error } = await supabase.from('subjects').delete().eq('id', id);
+      if (error) throw error;
       setSubjects(subjects.filter(s => s.id !== id));
-    } catch (error) { console.error(error); }
+    } catch (error: any) {
+      console.error(error);
+      addToast('Erro ao excluir matéria. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+    }
   };
 
   const updateSubject = async (id: string, updates: Partial<Subject>) => {
@@ -137,7 +160,8 @@ export function useSupabaseData(session: any) {
       }
 
       if (Object.keys(dbUpdates).length > 0) {
-        await supabase.from('subjects').update(dbUpdates).eq('id', id);
+        const { error } = await supabase.from('subjects').update(dbUpdates).eq('id', id);
+        if (error) throw error;
       }
       
       // Atualiza estado local com valor validado
@@ -146,16 +170,23 @@ export function useSupabaseData(session: any) {
         validatedUpdates.goalMinutes = sanitizeNumber(goalMinutes);
       }
       setSubjects(subjects.map(s => s.id === id ? { ...s, ...validatedUpdates } : s));
-    } catch (error) { console.error(error); }
+    } catch (error: any) {
+      console.error(error);
+      addToast('Erro ao atualizar matéria. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+    }
   };
 
   const reorderSubjects = async (newSubjects: Subject[]) => {
     setSubjects(newSubjects);
     try {
       for (let i = 0; i < newSubjects.length; i++) {
-         await supabase.from('subjects').update({ position: i }).eq('id', newSubjects[i].id);
+         const { error } = await supabase.from('subjects').update({ position: i }).eq('id', newSubjects[i].id);
+         if (error) throw error;
       }
-    } catch (error) { console.error(error); }
+    } catch (error: any) {
+      console.error(error);
+      addToast('Erro ao reordenar matérias. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+    }
   };
 
   // --- FUNÇÕES DE LOGS ---
@@ -198,16 +229,21 @@ export function useSupabaseData(session: any) {
         blank: sanitizeNumber(data.blank),
       };
       setLogs([...logs, newLocalLog]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar log:', error);
+      addToast('Erro ao registrar estudo. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
     }
   };
 
   const deleteLog = async (id: string) => {
     try {
-      await supabase.from('study_logs').delete().eq('id', id);
+      const { error } = await supabase.from('study_logs').delete().eq('id', id);
+      if (error) throw error;
       setLogs(logs.filter(l => l.id !== id));
-    } catch (error) { console.error(error); }
+    } catch (error: any) {
+      console.error(error);
+      addToast('Erro ao excluir registro de estudo. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+    }
   };
 
   const editLog = async (id: string, updates: Partial<StudyLog>) => {
@@ -222,9 +258,13 @@ export function useSupabaseData(session: any) {
        if (updates.wrong !== undefined) sanitizedUpdates.wrong = sanitizeNumber(updates.wrong);
        if (updates.blank !== undefined) sanitizedUpdates.blank = sanitizeNumber(updates.blank);
 
-       await supabase.from('study_logs').update(sanitizedUpdates).eq('id', id);
+       const { error } = await supabase.from('study_logs').update(sanitizedUpdates).eq('id', id);
+       if (error) throw error;
        setLogs(logs.map(l => l.id === id ? { ...l, ...sanitizedUpdates } : l));
-     } catch(error) { console.error(error); }
+     } catch(error: any) {
+       console.error(error);
+       addToast('Erro ao editar registro de estudo. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+     }
   }
 
   const updateSettings = async (updates: any) => {
@@ -235,12 +275,16 @@ export function useSupabaseData(session: any) {
       if (updates.dailyGoal !== undefined) dbUpdates.daily_goal = sanitizeNumber(updates.dailyGoal);
       if (updates.showPerformance !== undefined) dbUpdates.show_performance = updates.showPerformance;
 
-      await supabase.from('user_settings').update(dbUpdates).eq('user_id', session.user.id);
+      const { error } = await supabase.from('user_settings').update(dbUpdates).eq('user_id', session.user.id);
+      if (error) throw error;
 
       if (updates.cycleStartDate !== undefined) setCycleStartDate(updates.cycleStartDate);
       if (updates.dailyGoal !== undefined) setDailyGoal(sanitizeNumber(updates.dailyGoal));
       if (updates.showPerformance !== undefined) setShowPerformance(updates.showPerformance);
-    } catch (error) { console.error(error); }
+    } catch (error: any) {
+      console.error(error);
+      addToast('Erro ao atualizar configurações. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+    }
   };
 
   return {

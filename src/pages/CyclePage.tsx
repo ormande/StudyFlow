@@ -1,9 +1,208 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown, BookOpen, Clock, Calendar, Pencil, Save } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown, BookOpen, Clock, Calendar, Pencil, Save, GripVertical } from 'lucide-react';
+import { Reorder, useDragControls } from 'framer-motion';
 import ConfirmModal from '../components/ConfirmModal';
 import AlertModal from '../components/AlertModal';
 import { Subject, StudyLog, Subtopic } from '../types';
-import { getRandomColor } from '../utils/colors';
+import { getRandomColor, subjectColors } from '../utils/colors';
+import Skeleton from '../components/Skeleton';
+
+// Componente para cada card de matéria com drag & drop
+interface SortableSubjectCardProps {
+  subject: Subject;
+  index: number;
+  totalMinutes: number;
+  percentage: number;
+  isExpanded: boolean;
+  onExpand: (subjectId: string | null) => void;
+  onEdit: (subject: Subject) => void;
+  onDelete: (subjectId: string) => void;
+  onAddSubtopic: (subjectId: string) => void;
+  onToggleSubtopic: (subjectId: string, subtopicId: string) => void;
+  onDeleteSubtopic: (subjectId: string, subtopicId: string) => void;
+  moveSubtopic: (subjectId: string, subtopicIndex: number, direction: 'up' | 'down') => void;
+  newSubtopic: string;
+  setNewSubtopic: (value: string) => void;
+  subjectsLength: number;
+  subjects: Subject[];
+  onReorderSubjects: (subjects: Subject[]) => void;
+}
+
+const SortableSubjectCard = ({
+  subject,
+  index,
+  totalMinutes,
+  percentage,
+  isExpanded,
+  onExpand,
+  onEdit,
+  onDelete,
+  onAddSubtopic,
+  onToggleSubtopic,
+  onDeleteSubtopic,
+  moveSubtopic,
+  newSubtopic,
+  setNewSubtopic,
+  subjectsLength,
+  subjects,
+  onReorderSubjects
+}: SortableSubjectCardProps) => {
+  const controls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={subject}
+      dragListener={false}
+      dragControls={controls}
+      className="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden transition-colors duration-300 border border-gray-100 dark:border-gray-700"
+    >
+      <div className="p-5">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
+              {/* ALÇA DE DRAG */}
+              <GripVertical
+                className="w-5 h-5 text-gray-300 hover:text-emerald-500 cursor-grab active:cursor-grabbing touch-none transition-colors"
+                onPointerDown={(e) => controls.start(e)}
+              />
+              {/* CONTROLES DE ORDEM */}
+              <div className="flex flex-col gap-0.5">
+                <button 
+                  onClick={() => {
+                    const newSubjects = [...subjects];
+                    if (index > 0) {
+                      [newSubjects[index], newSubjects[index - 1]] = [newSubjects[index - 1], newSubjects[index]];
+                      onReorderSubjects(newSubjects);
+                    }
+                  }}
+                  disabled={index === 0}
+                  className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
+                >
+                  <ArrowUp size={14} strokeWidth={3} />
+                </button>
+                <button 
+                  onClick={() => {
+                    const newSubjects = [...subjects];
+                    if (index < subjectsLength - 1) {
+                      [newSubjects[index], newSubjects[index + 1]] = [newSubjects[index + 1], newSubjects[index]];
+                      onReorderSubjects(newSubjects);
+                    }
+                  }}
+                  disabled={index === subjectsLength - 1}
+                  className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
+                >
+                  <ArrowDown size={14} strokeWidth={3} />
+                </button>
+              </div>
+              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 pl-8">
+              Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
+            </p>
+          </div>
+          
+          {/* Botões de Ação: Editar e Excluir */}
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={() => onEdit(subject)} 
+              className="text-gray-400 hover:text-emerald-500 p-2 active:scale-90 transition-transform"
+              title="Editar Matéria"
+            >
+              <Pencil className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => onDelete(subject.id)} 
+              className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform"
+              title="Excluir Matéria"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+            <div 
+              className="h-full transition-all duration-300 rounded-full" 
+              style={{ width: `${percentage}%`, backgroundColor: percentage >= 100 ? '#10b981' : subject.color }} 
+            />
+          </div>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 text-right">{percentage.toFixed(1)}%</p>
+        </div>
+
+        <button 
+          onClick={() => onExpand(isExpanded ? null : subject.id)} 
+          className="w-full flex items-center justify-between py-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 group"
+        >
+          <span>Subtópicos ({subject.subtopics.filter((st) => st.completed).length}/{subject.subtopics.length})</span>
+          <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {/* EFEITO ACORDEÃO NOS SUBTÓPICOS */}
+      <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div className="overflow-hidden">
+          <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4">
+            <div className="space-y-2 mb-4">
+              {subject.subtopics.map((subtopic, subtopicIndex) => (
+                <div key={subtopic.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 group">
+                  
+                  <div className="flex flex-col gap-0.5 opacity-50 hover:opacity-100 transition-opacity">
+                     <button 
+                       onClick={() => moveSubtopic(subject.id, subtopicIndex, 'up')}
+                       disabled={subtopicIndex === 0}
+                       className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
+                     >
+                       <ArrowUp size={10} strokeWidth={3} />
+                     </button>
+                     <button 
+                       onClick={() => moveSubtopic(subject.id, subtopicIndex, 'down')}
+                       disabled={subtopicIndex === subject.subtopics.length - 1}
+                       className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
+                     >
+                       <ArrowDown size={10} strokeWidth={3} />
+                     </button>
+                  </div>
+
+                  <button
+                    onClick={() => onToggleSubtopic(subject.id, subtopic.id)}
+                    className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all active:scale-90 ${
+                      subtopic.completed ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-gray-500 hover:border-emerald-400'
+                    }`}
+                  >
+                    {subtopic.completed && <Check className="w-4 h-4 text-white" />}
+                  </button>
+                  <span className={`flex-1 text-sm ${subtopic.completed ? 'text-gray-500 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200 font-medium'}`}>
+                    {subtopic.name}
+                  </span>
+                  <button onClick={() => onDeleteSubtopic(subject.id, subtopic.id)} className="text-red-500 hover:text-red-600 p-1 active:scale-90 transition-transform">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            {/* Container do Input de Subtópico */}
+            <div className="flex gap-2 w-full pr-1">
+              <input
+                type="text"
+                value={newSubtopic}
+                onChange={(e) => setNewSubtopic(e.target.value)}
+                placeholder="Novo subtópico..."
+                className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base min-w-0"
+                onKeyDown={(e) => { if (e.key === 'Enter') onAddSubtopic(subject.id); }}
+              />
+              <button onClick={() => onAddSubtopic(subject.id)} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95 flex-shrink-0">
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Reorder.Item>
+  );
+};
 
 interface CyclePageProps {
   subjects: Subject[];
@@ -14,6 +213,7 @@ interface CyclePageProps {
   onUpdateSubject: (id: string, subject: Partial<Subject>) => void;
   onRestartCycle: () => void;
   onReorderSubjects: (subjects: Subject[]) => void;
+  isLoading: boolean;
 }
 
 export default function CyclePage({
@@ -24,7 +224,8 @@ export default function CyclePage({
   onDeleteSubject,
   onUpdateSubject,
   onRestartCycle,
-  onReorderSubjects
+  onReorderSubjects,
+  isLoading
 }: CyclePageProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
@@ -38,6 +239,7 @@ export default function CyclePage({
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [editName, setEditName] = useState('');
   const [editGoal, setEditGoal] = useState('');
+  const [editColor, setEditColor] = useState('');
 
   const handleAddSubject = () => {
     if (!newName.trim() || !newGoal) {
@@ -60,6 +262,7 @@ export default function CyclePage({
     setEditingSubject(subject);
     setEditName(subject.name);
     setEditGoal(subject.goalMinutes.toString());
+    setEditColor(subject.color);
   };
 
   // Função para salvar a edição
@@ -68,7 +271,8 @@ export default function CyclePage({
     
     onUpdateSubject(editingSubject.id, {
       name: editName.trim(),
-      goalMinutes: parseInt(editGoal)
+      goalMinutes: parseInt(editGoal),
+      color: editColor
     });
     
     setEditingSubject(null);
@@ -135,16 +339,6 @@ export default function CyclePage({
     onUpdateSubject(subjectId, { subtopics: updatedSubtopics });
   };
 
-  const moveSubject = (index: number, direction: 'up' | 'down') => {
-    const newSubjects = [...subjects];
-    if (direction === 'up' && index > 0) {
-      [newSubjects[index], newSubjects[index - 1]] = [newSubjects[index - 1], newSubjects[index]];
-    } else if (direction === 'down' && index < newSubjects.length - 1) {
-      [newSubjects[index], newSubjects[index + 1]] = [newSubjects[index + 1], newSubjects[index]];
-    }
-    onReorderSubjects(newSubjects);
-  };
-
   // Função para mover subtópicos
   const moveSubtopic = (subjectId: string, subtopicIndex: number, direction: 'up' | 'down') => {
     const subject = subjects.find((s) => s.id === subjectId);
@@ -170,8 +364,22 @@ export default function CyclePage({
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Gerencie suas matérias e acompanhe o progresso</p>
       </div>
 
-      {/* GRID PRINCIPAL */}
-      <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
+          {/* COLUNA ESQUERDA - Skeleton */}
+          <div className="md:sticky md:top-6 space-y-6">
+            <Skeleton className="h-64 w-full" />
+          </div>
+          
+          {/* COLUNA DIREITA - Skeletons dos cards */}
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
         
         {/* COLUNA ESQUERDA */}
         <div className="md:sticky md:top-6 space-y-6">
@@ -244,142 +452,40 @@ export default function CyclePage({
 
         {/* COLUNA DIREITA: Lista de Matérias */}
         <div className="space-y-4">
-          {subjects.map((subject, index) => {
-            const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);
-            const isExpanded = expandedSubject === subject.id;
+          <Reorder.Group
+            axis="y"
+            values={subjects}
+            onReorder={onReorderSubjects}
+            className="space-y-4"
+          >
+            {subjects.map((subject, index) => {
+              const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);
+              const isExpanded = expandedSubject === subject.id;
 
-            return (
-              <div key={subject.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden transition-colors duration-300 border border-gray-100 dark:border-gray-700">
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        {/* CONTROLES DE ORDEM */}
-                        <div className="flex flex-col gap-0.5">
-                          <button 
-                            onClick={() => moveSubject(index, 'up')}
-                            disabled={index === 0}
-                            className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
-                          >
-                            <ArrowUp size={14} strokeWidth={3} />
-                          </button>
-                          <button 
-                            onClick={() => moveSubject(index, 'down')}
-                            disabled={index === subjects.length - 1}
-                            className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
-                          >
-                            <ArrowDown size={14} strokeWidth={3} />
-                          </button>
-                        </div>
-                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 pl-8">
-                        Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
-                      </p>
-                    </div>
-                    
-                    {/* Botões de Ação: Editar e Excluir */}
-                    <div className="flex items-center gap-1">
-                      <button 
-                        onClick={() => openEditModal(subject)} 
-                        className="text-gray-400 hover:text-blue-500 p-2 active:scale-90 transition-transform"
-                        title="Editar Matéria"
-                      >
-                        <Pencil className="w-5 h-5" />
-                      </button>
-                      <button 
-                        onClick={() => setDeleteSubjectId(subject.id)} 
-                        className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform"
-                        title="Excluir Matéria"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                      <div 
-                        className="h-full transition-all duration-300 rounded-full" 
-                        style={{ width: `${percentage}%`, backgroundColor: percentage >= 100 ? '#10b981' : subject.color }} 
-                      />
-                    </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 text-right">{percentage.toFixed(1)}%</p>
-                  </div>
-
-                  <button 
-                    onClick={() => setExpandedSubject(isExpanded ? null : subject.id)} 
-                    className="w-full flex items-center justify-between py-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 group"
-                  >
-                    <span>Subtópicos ({subject.subtopics.filter((st) => st.completed).length}/{subject.subtopics.length})</span>
-                    <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                  </button>
-                </div>
-
-                {/* EFEITO ACORDEÃO NOS SUBTÓPICOS */}
-                <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                  <div className="overflow-hidden">
-                    <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4">
-                      <div className="space-y-2 mb-4">
-                        {subject.subtopics.map((subtopic, index) => (
-                          <div key={subtopic.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 group">
-                            
-                            <div className="flex flex-col gap-0.5 opacity-50 hover:opacity-100 transition-opacity">
-                               <button 
-                                 onClick={() => moveSubtopic(subject.id, index, 'up')}
-                                 disabled={index === 0}
-                                 className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
-                               >
-                                 <ArrowUp size={10} strokeWidth={3} />
-                               </button>
-                               <button 
-                                 onClick={() => moveSubtopic(subject.id, index, 'down')}
-                                 disabled={index === subject.subtopics.length - 1}
-                                 className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
-                               >
-                                 <ArrowDown size={10} strokeWidth={3} />
-                               </button>
-                            </div>
-
-                            <button
-                              onClick={() => handleToggleSubtopic(subject.id, subtopic.id)}
-                              className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all active:scale-90 ${
-                                subtopic.completed ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-gray-500 hover:border-emerald-400'
-                              }`}
-                            >
-                              {subtopic.completed && <Check className="w-4 h-4 text-white" />}
-                            </button>
-                            <span className={`flex-1 text-sm ${subtopic.completed ? 'text-gray-500 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200 font-medium'}`}>
-                              {subtopic.name}
-                            </span>
-                            <button onClick={() => handleDeleteSubtopic(subject.id, subtopic.id)} className="text-red-500 hover:text-red-600 p-1 active:scale-90 transition-transform">
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* Container do Input de Subtópico Corrigido */}
-                      <div className="flex gap-2 w-full pr-1">
-                        <input
-                          type="text"
-                          value={newSubtopic}
-                          onChange={(e) => setNewSubtopic(e.target.value)}
-                          placeholder="Novo subtópico..."
-                          className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base min-w-0"
-                          onKeyDown={(e) => { if (e.key === 'Enter') handleAddSubtopic(subject.id); }}
-                        />
-                        <button onClick={() => handleAddSubtopic(subject.id)} className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95 flex-shrink-0">
-                          <Plus className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              return (
+                <SortableSubjectCard
+                  key={subject.id}
+                  subject={subject}
+                  index={index}
+                  totalMinutes={totalMinutes}
+                  percentage={percentage}
+                  isExpanded={isExpanded}
+                  onExpand={setExpandedSubject}
+                  onEdit={openEditModal}
+                  onDelete={setDeleteSubjectId}
+                  onAddSubtopic={handleAddSubtopic}
+                  onToggleSubtopic={handleToggleSubtopic}
+                  onDeleteSubtopic={handleDeleteSubtopic}
+                  moveSubtopic={moveSubtopic}
+                  newSubtopic={newSubtopic}
+                  setNewSubtopic={setNewSubtopic}
+                  subjectsLength={subjects.length}
+                  subjects={subjects}
+                  onReorderSubjects={onReorderSubjects}
+                />
+              );
+            })}
+          </Reorder.Group>
 
           {!isAdding ? (
             <button
@@ -420,6 +526,7 @@ export default function CyclePage({
           )}
         </div>
       </div>
+      )}
 
       {/* Modal: Validação */}
       <AlertModal
@@ -460,7 +567,7 @@ export default function CyclePage({
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none text-base"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
                 autoFocus
               />
             </div>
@@ -472,14 +579,40 @@ export default function CyclePage({
                 min="1"
                 value={editGoal}
                 onChange={(e) => setEditGoal(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none text-base"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Cor</label>
+              <div className="flex flex-wrap gap-3">
+                {subjectColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setEditColor(color)}
+                    className={`w-8 h-8 rounded-full transition-all active:scale-90 ${
+                      editColor === color
+                        ? 'ring-2 ring-offset-2 ring-emerald-500 scale-110'
+                        : 'hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={`Cor ${color}`}
+                  >
+                    {editColor === color && (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white drop-shadow-md" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">
               <button 
                 onClick={handleSaveEdit} 
-                className="flex-1 py-3 rounded-xl bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
               >
                 <Save size={18} /> Salvar
               </button>

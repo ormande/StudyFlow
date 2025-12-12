@@ -1,4 +1,4 @@
-import { Home, Timer, PenLine, Target } from 'lucide-react';
+import { Home, Timer, PenLine, Target, Trophy } from 'lucide-react';
 import { TabType } from '../types';
 
 interface BottomNavProps {
@@ -12,11 +12,12 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     { id: 'timer' as TabType, icon: Timer, label: 'Timer' },
     { id: 'register' as TabType, icon: PenLine, label: 'Registrar' },
     { id: 'cycle' as TabType, icon: Target, label: 'Ciclo' },
+    { id: 'gamification' as TabType, icon: Trophy, label: 'Conquistas' },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 safe-area-bottom z-50 transition-colors duration-300 shadow-[0_-1px_10px_rgba(0,0,0,0.05)]">
-      <div className="flex justify-around items-center h-16 max-w-lg md:max-w-5xl mx-auto px-2">
+      <div className="flex justify-around items-center h-14 md:h-16 max-w-lg md:max-w-5xl mx-auto px-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

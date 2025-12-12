@@ -156,18 +156,11 @@ export default function RegisterPage({
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
-      {/* Grid Bento - 3 Colunas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+      {/* Grid Flexível - Cards Soltos */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
         
-        {/* COLUNA 1 - SETUP (O Que) */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-5 transition-colors duration-300">
-          
-          {/* Título do Card */}
-          <div className="flex items-center gap-2 mb-4">
-            <Layers className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Setup</h2>
-          </div>
-          
+        {/* Card 1 - Setup: Matéria e Subtópico */}
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 space-y-4 transition-colors duration-300">
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Matéria</label>
             <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-base text-gray-900 dark:text-white transition-colors">
@@ -187,165 +180,221 @@ export default function RegisterPage({
               </select>
             </div>
           )}
+        </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Data</label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
-              <input type="date" value={date} max={new Date().toISOString().split('T')[0]} onChange={(e) => setDate(e.target.value)} className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-base text-gray-900 dark:text-white transition-colors appearance-none h-12" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Tipo de Estudo</label>
-            <div className="grid grid-cols-3 gap-3">
-              {typeButtons.map((btn) => {
-                const Icon = btn.icon;
-                return (
-                  <button key={btn.id} type="button" onClick={() => setType(btn.id as any)} className={`py-4 rounded-xl font-semibold text-sm transition-all active:scale-95 flex flex-col items-center gap-2 ${type === btn.id ? 'bg-emerald-500 text-white shadow-lg scale-105' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
-                    <Icon className="w-5 h-5" /> {btn.label}
-                  </button>
-                );
-              })}
-            </div>
+        {/* Card 2 - Data */}
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Data</label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none" size={20} />
+            <input 
+              type="date" 
+              value={date} 
+              max={new Date().toISOString().split('T')[0]} 
+              onChange={(e) => setDate(e.target.value)} 
+              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-base text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark]" 
+            />
           </div>
         </div>
 
-        {/* COLUNA 2 - MÉTRICAS (Quanto) */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-colors duration-300">
-          
-          {/* Título do Card */}
+        {/* Card 3 - Tipo de Estudo */}
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Tipo de Estudo</label>
+          <div className="grid grid-cols-3 gap-2">
+            {typeButtons.map((btn) => {
+              const Icon = btn.icon;
+              return (
+                <button key={btn.id} type="button" onClick={() => setType(btn.id as any)} className={`py-3 rounded-xl font-semibold text-xs transition-all active:scale-95 flex flex-col items-center gap-1 ${type === btn.id ? 'bg-emerald-500 text-white shadow-lg scale-105' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+                  <Icon className="w-4 h-4" /> {btn.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Card 4 - Tempo Estudado */}
+        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Métricas</h2>
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Tempo Estudado</label>
           </div>
-          
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4 text-center">Tempo Estudado</label>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="flex flex-col items-center">
-                <input 
-                  type="number" 
-                  inputMode="numeric" 
-                  min="0" 
-                  value={hours} 
-                  onChange={(e) => handleHoursChange(e.target.value)} 
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  disabled={isTimerRunning} 
-                  className="w-full p-4 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-2xl outline-none text-center font-black text-3xl text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
-                  placeholder="00" 
-                />
-                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 mt-2 uppercase">Horas</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <input 
-                  type="number" 
-                  inputMode="numeric" 
-                  min="0" 
-                  max="59" 
-                  value={minutes} 
-                  onChange={(e) => handleMinutesChange(e.target.value)} 
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  disabled={isTimerRunning} 
-                  className="w-full p-4 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-2xl outline-none text-center font-black text-3xl text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
-                  placeholder="00" 
-                />
-                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 mt-2 uppercase">Minutos</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <input 
-                  type="number" 
-                  inputMode="numeric" 
-                  min="0" 
-                  max="59" 
-                  value={seconds} 
-                  onChange={(e) => handleSecondsChange(e.target.value)} 
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  disabled={isTimerRunning} 
-                  className="w-full p-4 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-2xl outline-none text-center font-black text-3xl text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
-                  placeholder="00" 
-                />
-                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 mt-2 uppercase">Segundos</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
-            <div className="relative">
-              <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <div className="grid grid-cols-3 gap-4">
+            <div className="flex flex-col items-center">
               <input 
                 type="number" 
                 inputMode="numeric" 
                 min="0" 
-                value={pages} 
-                onChange={(e) => handlePagesChange(e.target.value)} 
+                value={hours} 
+                onChange={(e) => handleHoursChange(e.target.value)} 
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     handleSubmit();
                   }
                 }}
-                className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-base text-gray-900 dark:text-white transition-colors h-12" 
-                placeholder="Quantidade" 
+                disabled={isTimerRunning} 
+                className="w-full p-4 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-2xl outline-none text-center font-black text-3xl text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
+                placeholder="00" 
               />
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 mt-2 uppercase">Horas</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <input 
+                type="number" 
+                inputMode="numeric" 
+                min="0" 
+                max="59" 
+                value={minutes} 
+                onChange={(e) => handleMinutesChange(e.target.value)} 
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                disabled={isTimerRunning} 
+                className="w-full p-4 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-2xl outline-none text-center font-black text-3xl text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
+                placeholder="00" 
+              />
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 mt-2 uppercase">Minutos</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <input 
+                type="number" 
+                inputMode="numeric" 
+                min="0" 
+                max="59" 
+                value={seconds} 
+                onChange={(e) => handleSecondsChange(e.target.value)} 
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                disabled={isTimerRunning} 
+                className="w-full p-4 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-2xl outline-none text-center font-black text-3xl text-gray-900 dark:text-white focus:border-emerald-500 disabled:opacity-50 transition-colors" 
+                placeholder="00" 
+              />
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 mt-2 uppercase">Segundos</span>
             </div>
           </div>
         </div>
 
-        {/* COLUNA 3 - RESULTADO (Como) */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-5 transition-colors duration-300 flex flex-col">
-          
-          {/* Título do Card */}
-          <div className="flex items-center gap-2 mb-4">
-            <FileText className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Resultado</h2>
+        {/* Card 5 - Páginas Lidas */}
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
+          <div className="relative">
+            <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input 
+              type="number" 
+              inputMode="numeric" 
+              min="0" 
+              value={pages} 
+              onChange={(e) => handlePagesChange(e.target.value)} 
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-base text-gray-900 dark:text-white transition-colors h-12" 
+              placeholder="Quantidade" 
+            />
           </div>
+        </div>
 
-          {/* ÁREA DE DESEMPENHO (Com Animação Slide Sólida) */}
-          <div className="flex flex-col">
-            <div className="flex justify-between items-center mb-3">
+        {/* Card 6 - Desempenho */}
+        <div className="md:col-span-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-emerald-500" />
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
-              <button onClick={() => setShowBlank(!showBlank)} className="text-[10px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm active:scale-95">
-                {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
-              </button>
             </div>
-            
-            <div className="flex gap-3 overflow-hidden mb-5">
-              <AnimatePresence mode='popLayout' initial={false}>
-                {/* BLOCO CERTAS */}
+            <button onClick={() => setShowBlank(!showBlank)} className="text-[10px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm active:scale-95">
+              {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
+            </button>
+          </div>
+          
+          <div className="flex gap-3 overflow-hidden">
+            <AnimatePresence mode='popLayout' initial={false}>
+              {/* BLOCO CERTAS */}
+              <motion.div 
+                layout 
+                key="correct"
+                className="flex-1 min-w-[80px]"
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              >
+                <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg"><Check size={16} className="text-white" /></div>
+                  <input 
+                    type="number" 
+                    inputMode="numeric" 
+                    min="0" 
+                    placeholder="0" 
+                    className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
+                    value={correct} 
+                    onChange={e => handleCorrectChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                  />
+                </div>
+              </motion.div>
+
+              {/* BLOCO ERRADAS */}
+              <motion.div 
+                layout 
+                key="wrong"
+                className="flex-1 min-w-[80px]"
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              >
+                <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg"><X size={16} className="text-white" /></div>
+                  <input 
+                    type="number" 
+                    inputMode="numeric" 
+                    min="0" 
+                    placeholder="0" 
+                    className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
+                    value={wrong} 
+                    onChange={e => handleWrongChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                  />
+                </div>
+              </motion.div>
+
+              {/* BLOCO BRANCO (Condicional) */}
+              {showBlank && (
                 <motion.div 
-                  layout 
-                  key="correct"
-                  className="flex-1 min-w-[80px]"
-                  transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                  key="blank"
+                  initial={{ width: 0, opacity: 0, x: -20 }} 
+                  animate={{ width: "auto", opacity: 1, x: 0 }} 
+                  exit={{ width: 0, opacity: 0, x: -20 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="flex-1 min-w-[80px] overflow-hidden flex flex-col"
                 >
-                  <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
+                  <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg"><Check size={16} className="text-white" /></div>
+                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>
                     <input 
                       type="number" 
                       inputMode="numeric" 
                       min="0" 
                       placeholder="0" 
-                      className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
-                      value={correct} 
-                      onChange={e => handleCorrectChange(e.target.value)}
+                      className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:ring-2 focus:ring-blue-400 text-base transition-colors" 
+                      value={blank} 
+                      onChange={e => handleBlankChange(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -355,76 +404,28 @@ export default function RegisterPage({
                     />
                   </div>
                 </motion.div>
-
-                {/* BLOCO ERRADAS */}
-                <motion.div 
-                  layout 
-                  key="wrong"
-                  className="flex-1 min-w-[80px]"
-                  transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                >
-                  <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg"><X size={16} className="text-white" /></div>
-                    <input 
-                      type="number" 
-                      inputMode="numeric" 
-                      min="0" 
-                      placeholder="0" 
-                      className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
-                      value={wrong} 
-                      onChange={e => handleWrongChange(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleSubmit();
-                        }
-                      }}
-                    />
-                  </div>
-                </motion.div>
-
-                {/* BLOCO BRANCO (Condicional) */}
-                {showBlank && (
-                  <motion.div 
-                    key="blank"
-                    initial={{ width: 0, opacity: 0, x: -20 }} 
-                    animate={{ width: "auto", opacity: 1, x: 0 }} 
-                    exit={{ width: 0, opacity: 0, x: -20 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="flex-1 min-w-[80px] overflow-hidden flex flex-col"
-                  >
-                    <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>
-                      <input 
-                        type="number" 
-                        inputMode="numeric" 
-                        min="0" 
-                        placeholder="0" 
-                        className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:ring-2 focus:ring-blue-400 text-base transition-colors" 
-                        value={blank} 
-                        onChange={e => handleBlankChange(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleSubmit();
-                          }
-                        }}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              )}
+            </AnimatePresence>
           </div>
+        </div>
 
-          <div className="flex-1 flex flex-col min-h-[120px]">
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors h-full" placeholder="Ex: Art. 5º, Inciso XI..."></textarea>
-          </div>
+        {/* Card 7 - Observações */}
+        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
+          <textarea 
+            value={notes} 
+            onChange={(e) => setNotes(e.target.value)} 
+            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm text-gray-900 dark:text-white focus:border-emerald-500 resize-none transition-colors min-h-[100px]" 
+            placeholder="Ex: Art. 5º, Inciso XI..."
+          />
+        </div>
 
-          <button onClick={handleSubmit} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2 mt-auto">
+        {/* Botão Salvar - Destaque */}
+        <div className="md:col-span-12">
+          <button 
+            onClick={handleSubmit} 
+            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2"
+          >
             <Save size={20} /> <span>Salvar Registro</span>
           </button>
         </div>

@@ -525,7 +525,7 @@ export default function CyclePage({
             </div>
           )}
         </div>
-      </div>
+        </div>
       )}
 
       {/* Modal: Validação */}

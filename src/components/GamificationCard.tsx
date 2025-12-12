@@ -9,7 +9,7 @@ interface GamificationCardProps {
 
 export default function GamificationCard({ logs, streak = 0 }: GamificationCardProps) {
   const gamification = useGamification(logs, streak);
-  const { level, nextLevel, progress, totalXP, xpToNext } = gamification;
+  const { level, nextLevel, progress } = gamification;
 
   const IconComponent = level.icon;
 

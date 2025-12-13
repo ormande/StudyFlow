@@ -210,10 +210,7 @@ export default function TimerPage({
   };
 
   const progress = getProgress();
-  // OTIMIZAÇÃO MOBILE: Radius reduzido de 100 para 85 para caber em telas menores (320-375px)
-  const radius = 85;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  // CORREÇÃO: Variáveis SVG removidas - agora usamos barra de progresso horizontal
 
   const getModeTitle = () => {
     switch (mode) {
@@ -232,9 +229,11 @@ export default function TimerPage({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] overflow-hidden px-4 md:px-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="flex flex-col min-h-screen overflow-y-auto pb-24 md:pb-8 px-4 md:px-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+      {/* CORREÇÃO CRÍTICA MOBILE: Trocar h-[calc(100vh-140px)] overflow-hidden por min-h-screen overflow-y-auto pb-24 para permitir scroll e espaço para BottomNav */}
+      {/* CORREÇÃO PROBLEMA 1: Aumentar padding-top para evitar sobreposição com botão Settings (top-6 + h-12 = ~72px) */}
       {/* Seletor de Modos (Abas) - Layout Mobile (ícones acima) e Desktop (horizontal) */}
-      <div className="mb-6 mt-4 md:mt-4 pt-16 md:pt-4">
+      <div className="mb-6 mt-2 md:mt-4 pt-20 md:pt-4 relative z-[60]">
         {/* Mobile: Layout vertical com ícones acima */}
         {/* OTIMIZAÇÃO MOBILE: Padding reduzido (px-3 py-2.5) e ícones menores (size={18}) para caber em telas 320-375px */}
         <div className="md:hidden flex flex-col gap-3 items-center">
@@ -433,46 +432,32 @@ export default function TimerPage({
         )}
       </AnimatePresence>
 
-      {/* Display do Tempo com Anel de Progresso - Layout Desktop/Mobile */}
-      <div className="flex-1 flex items-center justify-center mb-6 md:mb-0">
-        {/* OTIMIZAÇÃO MOBILE: max-w-md (448px) trocado por max-w-xs (320px) no mobile para caber em telas menores */}
+      {/* CORREÇÃO PROBLEMA 2: Barra de Progresso Horizontal substitui círculo SVG */}
+      {/* Display do Tempo com Barra de Progresso - Layout Desktop/Mobile */}
+      <div className="flex-1 flex flex-col items-center justify-center mb-6 md:mb-0">
+        {/* OTIMIZAÇÃO MOBILE: max-w-xs (320px) no mobile para caber em telas menores */}
         <div className="w-full max-w-xs md:max-w-md lg:max-w-6xl mx-auto md:grid md:grid-cols-2 md:gap-8 md:items-center">
           {/* Coluna Esquerda - Display do Tempo */}
-          <div className="relative flex items-center justify-center w-full">
-          {/* OTIMIZAÇÃO MOBILE: SVG reduzido de 240x240px para 200x200px no mobile, cx/cy ajustados de 120 para 100 */}
-          {/* Anel de Progresso SVG (apenas para Temporizador e Pomodoro) - Tamanho reduzido no mobile */}
-          {(mode === 'temporizador' || mode === 'pomodoro') && (
-              <svg 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90 w-[200px] h-[200px] md:w-[240px] md:h-[240px]" 
-                viewBox="0 0 200 200"
-                style={{ pointerEvents: 'none' }}
-              >
-                <circle
-                  cx="100"
-                  cy="100"
-                  r={radius}
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  fill="none"
-                  className="text-gray-200 dark:text-gray-700"
-                />
-                <circle
-                  cx="100"
-                  cy="100"
-                  r={radius}
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  fill="none"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  className="text-emerald-500 transition-all duration-1000 ease-linear"
-                />
-              </svg>
+          <div className="flex flex-col items-center justify-center w-full">
+            {/* Barra de Progresso Horizontal - Apenas Temporizador e Pomodoro */}
+            {(mode === 'temporizador' || mode === 'pomodoro') && (
+              <div className="w-full max-w-xs md:max-w-md mx-auto mb-6">
+                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  />
+                </div>
+                <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  {progress.toFixed(0)}% concluído
+                </p>
+              </div>
             )}
             
             {/* OTIMIZAÇÃO MOBILE: Padding reduzido de p-6 para p-4 no mobile, mantendo md:p-12 no desktop */}
-            {/* Display Digital - Padding reduzido no mobile */}
+            {/* Display Digital - Removido relative z-10 (não precisa mais, SVG foi removido) */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`display-${mode}`}
@@ -480,7 +465,7 @@ export default function TimerPage({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-4 md:p-12 w-full transition-colors duration-300 relative z-10"
+                className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-4 md:p-12 w-full max-w-xs md:max-w-md mx-auto transition-colors duration-300"
               >
                 {/* OTIMIZAÇÃO MOBILE: Font reduzida de text-5xl para text-4xl no mobile, mantendo md:text-7xl no desktop */}
                 <div className="text-4xl md:text-7xl font-bold text-gray-800 dark:text-white tracking-tight text-center font-mono transition-colors">
@@ -529,8 +514,9 @@ export default function TimerPage({
         </div>
       </div>
 
+      {/* CORREÇÃO MOBILE: Margem inferior aumentada para mb-8 no mobile para garantir espaço antes do BottomNav */}
       {/* Botões de Controle - Layout Desktop/Mobile */}
-      <div className="flex gap-4 w-full max-w-md md:max-w-2xl mx-auto mb-4 md:mb-6">
+      <div className="flex gap-4 w-full max-w-md md:max-w-2xl mx-auto mb-8 md:mb-6">
         <button
           onClick={handlePlayPause}
           disabled={(mode === 'temporizador' && (timerHours === '' || timerHours === '0') && (timerMinutes === '' || timerMinutes === '0') && timerSeconds === 0) || (mode === 'pomodoro' && !selectedPreset)}
@@ -569,6 +555,7 @@ export default function TimerPage({
         </AnimatePresence>
       </div>
 
+      {/* CORREÇÃO MOBILE: Margem inferior adicionada para garantir espaço antes do BottomNav */}
       {/* Botão de Parar e Registrar - Animado */}
       <AnimatePresence mode="wait">
         {(mode === 'cronometro' && timerSeconds > 0 && !isTimerRunning) && (
@@ -579,7 +566,7 @@ export default function TimerPage({
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={handleStop}
-            className="w-full max-w-md md:max-w-2xl mx-auto py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+            className="w-full max-w-md md:max-w-2xl mx-auto py-5 mb-8 md:mb-6 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
           >
             Parar e Registrar
           </motion.button>
@@ -593,7 +580,7 @@ export default function TimerPage({
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={handleStop}
-            className="w-full max-w-md md:max-w-2xl mx-auto py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+            className="w-full max-w-md md:max-w-2xl mx-auto py-5 mb-8 md:mb-6 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
           >
             Parar e Registrar
           </motion.button>
@@ -607,7 +594,7 @@ export default function TimerPage({
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={handleStop}
-            className="w-full max-w-md md:max-w-2xl mx-auto py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+            className="w-full max-w-md md:max-w-2xl mx-auto py-5 mb-8 md:mb-6 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
           >
             Parar e Registrar
           </motion.button>

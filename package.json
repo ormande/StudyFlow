@@ -12,6 +12,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@sentry/react": "^10.30.0",
     "@supabase/supabase-js": "^2.57.4",
     "@vercel/analytics": "^1.6.1",
     "framer-motion": "^12.23.25",

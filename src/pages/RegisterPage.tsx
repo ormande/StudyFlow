@@ -133,7 +133,8 @@ export default function RegisterPage({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+      {/* OTIMIZAÇÃO MOBILE: Padding lateral reduzido de px-6 para px-4 no mobile para dar mais espaço */}
       
       {/* Header Fixo */}
       <div className="mb-6 flex-shrink-0">
@@ -141,16 +142,19 @@ export default function RegisterPage({
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
+      {/* OTIMIZAÇÃO MOBILE: Gap aumentado de gap-4 para gap-5 no mobile, mantendo gap-6 no desktop para melhor respiração */}
       {/* Grid Flexível - Cards Soltos */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6">
         
+        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop. Gap entre campos aumentado de space-y-4 para space-y-5 */}
         {/* Card 1 - Setup: Matéria e Subtópico */}
-        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 space-y-4 transition-colors duration-300">
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 space-y-5 transition-colors duration-300">
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
               <BookOpen size={14} className="text-emerald-500" /> Matéria
             </label>
-            <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-base text-gray-900 dark:text-white transition-colors">
+            {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3 (mínimo adequado), font-size text-sm para legibilidade */}
+            <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors">
               <option value="">Selecione a matéria...</option>
               {subjects.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
             </select>
@@ -161,6 +165,7 @@ export default function RegisterPage({
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
                 <Layers size={14} className="text-emerald-500" /> Subtópico <span className="text-[10px] font-normal opacity-70 normal-case">(Opcional)</span>
               </label>
+              {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, font-size text-sm para legibilidade */}
               <select value={subtopicId} onChange={(e) => setSubtopicId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors">
                 <option value="">Geral (Sem subtópico específico)</option>
                 {selectedSubject.subtopics.map((st) => (<option key={st.id} value={st.id}>{st.name}</option>))}
@@ -169,33 +174,37 @@ export default function RegisterPage({
           )}
         </div>
 
+        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 2 - Data */}
-        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
             <Calendar size={14} className="text-emerald-500" /> Data
           </label>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none" size={20} />
+            {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, font-size text-sm no mobile para legibilidade */}
             <input 
               type="date" 
               value={date} 
               max={new Date().toISOString().split('T')[0]} 
               onChange={(e) => setDate(e.target.value)} 
-              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-base text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark]" 
+              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark]" 
             />
           </div>
         </div>
 
+        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 3 - Tipo de Estudo */}
-        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
             <RefreshCw size={14} className="text-emerald-500" /> Tipo de Estudo
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          {/* OTIMIZAÇÃO MOBILE: Gap aumentado de gap-2 para gap-3 para melhor espaçamento. Altura mínima garantida (py-3.5 = ~44px) para toque fácil */}
+          <div className="grid grid-cols-3 gap-3">
             {typeButtons.map((btn) => {
               const Icon = btn.icon;
               return (
-                <button key={btn.id} type="button" onClick={() => setType(btn.id as any)} className={`py-3 rounded-xl font-semibold text-xs transition-all active:scale-95 flex flex-col items-center gap-1 ${type === btn.id ? 'bg-emerald-500 text-white shadow-lg scale-105' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+                <button key={btn.id} type="button" onClick={() => setType(btn.id as any)} className={`py-3.5 rounded-xl font-semibold text-xs transition-all active:scale-95 flex flex-col items-center gap-1.5 min-h-[44px] ${type === btn.id ? 'bg-emerald-500 text-white shadow-lg scale-105' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
                   <Icon className="w-4 h-4" /> {btn.label}
                 </button>
               );
@@ -203,12 +212,14 @@ export default function RegisterPage({
           </div>
         </div>
 
+        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 4 - Tempo Estudado */}
-        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-1">
             <Clock size={14} className="text-emerald-500" /> Tempo Estudado
           </label>
-          <div className="grid grid-cols-3 gap-4">
+          {/* OTIMIZAÇÃO MOBILE: Gap ajustado para gap-3 no mobile (era gap-4), mantendo gap-4 no desktop para melhor respiração */}
+          <div className="grid grid-cols-3 gap-3 md:gap-4">
             <div className="flex flex-col items-center">
               <input 
                 type="number" 
@@ -271,13 +282,15 @@ export default function RegisterPage({
           </div>
         </div>
 
+        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 5 - Páginas Lidas */}
-        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
             <BookOpen size={14} className="text-emerald-500" /> Páginas Lidas
           </label>
           <div className="relative">
             <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, font-size text-sm no mobile para legibilidade */}
             <input 
               type="number" 
               inputMode="numeric" 
@@ -290,30 +303,33 @@ export default function RegisterPage({
                   handleSubmit();
                 }
               }}
-              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-base text-gray-900 dark:text-white transition-colors h-12" 
+              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-sm md:text-base text-gray-900 dark:text-white transition-colors h-12" 
               placeholder="Quantidade" 
             />
           </div>
         </div>
 
+        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 6 - Desempenho */}
-        <div className="md:col-span-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+        <div className="md:col-span-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
             <FileText size={14} className="text-emerald-500" /> Desempenho
           </label>
           
+          {/* OTIMIZAÇÃO MOBILE: Gap mantido gap-3 (já adequado) */}
           <div className="flex gap-3 pr-1">
             {/* BLOCO CERTAS */}
             <div className="flex-1">
               <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg"><Check size={16} className="text-white" /></div>
+                {/* OTIMIZAÇÃO MOBILE: Padding aumentado de p-2 para p-2.5 (mínimo adequado), font-size text-sm no mobile */}
                 <input 
                   type="number" 
                   inputMode="numeric" 
                   min="0" 
                   placeholder="0" 
-                  className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-base transition-all" 
+                  className="w-full pl-10 p-2.5 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm md:text-base transition-all" 
                   value={correct} 
                   onChange={e => handleCorrectChange(e.target.value)}
                   onKeyDown={(e) => {
@@ -331,12 +347,13 @@ export default function RegisterPage({
               <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg"><X size={16} className="text-white" /></div>
+                {/* OTIMIZAÇÃO MOBILE: Padding aumentado de p-2 para p-2.5 (mínimo adequado), font-size text-sm no mobile */}
                 <input 
                   type="number" 
                   inputMode="numeric" 
                   min="0" 
                   placeholder="0" 
-                  className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 text-base transition-all" 
+                  className="w-full pl-10 p-2.5 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 text-sm md:text-base transition-all" 
                   value={wrong} 
                   onChange={e => handleWrongChange(e.target.value)}
                   onKeyDown={(e) => {
@@ -354,12 +371,13 @@ export default function RegisterPage({
               <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>
+                {/* OTIMIZAÇÃO MOBILE: Padding aumentado de p-2 para p-2.5 (mínimo adequado), font-size text-sm no mobile */}
                 <input 
                   type="number" 
                   inputMode="numeric" 
                   min="0" 
                   placeholder="0" 
-                  className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-base transition-all" 
+                  className="w-full pl-10 p-2.5 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm md:text-base transition-all" 
                   value={blank} 
                   onChange={e => handleBlankChange(e.target.value)}
                   onKeyDown={(e) => {
@@ -374,11 +392,13 @@ export default function RegisterPage({
           </div>
         </div>
 
+        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 7 - Observações */}
-        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
             <FileText size={14} className="text-emerald-500" /> Observações
           </label>
+          {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, altura mínima mantida min-h-[100px] para legibilidade */}
           <textarea 
             value={notes} 
             onChange={(e) => setNotes(e.target.value)} 

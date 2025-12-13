@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase';
 import { Lock, Mail, ArrowRight, BookOpen, Loader2 } from 'lucide-react';
 import { useToast } from './contexts/ToastContext';
 import MainApp from './components/MainApp';
+import ResetPasswordModal from './components/ResetPasswordModal';
 
 // --- TELA DE LOGIN ---
 const LoginScreen = () => {
@@ -186,19 +187,36 @@ function App() {
     setIsRecoveryMode(false);
   };
 
-  if (authLoading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><Loader2 className="animate-spin text-emerald-500 w-10 h-10" /></div>;
+  // Loading state - primeira trava de segurança
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
+        <Loader2 className="animate-spin text-emerald-500 w-10 h-10" />
+      </div>
+    );
+  }
 
-  if (!session) return <LoginScreen />;
-
+  // Contêiner base sempre renderizado com tema
   return (
-    <MainApp
-      session={session}
-      isDarkMode={isDarkMode}
-      onToggleTheme={toggleTheme}
-      onHardReset={handleLogout}
-      isRecoveryMode={isRecoveryMode}
-      onCloseRecoveryModal={handleCloseRecoveryModal}
-    />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative transition-colors duration-300">
+      {/* Modal de Redefinição de Senha - Prioridade máxima, renderiza independente da sessão */}
+      <ResetPasswordModal 
+        isOpen={isRecoveryMode} 
+        onClose={handleCloseRecoveryModal} 
+      />
+
+      {/* Renderização condicional do conteúdo principal */}
+      {!session ? (
+        <LoginScreen />
+      ) : (
+        <MainApp
+          session={session}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
+          onHardReset={handleLogout}
+        />
+      )}
+    </div>
   );
 }
 

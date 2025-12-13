@@ -56,7 +56,7 @@ const SortableSubjectCard = ({
       dragControls={controls}
       className="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden transition-colors duration-300 border border-gray-100 dark:border-gray-700"
     >
-      <div className="p-5">
+      <div className="p-5 lg:p-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
@@ -149,8 +149,8 @@ const SortableSubjectCard = ({
       {/* EFEITO ACORDEÃO NOS SUBTÓPICOS */}
       <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="overflow-hidden">
-          <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700 pt-4">
-            <div className="space-y-2 mb-4">
+          <div className="px-5 pb-5 lg:px-6 lg:pb-6 border-t border-gray-100 dark:border-gray-700 pt-4">
+            <div className="space-y-2 lg:space-y-3 mb-4">
               {subject.subtopics.map((subtopic, subtopicIndex) => (
                 <div key={subtopic.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 group">
                   
@@ -201,13 +201,13 @@ const SortableSubjectCard = ({
             </div>
             
             {/* Container do Input de Subtópico */}
-            <div className="flex gap-2 w-full pr-1">
+            <div className="flex gap-2 lg:gap-3 w-full pr-1">
               <input
                 type="text"
                 value={newSubtopic}
                 onChange={(e) => setNewSubtopic(e.target.value)}
                 placeholder="Novo subtópico..."
-                className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base min-w-0"
+                className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base lg:text-base min-w-0"
                 onKeyDown={(e) => { if (e.key === 'Enter') onAddSubtopic(subject.id); }}
               />
               <button 
@@ -378,7 +378,7 @@ export default function CyclePage({
   const totalCycleProgress = getTotalCycleProgress();
 
   return (
-    <div className="max-w-lg md:max-w-5xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="max-w-lg md:max-w-7xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
       {/* Header */}
       <div className="mb-6">
@@ -387,9 +387,9 @@ export default function CyclePage({
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] lg:grid-cols-[380px_1fr] gap-8 items-start">
           {/* COLUNA ESQUERDA - Skeleton */}
-          <div className="md:sticky md:top-6 space-y-6">
+          <div className="md:sticky md:top-6 lg:top-4 space-y-6">
             <Skeleton className="h-64 w-full" />
           </div>
           
@@ -401,11 +401,11 @@ export default function CyclePage({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] lg:grid-cols-[380px_1fr] gap-8 items-start">
         
         {/* COLUNA ESQUERDA */}
-        <div className="md:sticky md:top-6 space-y-6">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-lg transition-colors duration-300 border border-gray-100 dark:border-gray-700">
+        <div className="md:sticky md:top-6 lg:top-4 space-y-6">
+          <div className="bg-white dark:bg-gray-800 p-6 lg:p-8 rounded-3xl shadow-lg transition-colors duration-300 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h2 className="text-lg font-bold text-gray-800 dark:text-white">Status Geral</h2>
@@ -429,9 +429,9 @@ export default function CyclePage({
             </button>
           </div>
 
-          <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 lg:p-6 rounded-2xl border border-emerald-100 dark:border-emerald-800">
             <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-3">📊 Este Ciclo</p>
-            <div className="space-y-3">
+            <div className="space-y-3 lg:space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                   <Calendar size={14} />
@@ -474,12 +474,13 @@ export default function CyclePage({
 
         {/* COLUNA DIREITA: Lista de Matérias */}
         <div className="space-y-4">
-          <Reorder.Group
-            axis="y"
-            values={subjects}
-            onReorder={onReorderSubjects}
-            className="space-y-4"
-          >
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <Reorder.Group
+              axis="y"
+              values={subjects}
+              onReorder={onReorderSubjects}
+              className="space-y-4 xl:col-span-2"
+            >
             {subjects.map((subject, index) => {
               const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);
               const isExpanded = expandedSubject === subject.id;
@@ -507,17 +508,18 @@ export default function CyclePage({
                 />
               );
             })}
-          </Reorder.Group>
+            </Reorder.Group>
+          </div>
 
           {!isAdding ? (
             <button
               onClick={() => setIsAdding(true)}
-              className="w-full py-5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="w-full py-5 lg:py-6 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" /> Adicionar Matéria
             </button>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 space-y-4 transition-colors border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 lg:p-6 space-y-4 lg:space-y-5 transition-colors border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nome da Matéria</label>
                 <input
@@ -580,7 +582,7 @@ export default function CyclePage({
       {/* NOVO: Modal de Edição */}
       {editingSubject && (
         <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm shadow-2xl p-5 space-y-4 animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm lg:max-w-md shadow-2xl p-5 lg:p-6 space-y-4 animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white">Editar Matéria</h3>
             
             <div>

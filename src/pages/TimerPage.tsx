@@ -350,10 +350,10 @@ export default function TimerPage({
       <AnimatePresence mode="wait">
         <motion.div
           key={mode}
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
           className="text-center mb-6"
         >
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 transition-colors">
@@ -370,10 +370,10 @@ export default function TimerPage({
         {mode === 'temporizador' && !isTimerRunning && timerSeconds === 0 && (
           <motion.div
             key="timer-config"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6 max-w-md mx-auto w-full"
           >
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center">
@@ -429,10 +429,10 @@ export default function TimerPage({
         {mode === 'pomodoro' && !isTimerRunning && (
           <motion.div
             key="pomodoro-presets"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
             className="flex gap-3 mb-6 justify-center flex-wrap max-w-md mx-auto w-full"
           >
           {POMODORO_PRESETS.map((preset) => (
@@ -497,10 +497,10 @@ export default function TimerPage({
             <AnimatePresence mode="wait">
               <motion.div
                 key={`display-${mode}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 md:p-12 w-full transition-colors duration-300 relative z-10"
               >
                 <div className="text-5xl md:text-7xl font-bold text-gray-800 dark:text-white tracking-tight text-center font-mono transition-colors">
@@ -515,10 +515,10 @@ export default function TimerPage({
             <AnimatePresence mode="wait">
               <motion.div
                 key={`info-${mode}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
               >
                 <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
@@ -594,10 +594,10 @@ export default function TimerPage({
         {(mode === 'cronometro' && timerSeconds > 0 && !isTimerRunning) && (
           <motion.button
             key="stop-cronometro"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={handleStop}
             className="w-full max-w-md md:max-w-2xl mx-auto py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
           >
@@ -608,10 +608,10 @@ export default function TimerPage({
         {(mode === 'temporizador' && initialTimerSeconds > 0 && !isTimerRunning) && (
           <motion.button
             key="stop-temporizador"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={handleStop}
             className="w-full max-w-md md:max-w-2xl mx-auto py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
           >
@@ -622,10 +622,10 @@ export default function TimerPage({
         {(mode === 'pomodoro' && pomodoroStarted && pomodoroInitialSeconds > 0 && !isTimerRunning) && (
           <motion.button
             key="stop-pomodoro"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={handleStop}
             className="w-full max-w-md md:max-w-2xl mx-auto py-5 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
           >

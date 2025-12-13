@@ -11,7 +11,6 @@ const TimerPage = lazy(() => import('../pages/TimerPage'));
 const CyclePage = lazy(() => import('../pages/CyclePage'));
 const GamificationPage = lazy(() => import('../pages/GamificationPage'));
 import SettingsModal from './SettingsModal';
-import ResetPasswordModal from './ResetPasswordModal';
 import { Settings, Loader2 } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
@@ -22,8 +21,6 @@ interface MainAppProps {
   isDarkMode: boolean;
   onToggleTheme: () => void;
   onHardReset: () => void;
-  isRecoveryMode: boolean;
-  onCloseRecoveryModal: () => void;
 }
 
 export default function MainApp({
@@ -31,8 +28,6 @@ export default function MainApp({
   isDarkMode,
   onToggleTheme,
   onHardReset,
-  isRecoveryMode,
-  onCloseRecoveryModal,
 }: MainAppProps) {
   // DATA HOOK
   const {
@@ -277,12 +272,6 @@ export default function MainApp({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative transition-colors duration-300">
-      {/* Modal de Redefinição de Senha - Bloqueia o app até ser concluído */}
-      <ResetPasswordModal 
-        isOpen={isRecoveryMode} 
-        onClose={onCloseRecoveryModal} 
-      />
-
       <SettingsModal 
         isOpen={showSettings} 
         onClose={handleCloseSettings} 

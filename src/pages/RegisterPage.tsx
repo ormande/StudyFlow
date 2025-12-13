@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar, Clock, FileText } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Subject, StudyLog } from '../types';
 import { useToast } from '../contexts/ToastContext';
-import AlertModal from '../components/AlertModal';
 
 interface RegisterPageProps {
   subjects: Subject[];
@@ -32,7 +30,6 @@ export default function RegisterPage({
   isTimerRunning,
 }: RegisterPageProps) {
   const { addToast } = useToast();
-
   const [subjectId, setSubjectId] = useState('');
   const [subtopicId, setSubtopicId] = useState('');
   const [type, setType] = useState<'teoria' | 'questoes' | 'revisao'>('teoria');
@@ -46,19 +43,11 @@ export default function RegisterPage({
   const [correct, setCorrect] = useState('');
   const [wrong, setWrong] = useState('');
   const [blank, setBlank] = useState('');
-  const [showBlank, setShowBlank] = useState(false);
-
-  const [alertModal, setAlertModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    variant: 'success' | 'warning' | 'info';
-  } | null>(null);
 
   const selectedSubject = subjects.find(s => s.id === subjectId);
 
   useEffect(() => { setSubtopicId(''); }, [subjectId]);
-
+  
   useEffect(() => {
     if (prefilledTime) {
       setHours(prefilledTime.hours > 0 ? prefilledTime.hours.toString() : '');
@@ -66,7 +55,7 @@ export default function RegisterPage({
       setSeconds(prefilledTime.seconds > 0 ? prefilledTime.seconds.toString() : '');
     }
   }, [prefilledTime]);
-
+  
   useEffect(() => {
     if (isTimerRunning && timerSeconds > 0) {
       const h = Math.floor(timerSeconds / 3600);
@@ -92,16 +81,13 @@ export default function RegisterPage({
       addToast('Selecione uma matéria, guerreiro!', 'warning');
       return;
     }
-
     const h = Math.max(0, parseInt(hours) || 0);
     const m = Math.max(0, parseInt(minutes) || 0);
     const s = Math.max(0, parseInt(seconds) || 0);
-
     if (h === 0 && m === 0 && s === 0) {
       addToast('O tempo de estudo não pode ser zero.', 'warning');
       return;
     }
-
     const subtopicName = selectedSubject?.subtopics.find(st => st.id === subtopicId)?.name;
 
     const newLog: Omit<StudyLog, 'id' | 'timestamp'> = {
@@ -120,7 +106,6 @@ export default function RegisterPage({
       wrong: Math.max(0, parseInt(wrong) || 0),
       blank: Math.max(0, parseInt(blank) || 0),
     };
-
     onAddLog(newLog);
     
     setSubjectId('');
@@ -306,106 +291,80 @@ export default function RegisterPage({
 
         {/* Card 6 - Desempenho */}
         <div className="md:col-span-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-emerald-500" />
-              <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
-            </div>
-            <button onClick={() => setShowBlank(!showBlank)} className="text-[10px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm active:scale-95">
-              {showBlank ? 'Ocultar "Em Branco"' : 'Mostrar "Em Branco"'}
-            </button>
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="w-5 h-5 text-emerald-500" />
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
           </div>
           
-          <div className="flex gap-3 overflow-hidden">
-            <AnimatePresence mode='popLayout' initial={false}>
-              {/* BLOCO CERTAS */}
-              <motion.div 
-                layout 
-                key="correct"
-                className="flex-1 min-w-[80px]"
-                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              >
-                <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg"><Check size={16} className="text-white" /></div>
-                  <input 
-                    type="number" 
-                    inputMode="numeric" 
-                    min="0" 
-                    placeholder="0" 
-                    className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-base transition-colors" 
-                    value={correct} 
-                    onChange={e => handleCorrectChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSubmit();
-                      }
-                    }}
-                  />
-                </div>
-              </motion.div>
+          <div className="flex gap-3 pr-1">
+            {/* BLOCO CERTAS */}
+            <div className="flex-1">
+              <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1 block">CERTAS</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-emerald-500 rounded-l-lg"><Check size={16} className="text-white" /></div>
+                <input 
+                  type="number" 
+                  inputMode="numeric" 
+                  min="0" 
+                  placeholder="0" 
+                  className="w-full pl-10 p-2 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-base transition-all" 
+                  value={correct} 
+                  onChange={e => handleCorrectChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                />
+              </div>
+            </div>
 
-              {/* BLOCO ERRADAS */}
-              <motion.div 
-                layout 
-                key="wrong"
-                className="flex-1 min-w-[80px]"
-                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              >
-                <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg"><X size={16} className="text-white" /></div>
-                  <input 
-                    type="number" 
-                    inputMode="numeric" 
-                    min="0" 
-                    placeholder="0" 
-                    className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:ring-2 focus:ring-red-500 text-base transition-colors" 
-                    value={wrong} 
-                    onChange={e => handleWrongChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSubmit();
-                      }
-                    }}
-                  />
-                </div>
-              </motion.div>
+            {/* BLOCO ERRADAS */}
+            <div className="flex-1">
+              <label className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1 block">ERRADAS</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-red-500 rounded-l-lg"><X size={16} className="text-white" /></div>
+                <input 
+                  type="number" 
+                  inputMode="numeric" 
+                  min="0" 
+                  placeholder="0" 
+                  className="w-full pl-10 p-2 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 text-base transition-all" 
+                  value={wrong} 
+                  onChange={e => handleWrongChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                />
+              </div>
+            </div>
 
-              {/* BLOCO BRANCO (Condicional) */}
-              {showBlank && (
-                <motion.div 
-                  key="blank"
-                  initial={{ width: 0, opacity: 0, x: -20 }} 
-                  animate={{ width: "auto", opacity: 1, x: 0 }} 
-                  exit={{ width: 0, opacity: 0, x: -20 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  className="flex-1 min-w-[80px] overflow-hidden flex flex-col"
-                >
-                  <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>
-                    <input 
-                      type="number" 
-                      inputMode="numeric" 
-                      min="0" 
-                      placeholder="0" 
-                      className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:ring-2 focus:ring-blue-400 text-base transition-colors" 
-                      value={blank} 
-                      onChange={e => handleBlankChange(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleSubmit();
-                        }
-                      }}
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* BLOCO BRANCO */}
+            <div className="flex-1">
+              <label className="text-[10px] font-bold text-blue-500 dark:text-blue-400 mb-1 block">BRANCO</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 w-8 flex items-center justify-center bg-blue-500 rounded-l-lg"><HelpCircle size={16} className="text-white" /></div>
+                <input 
+                  type="number" 
+                  inputMode="numeric" 
+                  min="0" 
+                  placeholder="0" 
+                  className="w-full pl-10 p-2 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-base transition-all" 
+                  value={blank} 
+                  onChange={e => handleBlankChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -430,8 +389,6 @@ export default function RegisterPage({
           </button>
         </div>
       </div>
-      
-      {alertModal && <AlertModal isOpen={alertModal.isOpen} title={alertModal.title} message={alertModal.message} buttonText="OK" variant={alertModal.variant} onClose={() => setAlertModal(null)} />}
     </div>
   );
 }

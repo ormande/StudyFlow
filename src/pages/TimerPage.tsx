@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Timer, Hourglass, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface TimerPageProps {
   onTimerStop: (hours: number, minutes: number, seconds: number) => void;
@@ -43,6 +44,10 @@ export default function TimerPage({
   const [selectedPreset, setSelectedPreset] = useState<PomodoroPreset | null>(null);
   const [pomodoroInitialSeconds, setPomodoroInitialSeconds] = useState(0);
   const [pomodoroStarted, setPomodoroStarted] = useState(false);
+  
+  // Estado para modal de confirmação de mudança de modo
+  const [showModeChangeConfirm, setShowModeChangeConfirm] = useState(false);
+  const [pendingMode, setPendingMode] = useState<'cronometro' | 'temporizador' | 'pomodoro' | null>(null);
   
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -151,6 +156,32 @@ export default function TimerPage({
     }
   };
 
+  const handleModeChangeRequest = (newMode: 'cronometro' | 'temporizador' | 'pomodoro') => {
+    if (isTimerRunning) {
+      setPendingMode(newMode);
+      setShowModeChangeConfirm(true);
+    } else {
+      setTimerMode(newMode);
+    }
+  };
+
+  const handleConfirmModeChange = () => {
+    if (pendingMode) {
+      setIsTimerRunning(false);
+      setTimerMode(pendingMode);
+      if (pendingMode === 'cronometro' && mode === 'cronometro') {
+        setTimerSeconds(0);
+      }
+      setPendingMode(null);
+      setShowModeChangeConfirm(false);
+    }
+  };
+
+  const handleCancelModeChange = () => {
+    setPendingMode(null);
+    setShowModeChangeConfirm(false);
+  };
+
   const handlePresetSelect = (preset: PomodoroPreset) => {
     if (isTimerRunning) return;
     setSelectedPreset(preset);
@@ -207,19 +238,7 @@ export default function TimerPage({
         <div className="md:hidden flex flex-col gap-3 items-center">
           <div className="flex gap-3 justify-center w-full px-4">
             <motion.button
-              onClick={() => {
-                if (isTimerRunning) {
-                  if (confirm('O timer está rodando. Deseja realmente mudar de modo?')) {
-                    setIsTimerRunning(false);
-                    setTimerMode('cronometro');
-                    if (mode === 'cronometro') {
-                      setTimerSeconds(0);
-                    }
-                  }
-                } else {
-                  setTimerMode('cronometro');
-                }
-              }}
+              onClick={() => handleModeChangeRequest('cronometro')}
               className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl font-semibold text-xs transition-all flex-1 ${
                 mode === 'cronometro'
                   ? 'bg-emerald-500 text-white shadow-lg'
@@ -230,16 +249,7 @@ export default function TimerPage({
               <span>Cronômetro</span>
             </motion.button>
             <motion.button
-              onClick={() => {
-                if (isTimerRunning) {
-                  if (confirm('O timer está rodando. Deseja realmente mudar de modo?')) {
-                    setIsTimerRunning(false);
-                    setTimerMode('temporizador');
-                  }
-                } else {
-                  setTimerMode('temporizador');
-                }
-              }}
+              onClick={() => handleModeChangeRequest('temporizador')}
               className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl font-semibold text-xs transition-all flex-1 ${
                 mode === 'temporizador'
                   ? 'bg-emerald-500 text-white shadow-lg'
@@ -250,16 +260,7 @@ export default function TimerPage({
               <span>Temporizador</span>
             </motion.button>
             <motion.button
-              onClick={() => {
-                if (isTimerRunning) {
-                  if (confirm('O timer está rodando. Deseja realmente mudar de modo?')) {
-                    setIsTimerRunning(false);
-                    setTimerMode('pomodoro');
-                  }
-                } else {
-                  setTimerMode('pomodoro');
-                }
-              }}
+              onClick={() => handleModeChangeRequest('pomodoro')}
               className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl font-semibold text-xs transition-all flex-1 ${
                 mode === 'pomodoro'
                   ? 'bg-emerald-500 text-white shadow-lg'
@@ -275,19 +276,7 @@ export default function TimerPage({
         {/* Desktop: Layout horizontal tradicional */}
         <div className="hidden md:flex gap-2 justify-center">
           <motion.button
-            onClick={() => {
-              if (isTimerRunning) {
-                if (confirm('O timer está rodando. Deseja realmente mudar de modo?')) {
-                  setIsTimerRunning(false);
-                  setTimerMode('cronometro');
-                  if (mode === 'cronometro') {
-                    setTimerSeconds(0);
-                  }
-                }
-              } else {
-                setTimerMode('cronometro');
-              }
-            }}
+            onClick={() => handleModeChangeRequest('cronometro')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
@@ -300,16 +289,7 @@ export default function TimerPage({
             Cronômetro
           </motion.button>
           <motion.button
-            onClick={() => {
-              if (isTimerRunning) {
-                if (confirm('O timer está rodando. Deseja realmente mudar de modo?')) {
-                  setIsTimerRunning(false);
-                  setTimerMode('temporizador');
-                }
-              } else {
-                setTimerMode('temporizador');
-              }
-            }}
+            onClick={() => handleModeChangeRequest('temporizador')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
@@ -322,16 +302,7 @@ export default function TimerPage({
             Temporizador
           </motion.button>
           <motion.button
-            onClick={() => {
-              if (isTimerRunning) {
-                if (confirm('O timer está rodando. Deseja realmente mudar de modo?')) {
-                  setIsTimerRunning(false);
-                  setTimerMode('pomodoro');
-                }
-              } else {
-                setTimerMode('pomodoro');
-              }
-            }}
+            onClick={() => handleModeChangeRequest('pomodoro')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
@@ -633,6 +604,18 @@ export default function TimerPage({
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* Modal de Confirmação de Mudança de Modo */}
+      <ConfirmModal
+        isOpen={showModeChangeConfirm}
+        title="Mudar de Modo?"
+        message="O timer está rodando. Deseja realmente mudar de modo?"
+        confirmText="Sim, mudar"
+        cancelText="Cancelar"
+        variant="warning"
+        onConfirm={handleConfirmModeChange}
+        onCancel={handleCancelModeChange}
+      />
     </div>
   );
 }

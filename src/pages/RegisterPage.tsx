@@ -147,7 +147,9 @@ export default function RegisterPage({
         {/* Card 1 - Setup: Matéria e Subtópico */}
         <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 space-y-4 transition-colors duration-300">
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Matéria</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
+              <BookOpen size={14} className="text-emerald-500" /> Matéria
+            </label>
             <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-base text-gray-900 dark:text-white transition-colors">
               <option value="">Selecione a matéria...</option>
               {subjects.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
@@ -157,7 +159,7 @@ export default function RegisterPage({
           {selectedSubject && selectedSubject.subtopics.length > 0 && (
              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
-                <Layers size={14} /> Subtópico <span className="text-[10px] font-normal opacity-70 normal-case">(Opcional)</span>
+                <Layers size={14} className="text-emerald-500" /> Subtópico <span className="text-[10px] font-normal opacity-70 normal-case">(Opcional)</span>
               </label>
               <select value={subtopicId} onChange={(e) => setSubtopicId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors">
                 <option value="">Geral (Sem subtópico específico)</option>
@@ -169,7 +171,9 @@ export default function RegisterPage({
 
         {/* Card 2 - Data */}
         <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Data</label>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
+            <Calendar size={14} className="text-emerald-500" /> Data
+          </label>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none" size={20} />
             <input 
@@ -184,7 +188,9 @@ export default function RegisterPage({
 
         {/* Card 3 - Tipo de Estudo */}
         <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Tipo de Estudo</label>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
+            <RefreshCw size={14} className="text-emerald-500" /> Tipo de Estudo
+          </label>
           <div className="grid grid-cols-3 gap-2">
             {typeButtons.map((btn) => {
               const Icon = btn.icon;
@@ -199,10 +205,9 @@ export default function RegisterPage({
 
         {/* Card 4 - Tempo Estudado */}
         <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-5 h-5 text-emerald-500" />
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Tempo Estudado</label>
-          </div>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-1">
+            <Clock size={14} className="text-emerald-500" /> Tempo Estudado
+          </label>
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col items-center">
               <input 
@@ -268,7 +273,9 @@ export default function RegisterPage({
 
         {/* Card 5 - Páginas Lidas */}
         <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Páginas Lidas</label>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
+            <BookOpen size={14} className="text-emerald-500" /> Páginas Lidas
+          </label>
           <div className="relative">
             <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input 
@@ -291,10 +298,9 @@ export default function RegisterPage({
 
         {/* Card 6 - Desempenho */}
         <div className="md:col-span-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-3">
-            <FileText className="w-5 h-5 text-emerald-500" />
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Desempenho</label>
-          </div>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
+            <FileText size={14} className="text-emerald-500" /> Desempenho
+          </label>
           
           <div className="flex gap-3 pr-1">
             {/* BLOCO CERTAS */}
@@ -370,7 +376,9 @@ export default function RegisterPage({
 
         {/* Card 7 - Observações */}
         <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Observações</label>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
+            <FileText size={14} className="text-emerald-500" /> Observações
+          </label>
           <textarea 
             value={notes} 
             onChange={(e) => setNotes(e.target.value)} 

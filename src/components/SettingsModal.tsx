@@ -6,6 +6,7 @@ import { Subject, StudyLog } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useNotification } from '../hooks/useNotification';
+import { useToast } from '../contexts/ToastContext';
 import ConfirmModal from './ConfirmModal';
 import ChangePasswordModal from './ChangePasswordModal';
 // i18n guardado para uso futuro:
@@ -50,6 +51,7 @@ export default function SettingsModal({
   
   // Hook de notificações
   const { permission, requestPermission, sendNotification } = useNotification();
+  const { addToast } = useToast();
   
   // i18n guardado para uso futuro:
   // const { t, i18n } = useTranslation();
@@ -251,11 +253,13 @@ export default function SettingsModal({
       setShowFactoryResetConfirm(false);
       
       // Mostrar sucesso e recarregar página
-      alert('Todos os dados foram apagados com sucesso! A página será recarregada.');
-      window.location.reload();
+      addToast('Todos os dados foram apagados com sucesso! A página será recarregada.', 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error: any) {
       console.error('Erro ao resetar dados:', error);
-      alert('Erro ao apagar dados: ' + (error?.message || 'Erro desconhecido'));
+      addToast('Erro ao apagar dados: ' + (error?.message || 'Erro desconhecido'), 'error');
     } finally {
       setIsResetting(false);
     }

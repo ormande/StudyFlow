@@ -5,7 +5,7 @@
 <h1 align="center">StudyFlow</h1>
 
 <p align="center">
-  <strong>Aplicativo de gestão de estudos para concurseiros e estudantes</strong>
+  <strong>Sistema de gestão de estudos com gamificação para concurseiros</strong>
 </p>
 
 <p align="center">
@@ -14,22 +14,34 @@
   <a href="#-screenshots">Screenshots</a> •
   <a href="#-tecnologias">Tecnologias</a> •
   <a href="#-como-executar">Como Executar</a> •
-  <a href="#-autor">Autor</a>
+  <a href="#-roadmap">Roadmap</a> •
+  <a href="#-contribuindo">Contribuindo</a> •
+  <a href="#-autor">Autor</a> •
+  <a href="#-licença">Licença</a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.5.0-emerald" alt="Version" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
-  <img src="https://img.shields.io/badge/status-em%20desenvolvimento-yellow" alt="Status" />
+  <img src="https://img.shields.io/badge/status-beta-yellow" alt="Status" />
+  <img src="https://img.shields.io/badge/lançamento-janeiro%202025-green" alt="Launch" />
 </p>
 
 ---
 
 ## 📖 Sobre
 
-O **StudyFlow** é uma aplicação web progressiva (PWA) desenvolvida para ajudar estudantes a organizarem e acompanharem seus estudos de forma eficiente. Ideal para quem se prepara para concursos públicos, vestibulares ou qualquer tipo de prova.
+O **StudyFlow** é uma Progressive Web App (PWA) que revoluciona a forma como concurseiros organizam seus estudos, combinando **gestão inteligente de ciclos de estudo** com um **sistema de gamificação motivacional**.
 
-O app permite registrar sessões de estudo, acompanhar o progresso por matéria, definir metas diárias e visualizar estatísticas de desempenho — tudo em uma interface moderna e responsiva.
+Diferente de outros apps do mercado, o StudyFlow oferece:
+- 🎮 **Sistema de XP e Elos** (Bronze → Prata → Ouro → Platina → Diamante)
+- 🏆 **50+ conquistas desbloqueáveis** (badges motivacionais)
+- 🔥 **Sistema de ofensiva** (dias consecutivos de estudo)
+- ⏱️ **Timer integrado** (Cronômetro, Temporizador e Pomodoro)
+- 📊 **Análise de desempenho** por matéria e subtópico
+- 📈 **Ciclo de estudos** personalizável com metas individuais
+
+Ideal para quem se prepara para concursos públicos, vestibulares, ENEM, OAB, ou qualquer prova que exija organização e disciplina.
 
 🔗 **Acesse o app:** [study-flow-six.vercel.app](https://study-flow-six.vercel.app/)
 
@@ -37,65 +49,99 @@ O app permite registrar sessões de estudo, acompanhar o progresso por matéria,
 
 ## ✨ Funcionalidades
 
-### 📊 Dashboard Completo
-- Visualização do ritmo de estudos dos últimos 7 dias
-- Acompanhamento de ofensiva (dias consecutivos)
-- Meta diária com barra de progresso
-- Desempenho em questões por matéria
-- Histórico de atividades recentes
+### 📊 Dashboard Inteligente
+- Estatísticas do dia (tempo, páginas, questões)
+- Gráfico de barras dos últimos 7 dias
+- Acompanhamento de **ofensiva** (streak de dias consecutivos)
+- Meta diária com barra de progresso animada
+- Progresso por matéria em tempo real
+- **Desempenho em questões** (certas, erradas, em branco) com gráficos
+- Histórico completo de atividades
 
-### ⏱️ Cronômetro Integrado
-- Timer para acompanhar sessões de estudo em tempo real
-- Integração direta com a página de registro
+### ⏱️ Sistema de Timer Completo
+- **Cronômetro** - Para sessões livres de estudo
+- **Temporizador** - Defina um tempo específico e foque
+- **Modo Pomodoro** - Técnica de produtividade (25min foco + 5min pausa)
+- Presets rápidos (Foco, Pausa Curta, Pausa Longa)
+- Integração direta com registro de estudos
 
-### 📝 Registro de Estudos
-- Registro de tempo estudado (horas, minutos, segundos)
-- Tipos de estudo: Teoria, Questões ou Revisão
-- Controle de páginas lidas
-- Desempenho em questões (certas, erradas, em branco)
+### 📝 Registro Detalhado de Estudos
+- Tempo estudado (horas, minutos, segundos)
+- **Tipos de estudo:** Teoria, Questões ou Revisão
+- Páginas lidas (para Teoria)
+- **Desempenho completo:** Questões certas, erradas e em branco
+- Matérias e **subtópicos** para organização granular
 - Campo de observações para anotações
-- Suporte a subtópicos por matéria
+- Data retroativa (registre estudos passados)
 
-### 📚 Gestão de Ciclo de Estudos
-- Cadastro de matérias com metas individuais
-- Subtópicos para organização detalhada
-- Progresso visual por matéria
-- Reordenação de matérias por arrastar
-- Reinício de ciclo
+### 📚 Ciclo de Estudos Inteligente
+- Cadastro de matérias com **metas individuais** (horas)
+- **Subtópicos ilimitados** por matéria
+- Progresso visual com barras coloridas
+- **Reordenação por arrastar** (priorize matérias)
+- Reinício de ciclo (zera progresso, mantém estrutura)
+- Acompanhamento de conclusão de subtópicos
 
-### ⚙️ Configurações
-- Tema claro/escuro
-- Meta diária personalizável
-- Privacidade (ocultar desempenho)
+### 🎮 Sistema de Gamificação
+- **Sistema de XP:** Ganhe pontos estudando
+- **5 Elos:** Bronze → Prata → Ouro → Platina → Diamante
+- **50+ Badges:** Conquistas desbloqueáveis (Maratonista, Perfeccionista, etc)
+- **Ofensiva (Streak):** Dias consecutivos sem falhar
+- **Sala de Troféus:** Visualize todas as suas conquistas
+- **Ranking visual** com barra de progresso até o próximo elo
+
+### 📊 Estatísticas e Análises
+- Desempenho por matéria (aproveitamento de questões)
+- Tempo total estudado (hoje, semana, mês, total)
+- Páginas lidas acumuladas
+- **Exportação de dados** em PDF (resumo completo)
+- Histórico completo com filtros
+
+### ⚙️ Configurações Personalizáveis
+- **Tema claro/escuro** (modo noturno)
+- **Meta diária** personalizável (0-12 horas)
+- **Privacidade:** Ocultar desempenho (para quem não quer ver % de acerto)
 - Alteração de senha
+- Notificações (suporte PWA)
+- **Factory Reset** (limpar todos os dados)
 
-### 📱 PWA (Progressive Web App)
-- Instalável no celular como app nativo
-- Interface responsiva (mobile e desktop)
-- Funciona em qualquer dispositivo
+### 📱 Progressive Web App (PWA)
+- **Instalável** no celular como app nativo
+- Funciona **offline** (Service Worker)
+- Interface **100% responsiva** (mobile e desktop)
+- Notificações push (em breve)
+- Carregamento instantâneo
 
 ---
 
 ## 📸 Screenshots
 
-### Desktop (Tema Claro)
+### Desktop
 
 <p align="center">
   <img src="./docs/screenshots/desktop-dashboard.png" alt="Dashboard Desktop" width="700" />
+  <br />
+  <em>Dashboard com estatísticas e gráficos</em>
 </p>
 
 <p align="center">
   <img src="./docs/screenshots/desktop-register.png" alt="Registro Desktop" width="700" />
+  <br />
+  <em>Tela de registro de estudos</em>
 </p>
 
 <p align="center">
   <img src="./docs/screenshots/desktop-cycle.png" alt="Ciclo Desktop" width="700" />
+  <br />
+  <em>Gestão do ciclo de estudos</em>
 </p>
 
-### Mobile (Tema Escuro)
+### Mobile
 
 <p align="center">
   <img src="./docs/screenshots/mobile-dashboard.png" alt="Dashboard Mobile" width="300" />
+  <br />
+  <em>Dashboard otimizado para mobile</em>
 </p>
 
 ---
@@ -105,18 +151,25 @@ O app permite registrar sessões de estudo, acompanhar o progresso por matéria,
 O projeto foi desenvolvido com as seguintes tecnologias:
 
 ### Frontend
-- **React 18** — Biblioteca para construção de interfaces
-- **TypeScript** — Tipagem estática para JavaScript
-- **Vite** — Build tool ultrarrápido
-- **Tailwind CSS** — Framework CSS utilitário
-- **Framer Motion** — Animações fluidas
-- **Lucide React** — Ícones modernos
+- **[React 18](https://react.dev/)** — Biblioteca para construção de interfaces
+- **[TypeScript](https://www.typescriptlang.org/)** — Tipagem estática para JavaScript
+- **[Vite](https://vitejs.dev/)** — Build tool ultrarrápido (HMR instantâneo)
+- **[Tailwind CSS](https://tailwindcss.com/)** — Framework CSS utilitário
+- **[Framer Motion](https://www.framer.com/motion/)** — Animações fluidas e naturais
+- **[Lucide React](https://lucide.dev/)** — Ícones modernos e leves
 
 ### Backend
-- **Supabase** — Backend as a Service (autenticação + banco de dados PostgreSQL)
+- **[Supabase](https://supabase.com/)** — Backend as a Service
+  - Autenticação (email/senha + recuperação)
+  - Banco de dados PostgreSQL
+  - Realtime subscriptions
+  - Row Level Security (RLS)
 
-### Infraestrutura
-- **Vercel** — Deploy e hospedagem
+### Infraestrutura & DevOps
+- **[Vercel](https://vercel.com/)** — Deploy contínuo e hospedagem
+- **[Vercel Analytics](https://vercel.com/analytics)** — Métricas de tráfego
+- **[Sentry](https://sentry.io/)** — Monitoramento de erros em produção
+- **[GitHub Actions](https://github.com/features/actions)** — CI/CD (testes automatizados)
 - **PWA** — Progressive Web App com Service Worker
 
 ---
@@ -130,7 +183,6 @@ O projeto foi desenvolvido com as seguintes tecnologias:
 - Conta no [Supabase](https://supabase.com/) (para o banco de dados)
 
 ### Instalação
-
 ```bash
 # Clone o repositório
 git clone https://github.com/ormande/study-flow.git
@@ -148,16 +200,18 @@ cp .env.example .env.local
 ### Variáveis de Ambiente
 
 Crie um arquivo `.env.local` na raiz com:
-
 ```env
-VITE_SUPABASE_URL=sua_url_do_supabase
-VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+# Supabase (OBRIGATÓRIO)
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY=sua-chave-publica-aqui
+
+# Sentry (Monitoramento - Opcional)
+VITE_SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
 ```
 
 ### Executando
-
 ```bash
-# Modo desenvolvimento
+# Modo desenvolvimento (http://localhost:5173)
 npm run dev
 
 # Build para produção
@@ -165,52 +219,135 @@ npm run build
 
 # Preview do build
 npm run preview
-```
 
-O app estará disponível em `http://localhost:5173`
+# Testes (em breve)
+npm test
+```
 
 ---
 
 ## 📁 Estrutura do Projeto
-
 ```
-src/
-├── components/       # Componentes reutilizáveis
-│   ├── AlertModal.tsx
-│   ├── Toast.tsx
-│   └── ...
-├── contexts/         # Context API
-│   └── ToastContext.tsx
-├── hooks/            # Hooks customizados
-│   └── useSupabaseData.ts
-├── lib/              # Configurações externas
-│   └── supabase.ts
-├── pages/            # Páginas da aplicação
-│   ├── DashboardPage.tsx
-│   ├── TimerPage.tsx
-│   ├── RegisterPage.tsx
-│   └── CyclePage.tsx
-├── types/            # Definições TypeScript
-│   └── index.ts
-├── App.tsx           # Componente raiz
-└── main.tsx          # Entry point
+study-flow/
+├── src/
+│   ├── components/          # Componentes reutilizáveis
+│   │   ├── AlertModal.tsx
+│   │   ├── ConfirmModal.tsx
+│   │   ├── SettingsModal.tsx
+│   │   ├── ShareModal.tsx
+│   │   ├── Toast.tsx
+│   │   └── GamificationCard.tsx
+│   │
+│   ├── contexts/            # Context API (estado global)
+│   │   └── ToastContext.tsx
+│   │
+│   ├── hooks/               # Hooks customizados
+│   │   └── useSupabaseData.ts
+│   │
+│   ├── lib/                 # Configurações externas
+│   │   └── supabase.ts
+│   │
+│   ├── pages/               # Páginas principais
+│   │   ├── DashboardPage.tsx
+│   │   ├── TimerPage.tsx
+│   │   ├── RegisterPage.tsx
+│   │   ├── CyclePage.tsx
+│   │   └── GamificationPage.tsx
+│   │
+│   ├── types/               # Definições TypeScript
+│   │   └── index.ts
+│   │
+│   ├── App.tsx              # Componente raiz + roteamento
+│   ├── main.tsx             # Entry point
+│   └── index.css            # Estilos globais + Tailwind
+│
+├── public/                  # Assets estáticos
+│   ├── manifest.json        # Manifesto PWA
+│   ├── sw.js               # Service Worker
+│   └── icons/              # Ícones do PWA
+│
+├── docs/                    # Documentação
+│   └── screenshots/        # Imagens do README
+│
+├── .env.example            # Template de variáveis
+├── .gitignore
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+├── vite.config.ts
+├── vercel.json
+└── README.md
 ```
 
 ---
 
 ## 🗺️ Roadmap
 
+### ✅ v1.0.0 - v1.5.0 (Concluído)
 - [x] Dashboard com estatísticas
-- [x] Cronômetro de estudos
-- [x] Registro de sessões
+- [x] Sistema de timer (Cronômetro, Temporizador, Pomodoro)
+- [x] Registro completo de sessões
 - [x] Gestão de matérias e subtópicos
+- [x] Sistema de ciclo de estudos
 - [x] Tema claro/escuro
 - [x] PWA instalável
-- [ ] Modo Pomodoro
-- [ ] Notificações/Lembretes
-- [ ] Exportar dados (PDF/Excel)
-- [ ] Gráficos avançados
-- [ ] Gamificação (badges e conquistas)
+- [x] **Sistema de gamificação** (XP, elos, badges)
+- [x] **Exportação de dados** (PDF)
+- [x] Histórico completo de estudos
+- [x] **Integração com Supabase**
+- [x] **Deploy com Vercel**
+- [x] **Monitoramento com Sentry**
+- [x] **Vercel Analytics**
+
+### 🚧 v1.6.0 - Janeiro 2025 (Em Desenvolvimento)
+- [ ] Nova navegação mobile (BottomNav com 5 abas)
+- [ ] Frase motivacional no dashboard
+- [ ] Desempenho com barra colorida (verde/vermelho/azul)
+- [ ] Constância visual (calendário de bolinhas)
+- [ ] FAB de timer flutuante
+- [ ] Toast especial ao subir de elo
+- [ ] Seletor de data no registro (Hoje/Ontem/Outro)
+- [ ] Botão "Salvar e criar novo" no registro
+- [ ] Tamanho de fonte personalizável
+
+### 🔮 v2.0.0 - Fevereiro 2025 (Planejado)
+- [ ] Estatísticas avançadas (gráficos de evolução 30 dias)
+- [ ] Heatmap de constância (calendário completo)
+- [ ] Landing page pública
+- [ ] Onboarding interativo (tour guiado)
+- [ ] Sistema de lembretes (notificações PWA)
+- [ ] Modo offline completo
+- [ ] Sugestões de IA para otimizar estudos
+- [ ] App mobile nativo (React Native)
+
+### 💡 Futuro (v3.0+)
+- [ ] Sistema de revisões espaçadas (Spaced Repetition)
+- [ ] Simulados com correção automática
+- [ ] Grupos de estudo (funcionalidade social)
+- [ ] Integração com Anki
+- [ ] Marketplace de ciclos de estudo
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são muito bem-vindas! Se você quer ajudar a melhorar o StudyFlow:
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanças (`git commit -m 'feat: adiciona MinhaFeature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
+
+Leia o [CONTRIBUTING.md](./CONTRIBUTING.md) para mais detalhes sobre nosso código de conduta e processo de submissão.
+
+### 🐛 Reportando Bugs
+
+Encontrou um bug? Abra uma [issue](https://github.com/ormande/study-flow/issues) com:
+- Descrição clara do problema
+- Passos para reproduzir
+- Screenshots (se aplicável)
+- Navegador e sistema operacional
 
 ---
 
@@ -221,11 +358,12 @@ src/
 </p>
 
 <p align="center">
-  <strong>Kayke Paião</strong>
+  <strong>Kayke Paião Ormande da Silva</strong>
 </p>
 
 <p align="center">
-  Estudante de Gestão de Tecnologia da Informação
+  Estudante de Gestão de Tecnologia da Informação<br />
+  Desenvolvedor Full Stack | Entusiasta de UX/UI
 </p>
 
 <p align="center">
@@ -234,6 +372,9 @@ src/
   </a>
   <a href="https://github.com/ormande">
     <img src="https://img.shields.io/badge/-GitHub-181717?style=flat&logo=github&logoColor=white" alt="GitHub" />
+  </a>
+  <a href="https://linkedin.com/in/kayke-paiao">
+    <img src="https://img.shields.io/badge/-LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn" />
   </a>
 </p>
 
@@ -245,6 +386,19 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](./LICENSE) para 
 
 ---
 
+## 🙏 Agradecimentos
+
+- [Supabase](https://supabase.com/) - Pela incrível plataforma de backend
+- [Vercel](https://vercel.com/) - Pelo deploy e hospedagem gratuitos
+- [Lucide](https://lucide.dev/) - Pelos ícones lindos e open-source
+- Comunidade de concurseiros brasileiros - Pela inspiração e feedback
+
+---
+
 <p align="center">
-  Feito com 💚 e muito ☕ por Kayke Paião
+  <strong>Feito com 💚, ☕ e muita disciplina por Kayke Paião</strong>
+</p>
+
+<p align="center">
+  <sub>StudyFlow © 2025 - Todos os direitos reservados</sub>
 </p>

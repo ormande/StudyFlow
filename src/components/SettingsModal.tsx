@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Instagram, AlertTriangle, Moon, Sun, Target, Settings, Eye, EyeOff, Lock, Database, FileSpreadsheet, FileText, Bell, BellOff, LogOut, Trash2, Zap } from 'lucide-react';
+import { X, Instagram, AlertTriangle, Moon, Sun, Target, Settings, Eye, EyeOff, Lock, Database, FileSpreadsheet, FileText, Bell, BellOff, LogOut, Trash2, Zap, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Subject, StudyLog } from '../types';
@@ -9,6 +9,8 @@ import { useNotification } from '../hooks/useNotification';
 import { useToast } from '../contexts/ToastContext';
 import ConfirmModal from './ConfirmModal';
 import ChangePasswordModal from './ChangePasswordModal';
+import FeedbackModal from './FeedbackModal';
+import { registerPoppinsFontSimple } from '../utils/pdfFonts';
 // i18n guardado para uso futuro:
 // Para reativar: descomente a linha abaixo e adicione o seletor de idioma na seção "Preferências & Foco"
 // import { useTranslation } from 'react-i18next';
@@ -27,6 +29,7 @@ interface SettingsModalProps {
   subjects: Subject[];
   logs: StudyLog[];
   userEmail: string | undefined;
+  userId?: string;
 }
 
 export default function SettingsModal({ 
@@ -41,13 +44,15 @@ export default function SettingsModal({
   onTogglePerformance,
   subjects,
   logs,
-  userEmail
+  userEmail,
+  userId
 }: SettingsModalProps) {
   // Estados para confirmações
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   
   // Hook de notificações
   const { permission, requestPermission, sendNotification } = useNotification();
@@ -136,31 +141,268 @@ export default function SettingsModal({
     URL.revokeObjectURL(url);
   };
 
-  // Função para Exportar PDF Profissional
-  const handleExportPDF = () => {
-    // Criar instância do jsPDF
-    const doc = new jsPDF();
+  // ============================================
+  // FUNÇÕES AUXILIARES PARA RELATÓRIO PDF
+  // ============================================
+
+  /**
+   * Calcula estatísticas agregadas dos logs de estudo
+   */
+  const calculateStats = (logs: StudyLog[]): {
+    totalMinutes: number;
+    totalHours: number;
+    totalQuestions: number;
+    totalCorrect: number;
+    totalWrong: number;
+    accuracyRate: number;
+    averageDailyMinutes: number;
+    periodStart: Date | null;
+    periodEnd: Date | null;
+  } => {
+    if (logs.length === 0) {
+      return {
+        totalMinutes: 0,
+        totalHours: 0,
+        totalQuestions: 0,
+        totalCorrect: 0,
+        totalWrong: 0,
+        accuracyRate: 0,
+        averageDailyMinutes: 0,
+        periodStart: null,
+        periodEnd: null
+      };
+    }
+
+    let totalMinutes = 0;
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+    let totalWrong = 0;
+    const dates: Date[] = [];
+
+    logs.forEach(log => {
+      // Calcular tempo total em minutos
+      const logMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
+      totalMinutes += logMinutes;
+
+      // Calcular questões
+      if (log.correct !== undefined && log.correct !== null) {
+        totalCorrect += log.correct;
+      }
+      if (log.wrong !== undefined && log.wrong !== null) {
+        totalWrong += log.wrong;
+      }
+      totalQuestions = totalCorrect + totalWrong;
+
+      // Coletar datas
+      if (log.date) {
+        dates.push(new Date(log.date));
+      }
+    });
+
+    const totalHours = Math.floor(totalMinutes / 60);
     
-    // Cabeçalho da Marca - Retângulo colorido
-    doc.setFillColor(16, 185, 129); // RGB do Emerald-500
-    doc.rect(0, 0, 210, 40, 'F'); // Retângulo preenchendo a largura da página
-    
-    // Texto "StudyFlow" no cabeçalho (branco)
+    // Calcular taxa de acerto
+    const accuracyRate = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+
+    // Calcular média diária
+    const uniqueDays = new Set(dates.map(d => d.toDateString())).size;
+    const averageDailyMinutes = uniqueDays > 0 ? totalMinutes / uniqueDays : 0;
+
+    // Período do relatório
+    const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime());
+    const periodStart = sortedDates.length > 0 ? sortedDates[0] : null;
+    const periodEnd = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : null;
+
+    return {
+      totalMinutes,
+      totalHours,
+      totalQuestions,
+      totalCorrect,
+      totalWrong,
+      accuracyRate,
+      averageDailyMinutes,
+      periodStart,
+      periodEnd
+    };
+  };
+
+  /**
+   * Carrega a logo do StudyFlow como base64
+   * Tenta usar icon-192.png do public, se não conseguir, retorna null
+   */
+  const loadLogoAsBase64 = async (): Promise<string | null> => {
+    try {
+      // Tentar carregar o ícone do public
+      const response = await fetch('/icon-192.png');
+      if (!response.ok) return null;
+      
+      const blob = await response.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          resolve(base64);
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Não foi possível carregar a logo:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Extrai a cor verde dominante da logo do StudyFlow
+   * Retorna RGB [r, g, b] ou null se não conseguir extrair
+   */
+  const extractLogoGreenColor = async (): Promise<[number, number, number] | null> => {
+    try {
+      const response = await fetch('/icon-192.png');
+      if (!response.ok) return null;
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+              URL.revokeObjectURL(imageUrl);
+              resolve(null);
+              return;
+            }
+
+            ctx.drawImage(img, 0, 0);
+            
+            // Analisar pixels para encontrar a cor verde dominante
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            
+            // Contar cores verdes (onde G > R e G > B, e G > 100 para ser verde visível)
+            const greenPixels: { r: number; g: number; b: number; count: number }[] = [];
+            
+            for (let i = 0; i < pixels.length; i += 4) {
+              const r = pixels[i];
+              const g = pixels[i + 1];
+              const b = pixels[i + 2];
+              
+              // Verificar se é uma cor verde (G dominante e G > 100)
+              if (g > r && g > b && g > 100) {
+                // Agrupar cores similares (tolerância de ±10)
+                const existing = greenPixels.find(
+                  p => Math.abs(p.r - r) < 10 && Math.abs(p.g - g) < 10 && Math.abs(p.b - b) < 10
+                );
+                
+                if (existing) {
+                  existing.r = (existing.r * existing.count + r) / (existing.count + 1);
+                  existing.g = (existing.g * existing.count + g) / (existing.count + 1);
+                  existing.b = (existing.b * existing.count + b) / (existing.count + 1);
+                  existing.count++;
+                } else {
+                  greenPixels.push({ r, g, b, count: 1 });
+                }
+              }
+            }
+            
+            URL.revokeObjectURL(imageUrl);
+            
+            if (greenPixels.length === 0) {
+              resolve(null);
+              return;
+            }
+            
+            // Encontrar a cor verde mais comum
+            const dominantGreen = greenPixels.reduce((prev, current) => 
+              current.count > prev.count ? current : prev
+            );
+            
+            resolve([
+              Math.round(dominantGreen.r),
+              Math.round(dominantGreen.g),
+              Math.round(dominantGreen.b)
+            ]);
+          } catch (error) {
+            console.warn('Erro ao extrair cor da logo:', error);
+            URL.revokeObjectURL(imageUrl);
+            resolve(null);
+          }
+        };
+        
+        img.onerror = () => {
+          URL.revokeObjectURL(imageUrl);
+          resolve(null);
+        };
+        
+        img.src = imageUrl;
+      });
+    } catch (error) {
+      console.warn('Erro ao carregar logo para extração de cor:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Desenha o cabeçalho profissional do relatório
+   */
+  const drawHeader = async (doc: jsPDF, userEmail: string | undefined, periodStart: Date | null, periodEnd: Date | null, logoBase64: string | null, greenColor: [number, number, number]): Promise<number> => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const headerHeight = 45;
+
+    // Retângulo de fundo (cor verde da logo)
+    doc.setFillColor(greenColor[0], greenColor[1], greenColor[2]);
+    doc.rect(0, 0, pageWidth, headerHeight, 'F');
+
+    // Tentar adicionar logo real se disponível
+    if (logoBase64) {
+      try {
+        // Adicionar logo (ajustar tamanho conforme necessário)
+        const logoSize = 20;
+        const logoX = 15;
+        const logoY = (headerHeight - logoSize) / 2;
+        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoSize, logoSize);
+      } catch (error) {
+        console.warn('Erro ao adicionar logo ao PDF:', error);
+      }
+    }
+
+    // Nome da marca (posicionado após a logo ou no início se não houver logo)
+    const textStartX = logoBase64 ? 40 : 15;
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(28);
-    doc.setFont('helvetica', 'bold');
-    doc.text('StudyFlow', 15, 20);
-    
-    // Texto "Relatório de Desempenho" (branco, menor)
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Relatório de Desempenho', 15, 30);
-    
-    // Metadados - Abaixo do cabeçalho
-    doc.setTextColor(0, 0, 0); // Preto
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    
+    doc.setFontSize(24);
+    // Usar Poppins bold se disponível, senão helvetica bold
+    const fontFamily = doc.getFont().fontName === 'Poppins' ? 'Poppins' : 'helvetica';
+    doc.setFont(fontFamily, 'bold');
+    doc.text('StudyFlow', textStartX, 18);
+
+    // Subtítulo
+    doc.setFontSize(12);
+    setFontSafe(doc, 'normal');
+    doc.text('Relatório Executivo de Estudos', textStartX, 28);
+
+    // Nome do aluno e período
+    doc.setFontSize(9);
+    doc.text(`Aluno: ${userEmail || 'Não identificado'}`, textStartX, 36);
+
+    // Período do relatório
+    let periodText = 'Período: ';
+    if (periodStart && periodEnd) {
+      const startStr = periodStart.toLocaleDateString('pt-BR');
+      const endStr = periodEnd.toLocaleDateString('pt-BR');
+      periodText += `${startStr} a ${endStr}`;
+    } else {
+      periodText += 'Todos os registros';
+    }
+    doc.text(periodText, textStartX, 41);
+
+    // Data de geração (canto superior direito)
     const currentDate = new Date().toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -168,57 +410,422 @@ export default function SettingsModal({
       hour: '2-digit',
       minute: '2-digit'
     });
-    
-    doc.text(`Aluno: ${userEmail || 'Não identificado'}`, 15, 50);
-    doc.text(`Gerado em: ${currentDate}`, 15, 56);
-    
-    // Preparar dados da tabela
-    const tableData = logs.map(log => {
-      const subject = subjects.find(s => s.id === log.subjectId);
-      const subjectName = subject?.name || 'Desconhecida';
-      const totalMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
-      const date = log.date ? new Date(log.date).toLocaleDateString('pt-BR') : '';
-      
-      return [
-        date,
-        subjectName,
-        log.type,
-        totalMinutes.toFixed(2).replace('.', ','),
-        log.pages?.toString() || '-',
-        log.correct?.toString() || '-'
-      ];
+    doc.setFontSize(8);
+    doc.text(`Gerado em: ${currentDate}`, pageWidth - 15, 15, { align: 'right' });
+
+    return headerHeight;
+  };
+
+  /**
+   * Helper para obter a fonte correta (Poppins se disponível, senão helvetica)
+   */
+  const getFont = (doc: jsPDF): string => {
+    try {
+      const currentFont = doc.getFont();
+      if (currentFont.fontName === 'Poppins') {
+        return 'Poppins';
+      }
+    } catch (e) {
+      // Ignorar erro
+    }
+    return 'helvetica';
+  };
+
+  /**
+   * Helper para definir fonte com fallback
+   */
+  const setFontSafe = (doc: jsPDF, style: 'normal' | 'bold' = 'normal'): void => {
+    const fontFamily = getFont(doc);
+    doc.setFont(fontFamily, style);
+  };
+
+  /**
+   * Desenha cards de KPIs (Resumo Executivo)
+   */
+  const drawKPICards = (doc: jsPDF, stats: ReturnType<typeof calculateStats>, startY: number, greenColor: [number, number, number]): number => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    const cardWidth = (pageWidth - margin * 3) / 2; // 2 colunas
+    const cardHeight = 35;
+    const cardGap = 10;
+    let currentY = startY + 10;
+
+    // Título da seção
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    setFontSafe(doc, 'bold');
+    doc.text('Resumo Executivo', margin, currentY);
+    currentY += 8;
+
+    // Card 1: Tempo Total Estudado
+    drawKPICard(
+      doc,
+      margin,
+      currentY,
+      cardWidth,
+      cardHeight,
+      'Tempo Total',
+      `${stats.totalHours}h ${Math.round(stats.totalMinutes % 60)}min`,
+      'Estudado',
+      greenColor
+    );
+
+    // Card 2: Questões e Taxa de Acerto
+    drawKPICard(
+      doc,
+      margin * 2 + cardWidth,
+      currentY,
+      cardWidth,
+      cardHeight,
+      'Desempenho',
+      `${stats.totalQuestions} questões`,
+      `${stats.accuracyRate.toFixed(1)}% de acerto`,
+      greenColor
+    );
+
+    currentY += cardHeight + cardGap;
+
+    // Card 3: Média Diária
+    drawKPICard(
+      doc,
+      margin,
+      currentY,
+      cardWidth,
+      cardHeight,
+      'Média Diária',
+      `${Math.round(stats.averageDailyMinutes)} min/dia`,
+      'Tempo médio de estudo',
+      greenColor
+    );
+
+    // Card 4: Estatísticas Adicionais
+    const acertosText = stats.totalCorrect > 0 ? `${stats.totalCorrect} acertos` : 'N/A';
+    drawKPICard(
+      doc,
+      margin * 2 + cardWidth,
+      currentY,
+      cardWidth,
+      cardHeight,
+      'Detalhes',
+      acertosText,
+      stats.totalWrong > 0 ? `${stats.totalWrong} erros` : 'Sem erros',
+      greenColor
+    );
+
+    return currentY + cardHeight + 15;
+  };
+
+  /**
+   * Desenha um card individual de KPI
+   */
+  const drawKPICard = (
+    doc: jsPDF,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    title: string,
+    value: string,
+    subtitle: string,
+    greenColor: [number, number, number]
+  ): void => {
+    // Fundo do card (cinza claro)
+    doc.setFillColor(245, 247, 250);
+    doc.setDrawColor(200, 200, 200);
+    doc.roundedRect(x, y, width, height, 3, 3, 'FD');
+
+    // Borda superior colorida (cor verde da logo)
+    doc.setFillColor(greenColor[0], greenColor[1], greenColor[2]);
+    doc.rect(x, y, width, 5, 'F');
+
+    // Título
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    setFontSafe(doc, 'normal');
+    doc.text(title, x + 8, y + 12);
+
+    // Valor principal
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(16);
+    setFontSafe(doc, 'bold');
+    doc.text(value, x + 8, y + 22);
+
+    // Subtítulo
+    doc.setTextColor(120, 120, 120);
+    doc.setFontSize(8);
+    setFontSafe(doc, 'normal');
+    doc.text(subtitle, x + 8, y + 30);
+  };
+
+  /**
+   * Desenha gráfico de barras semanal (últimos 7 dias)
+   */
+  const drawWeeklyChart = (doc: jsPDF, logs: StudyLog[], startY: number, greenColor: [number, number, number]): number => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    const chartWidth = pageWidth - margin * 2;
+    const chartHeight = 60;
+    const chartX = margin;
+    const chartY = startY + 10;
+
+    // Título do gráfico
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    setFontSafe(doc, 'bold');
+    doc.text('Atividade Semanal (Últimos 7 Dias)', chartX, chartY);
+
+    // Calcular dados dos últimos 7 dias
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Inclui hoje + 6 dias anteriores = 7 dias
+
+    const dailyData: { date: Date; minutes: number }[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(sevenDaysAgo);
+      date.setDate(date.getDate() + i);
+      dailyData.push({ date, minutes: 0 });
+    }
+
+    // Agrupar logs por dia
+    logs.forEach(log => {
+      if (log.date) {
+        const logDate = new Date(log.date);
+        logDate.setHours(0, 0, 0, 0);
+        
+        const dayIndex = dailyData.findIndex(d => 
+          d.date.getTime() === logDate.getTime()
+        );
+        
+        if (dayIndex !== -1) {
+          const logMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
+          dailyData[dayIndex].minutes += logMinutes;
+        }
+      }
     });
+
+    // Encontrar valor máximo para escala
+    const maxMinutes = Math.max(...dailyData.map(d => d.minutes), 1);
+    const barWidth = (chartWidth - 20) / 7; // 7 barras com espaçamento
+    const maxBarHeight = chartHeight - 25; // Altura máxima da barra (deixar espaço para labels)
+
+    // Desenhar eixos
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    // Eixo X (linha horizontal)
+    doc.line(chartX, chartY + maxBarHeight + 15, chartX + chartWidth, chartY + maxBarHeight + 15);
+    // Eixo Y (linha vertical)
+    doc.line(chartX, chartY + 5, chartX, chartY + maxBarHeight + 15);
+
+    // Desenhar barras
+    dailyData.forEach((day, index) => {
+      const barX = chartX + 10 + index * barWidth;
+      const barHeight = maxMinutes > 0 ? (day.minutes / maxMinutes) * maxBarHeight : 0;
+      const barY = chartY + maxBarHeight + 15 - barHeight;
+
+      // Cor da barra (gradiente visual - mais escuro = mais tempo)
+      const intensity = maxMinutes > 0 ? Math.min(day.minutes / maxMinutes, 1) : 0;
+      // Usar cor da logo como base, variando a intensidade
+      const r = Math.round(greenColor[0] + (255 - greenColor[0]) * (1 - intensity) * 0.3);
+      const g = Math.round(greenColor[1] + (255 - greenColor[1]) * (1 - intensity) * 0.3);
+      const b = Math.round(greenColor[2] + (255 - greenColor[2]) * (1 - intensity) * 0.3);
+      doc.setFillColor(r, g, b);
+
+      // Desenhar barra
+      doc.rect(barX, barY, barWidth - 2, barHeight, 'F');
+
+      // Label do dia (abreviação)
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(7);
+      setFontSafe(doc, 'normal');
+      const dayLabel = day.date.toLocaleDateString('pt-BR', { weekday: 'short' }).substring(0, 3);
+      doc.text(dayLabel.toUpperCase(), barX + (barWidth - 2) / 2, chartY + maxBarHeight + 20, { align: 'center' });
+
+      // Valor em minutos (se > 0)
+      if (day.minutes > 0) {
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(7);
+        setFontSafe(doc, 'bold');
+        const minutesText = Math.round(day.minutes).toString();
+        doc.text(minutesText, barX + (barWidth - 2) / 2, barY - 3, { align: 'center' });
+      }
+    });
+
+    // Label do eixo Y (valor máximo)
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(7);
+    setFontSafe(doc, 'normal');
+    doc.text(`${Math.round(maxMinutes)} min`, chartX - 5, chartY + 5, { align: 'right' });
+
+    return chartY + chartHeight + 10;
+  };
+
+  /**
+   * Desenha rodapé com paginação em todas as páginas
+   */
+  const drawFooter = (doc: jsPDF, pageNumber: number, totalPages: number): void => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const footerY = pageHeight - 15;
+
+    // Linha separadora
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(15, footerY - 5, pageWidth - 15, footerY - 5);
+
+    // Texto do rodapé
+    doc.setTextColor(120, 120, 120);
+    doc.setFontSize(8);
+    setFontSafe(doc, 'normal');
+    doc.text('Gerado via StudyFlow', 15, footerY);
     
+    // Paginação
+    doc.text(`Página ${pageNumber} de ${totalPages}`, pageWidth - 15, footerY, { align: 'right' });
+  };
+
+  /**
+   * Função principal para Exportar PDF Profissional
+   */
+  const handleExportPDF = async () => {
+    // Carregar logo e extrair cor verde antes de criar o PDF
+    const logoBase64 = await loadLogoAsBase64();
+    const logoGreenColor = await extractLogoGreenColor();
+    
+    // Usar cor da logo se disponível, senão usar Emerald-500 padrão
+    const greenColor: [number, number, number] = logoGreenColor || [16, 185, 129];
+
+    // Criar instância do jsPDF
+    const doc = new jsPDF();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+
+    // Registrar fonte Poppins (carrega de CDN se disponível)
+    const poppinsRegistered = await registerPoppinsFontSimple(doc);
+    
+    // Definir fonte padrão (Poppins se disponível, senão helvetica como fallback)
+    if (poppinsRegistered) {
+      doc.setFont('Poppins', 'normal');
+    } else {
+      setFontSafe(doc, 'normal');
+    }
+    doc.setTextColor(0, 0, 0);
+
+    // Calcular estatísticas
+    const stats = calculateStats(logs);
+
+    // Desenhar cabeçalho (agora é async)
+    const headerHeight = await drawHeader(doc, userEmail, stats.periodStart, stats.periodEnd, logoBase64, greenColor);
+    let currentY = headerHeight + 5;
+
+    // Callback para adicionar rodapé em todas as páginas
+    const addFooter = () => {
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        drawFooter(doc, i, totalPages);
+      }
+    };
+
+    // Desenhar Resumo Executivo (KPIs)
+    currentY = drawKPICards(doc, stats, currentY, greenColor);
+
+    // Verificar se precisa de nova página
+    if (currentY > pageHeight - 80) {
+      doc.addPage();
+      currentY = margin;
+    }
+
+    // Desenhar Gráfico Semanal
+    if (logs.length > 0) {
+      currentY = drawWeeklyChart(doc, logs, currentY, greenColor);
+    }
+
+    // Verificar se precisa de nova página para a tabela
+    if (currentY > pageHeight - 100) {
+      doc.addPage();
+      currentY = margin;
+    }
+
+    // Preparar dados da tabela detalhada
+    const tableData = logs
+      .sort((a, b) => {
+        // Ordenar por data (mais recente primeiro)
+        const dateA = a.date ? new Date(a.date).getTime() : 0;
+        const dateB = b.date ? new Date(b.date).getTime() : 0;
+        return dateB - dateA;
+      })
+      .map(log => {
+        const subject = subjects.find(s => s.id === log.subjectId);
+        const subjectName = subject?.name || 'Desconhecida';
+        const totalMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
+        const date = log.date ? new Date(log.date).toLocaleDateString('pt-BR') : '';
+        
+        // Calcular taxa de acerto individual
+        const totalQ = (log.correct || 0) + (log.wrong || 0);
+        const accuracy = totalQ > 0 ? ((log.correct || 0) / totalQ * 100).toFixed(1) : '-';
+        
+        return [
+          date,
+          subjectName,
+          log.type.charAt(0).toUpperCase() + log.type.slice(1), // Capitalizar primeira letra
+          totalMinutes.toFixed(1).replace('.', ','),
+          log.pages?.toString() || '-',
+          log.correct?.toString() || '-',
+          log.wrong?.toString() || '-',
+          accuracy !== '-' ? `${accuracy}%` : '-'
+        ];
+      });
+
+    // Título da tabela
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    setFontSafe(doc, 'bold');
+    doc.text('Registros Detalhados', margin, currentY);
+    currentY += 8;
+
     // Adicionar tabela usando autoTable
     autoTable(doc, {
-      startY: 65,
-      head: [['Data', 'Matéria', 'Tipo', 'Tempo (min)', 'Páginas', 'Acertos']],
-      body: tableData,
+      startY: currentY,
+      head: [['Data', 'Matéria', 'Tipo', 'Tempo (min)', 'Páginas', 'Acertos', 'Erros', 'Taxa Acerto']],
+      body: tableData.length > 0 ? tableData : [['Nenhum registro encontrado', '', '', '', '', '', '', '']],
       headStyles: {
-        fillColor: [16, 185, 129], // Emerald-500
+        fillColor: greenColor, // Cor verde da logo
         textColor: [255, 255, 255], // Branco
         fontStyle: 'bold',
-        fontSize: 10
+        fontSize: 9,
+        halign: 'center'
       },
       alternateRowStyles: {
         fillColor: [245, 247, 250] // Cinza claro para zebra striping
       },
       styles: {
-        fontSize: 9,
-        cellPadding: 3
+        fontSize: 8,
+        cellPadding: 2.5,
+        halign: 'center'
       },
       columnStyles: {
-        0: { cellWidth: 30 }, // Data
-        1: { cellWidth: 50 }, // Matéria
-        2: { cellWidth: 25 }, // Tipo
-        3: { cellWidth: 25 }, // Tempo
-        4: { cellWidth: 20 }, // Páginas
-        5: { cellWidth: 20 }  // Acertos
+        0: { cellWidth: 25, halign: 'left' }, // Data
+        1: { cellWidth: 45, halign: 'left' }, // Matéria
+        2: { cellWidth: 20, halign: 'center' }, // Tipo
+        3: { cellWidth: 20, halign: 'center' }, // Tempo
+        4: { cellWidth: 18, halign: 'center' }, // Páginas
+        5: { cellWidth: 18, halign: 'center' }, // Acertos
+        6: { cellWidth: 18, halign: 'center' }, // Erros
+        7: { cellWidth: 20, halign: 'center' }  // Taxa Acerto
+      },
+      margin: { left: margin, right: margin },
+      didDrawPage: () => {
+        // Adicionar rodapé após cada página da tabela
+        addFooter();
       }
     });
-    
+
+    // Adicionar rodapé na última página
+    addFooter();
+
     // Salvar o PDF
-    doc.save('studyflow_relatorio.pdf');
+    const fileName = `studyflow_relatorio_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
   };
 
   // Função para Factory Reset (Zerar todos os dados)
@@ -268,9 +875,15 @@ export default function SettingsModal({
   return (
     <>
       {/* Modal de Alteração de Senha */}
-      <ChangePasswordModal
-        isOpen={showChangePasswordModal}
-        onClose={() => setShowChangePasswordModal(false)}
+      <ChangePasswordModal 
+        isOpen={showChangePasswordModal} 
+        onClose={() => setShowChangePasswordModal(false)} 
+      />
+      <FeedbackModal 
+        isOpen={showFeedbackModal} 
+        onClose={() => setShowFeedbackModal(false)}
+        userEmail={userEmail}
+        userId={userId}
       />
 
       {/* Modal de Confirmação de Logout */}
@@ -432,6 +1045,32 @@ export default function SettingsModal({
                   </div>
                 </div>
 
+                {/* Botão Reiniciar Tutorial */}
+                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-5 border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Zap size={18} className="text-purple-500" />
+                    <p className="font-bold text-gray-800 dark:text-white text-base">Tutorial</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('studyflow_onboarding_completed');
+                      if ((window as any).restartOnboardingTour) {
+                        (window as any).restartOnboardingTour();
+                      }
+                      addToast('Tutorial reiniciado! O tour começará em breve.', 'success');
+                      // Fechar o modal de configurações
+                      onClose();
+                    }}
+                    className="w-full py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20"
+                  >
+                    <Zap size={18} />
+                    Reiniciar Tutorial
+                  </button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+                    Revise o tour guiado do app
+                  </p>
+                </div>
+
                 {/* SEÇÃO 2: DADOS & RELATÓRIOS */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-3">
@@ -490,6 +1129,31 @@ export default function SettingsModal({
                     <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 text-center">
                       Defina uma nova senha para sua conta
                     </p>
+                  </div>
+                </div>
+
+                {/* SEÇÃO 3.5: AJUDA & FEEDBACK */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-3">
+                    <MessageSquare size={14} />
+                    <span className="text-xs font-bold uppercase tracking-wider">Ajuda & Feedback</span>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">
+                    <div className="flex items-center gap-2 mb-3">
+                      <MessageSquare size={16} className="text-emerald-600 dark:text-emerald-400" />
+                      <p className="font-semibold text-gray-800 dark:text-white text-sm">Dar Feedback</p>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                      Reporte bugs, envie sugestões ou deixe um elogio. Sua opinião é muito importante!
+                    </p>
+                    <button
+                      onClick={() => setShowFeedbackModal(true)}
+                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                    >
+                      <MessageSquare size={18} />
+                      💬 Dar Feedback
+                    </button>
                   </div>
                 </div>
 

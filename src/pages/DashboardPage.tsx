@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History, Target, ChevronDown } from 'lucide-react';
+import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History, Target, ChevronDown, Calendar } from 'lucide-react';
 import HistoryModal from '../components/HistoryModal';
+import HeatmapModal from '../components/HeatmapModal';
 import { Subject, StudyLog } from '../types';
 import ShareModal from '../components/ShareModal';
 import GamificationCard from '../components/GamificationCard';
@@ -21,6 +22,7 @@ interface DashboardPageProps {
 export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog, dailyGoal, showPerformance, streak, isLoading }: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showHeatmapModal, setShowHeatmapModal] = useState(false);
   
   const [expandedPerformanceId, setExpandedPerformanceId] = useState<string | null>(null);
 
@@ -168,9 +170,9 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
           {/* MOBILE LAYOUT */}
           <div className="lg:hidden space-y-6">
             {/* LINHA 1 - Mobile: Hoje e Total */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6" data-tour="stats-cards-wrapper" data-tour-mobile="true">
               {/* Card Hoje */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
                 <button
                   onClick={() => setShowShareModal(true)}
                   className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 active:scale-95"
@@ -190,7 +192,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               </div>
 
               {/* Card Total */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
                 <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-1 opacity-90">
@@ -243,6 +245,14 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                     </div>
                   ))}
                 </div>
+                {/* Botão Ver mais */}
+                <button
+                  onClick={() => setShowHeatmapModal(true)}
+                  className="mt-3 text-white hover:text-white/80 text-xs font-semibold flex items-center gap-1 transition-colors"
+                >
+                  <Calendar size={14} />
+                  Ver calendário completo →
+                </button>
               </div>
             </div>
 
@@ -406,40 +416,43 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
           {/* DESKTOP LAYOUT */}
           <div className="hidden lg:block space-y-6">
             {/* LINHA 1 - Desktop: Hoje, Total, Meta Diária */}
-            <div className="grid grid-cols-3 gap-6">
-              {/* Card Hoje */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 active:scale-95"
-                  title="Compartilhar Progresso do Dia"
-                >
-                  <Share2 size={18} />
-                </button>
-                <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-                <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
-                  <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
-                    <Clock className="w-4 h-4 md:w-5 md:h-5" />
-                    <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Hoje</span>
-                  </div>
-                  <div className="flex-1 flex flex-col justify-center">
-                    <p className="text-3xl md:text-6xl font-black tracking-tight leading-none mb-1 md:mb-2">{hours > 0 ? `${hours}h` : `${minutes}m`}</p>
-                    <p className="text-[10px] md:text-xs font-medium opacity-80">{hours > 0 && minutes > 0 ? `${minutes}m adicionais` : 'Foco total!'}</p>
+            <div className="grid grid-cols-3 gap-6" data-tour="dashboard-stats" data-tour-desktop="true">
+              {/* Wrapper para os cards de estatísticas (apenas para o tour) */}
+              <div className="col-span-2 grid grid-cols-2 gap-6" data-tour="stats-cards-wrapper" data-tour-desktop="true">
+                {/* Card Hoje */}
+                <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 active:scale-95"
+                    title="Compartilhar Progresso do Dia"
+                  >
+                    <Share2 size={18} />
+                  </button>
+                  <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
+                  <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
+                    <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
+                      <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                      <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Hoje</span>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                      <p className="text-3xl md:text-6xl font-black tracking-tight leading-none mb-1 md:mb-2">{hours > 0 ? `${hours}h` : `${minutes}m`}</p>
+                      <p className="text-[10px] md:text-xs font-medium opacity-80">{hours > 0 && minutes > 0 ? `${minutes}m adicionais` : 'Foco total!'}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Card Total */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
-                <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-                <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
-                  <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
-                    <Zap className="w-4 h-4 md:w-5 md:h-5" />
-                    <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Total</span>
-                  </div>
-                  <div className="flex-1 flex flex-col justify-center">
-                    <p className="text-3xl md:text-6xl font-black tracking-tight leading-none mb-1 md:mb-2">{totalHours > 0 ? `${totalHours}h` : '0h'}</p>
-                    <p className="text-[10px] md:text-xs font-medium opacity-80">{totalHours > 0 ? 'acumuladas no app' : 'Vamos começar?'}</p>
+                {/* Card Total */}
+                <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
+                  <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
+                  <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
+                    <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
+                      <Zap className="w-4 h-4 md:w-5 md:h-5" />
+                      <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Total</span>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center">
+                      <p className="text-3xl md:text-6xl font-black tracking-tight leading-none mb-1 md:mb-2">{totalHours > 0 ? `${totalHours}h` : '0h'}</p>
+                      <p className="text-[10px] md:text-xs font-medium opacity-80">{totalHours > 0 ? 'acumuladas no app' : 'Vamos começar?'}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -524,6 +537,14 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                       </div>
                     ))}
                   </div>
+                  {/* Botão Ver mais */}
+                  <button
+                    onClick={() => setShowHeatmapModal(true)}
+                    className="mt-4 text-white hover:text-white/80 text-xs font-semibold flex items-center gap-1 transition-colors"
+                  >
+                    <Calendar size={14} />
+                    Ver calendário completo →
+                  </button>
                 </div>
               </div>
 
@@ -678,6 +699,13 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
         subjects={subjects}
         onDeleteLog={onDeleteLog}
         onEditLog={onEditLog}
+      />
+
+      <HeatmapModal
+        isOpen={showHeatmapModal}
+        onClose={() => setShowHeatmapModal(false)}
+        logs={logs}
+        dailyGoal={dailyGoal}
       />
     </div>
   );

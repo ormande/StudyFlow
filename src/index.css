@@ -157,3 +157,13 @@
   animation: trophy-bounce 1.5s ease-in-out infinite;
   display: inline-block;
 }
+
+/* Estilos para traduzir o texto do progresso do react-joyride */
+.react-joyride__tooltip button[data-action="next"] {
+  position: relative;
+}
+
+/* Sobrescrever o texto do botão com tradução em português */
+.react-joyride__tooltip button[data-action="next"] span:first-of-type {
+  display: none;
+}

@@ -13,18 +13,15 @@
   <a href="#-funcionalidades">Funcionalidades</a> •
   <a href="#-screenshots">Screenshots</a> •
   <a href="#-tecnologias">Tecnologias</a> •
-  <a href="#-como-executar">Como Executar</a> •
-  <a href="#-roadmap">Roadmap</a> •
-  <a href="#-contribuindo">Contribuindo</a> •
   <a href="#-autor">Autor</a> •
   <a href="#-licença">Licença</a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.5.0-emerald" alt="Version" />
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
+  <img src="https://img.shields.io/badge/license-Proprietário-red" alt="License" />
   <img src="https://img.shields.io/badge/status-beta-yellow" alt="Status" />
-  <img src="https://img.shields.io/badge/lançamento-janeiro%202025-green" alt="Launch" />
+  <img src="https://img.shields.io/badge/projeto-portfólio-blueviolet" alt="Type" />
 </p>
 
 ---
@@ -174,58 +171,6 @@ O projeto foi desenvolvido com as seguintes tecnologias:
 
 ---
 
-## 🚀 Como Executar
-
-### Pré-requisitos
-
-- Node.js 18+ instalado
-- npm ou yarn
-- Conta no [Supabase](https://supabase.com/) (para o banco de dados)
-
-### Instalação
-```bash
-# Clone o repositório
-git clone https://github.com/ormande/study-flow.git
-
-# Entre na pasta
-cd study-flow
-
-# Instale as dependências
-npm install
-
-# Configure as variáveis de ambiente
-cp .env.example .env.local
-```
-
-### Variáveis de Ambiente
-
-Crie um arquivo `.env.local` na raiz com:
-```env
-# Supabase (OBRIGATÓRIO)
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-chave-publica-aqui
-
-# Sentry (Monitoramento - Opcional)
-VITE_SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
-```
-
-### Executando
-```bash
-# Modo desenvolvimento (http://localhost:5173)
-npm run dev
-
-# Build para produção
-npm run build
-
-# Preview do build
-npm run preview
-
-# Testes (em breve)
-npm test
-```
-
----
-
 ## 📁 Estrutura do Projeto
 ```
 study-flow/
@@ -279,8 +224,6 @@ study-flow/
 └── README.md
 ```
 
----
-
 ## 🗺️ Roadmap
 
 ### ✅ v1.0.0 - v1.5.0 (Concluído)
@@ -329,25 +272,11 @@ study-flow/
 
 ---
 
-## 🤝 Contribuindo
+## 🤝 Contato e Feedback
 
-Contribuições são muito bem-vindas! Se você quer ajudar a melhorar o StudyFlow:
+Este é um projeto pessoal de portfólio. **Pull Requests não são aceitos** para manter a integridade autoral do código.
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
-3. Commit suas mudanças (`git commit -m 'feat: adiciona MinhaFeature'`)
-4. Push para a branch (`git push origin feature/MinhaFeature`)
-5. Abra um Pull Request
-
-Leia o [CONTRIBUTING.md](./CONTRIBUTING.md) para mais detalhes sobre nosso código de conduta e processo de submissão.
-
-### 🐛 Reportando Bugs
-
-Encontrou um bug? Abra uma [issue](https://github.com/ormande/study-flow/issues) com:
-- Descrição clara do problema
-- Passos para reproduzir
-- Screenshots (se aplicável)
-- Navegador e sistema operacional
+Entretanto, feedbacks e sugestões são bem-vindos! Se você encontrou um bug ou tem uma ideia, sinta-se à vontade para abrir uma [Issue](https://github.com/ormande/StudyFlow/issues) ou entrar em contato diretamente.
 
 ---
 
@@ -382,7 +311,9 @@ Encontrou um bug? Abra uma [issue](https://github.com/ormande/study-flow/issues)
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
+**Todos os direitos reservados.**
+
+Este projeto é de propriedade exclusiva de Kayke Paião Ormande da Silva. O código-fonte é disponibilizado publicamente apenas para fins de demonstração de portfólio e aprendizado. A cópia, redistribuição ou uso comercial sem autorização expressa é proibida.
 
 ---
 

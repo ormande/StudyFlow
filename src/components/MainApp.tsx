@@ -6,15 +6,21 @@ import BottomNav from './BottomNav';
 import Sidebar from './Sidebar';
 import DashboardPage from '../pages/DashboardPage';
 import RegisterPage from '../pages/RegisterPage';
+import MorePage from '../pages/MorePage';
 // Lazy loading para páginas grandes
 const TimerPage = lazy(() => import('../pages/TimerPage'));
 const CyclePage = lazy(() => import('../pages/CyclePage'));
 const GamificationPage = lazy(() => import('../pages/GamificationPage'));
 import SettingsModal from './SettingsModal';
-import { Settings, Loader2 } from 'lucide-react';
+import FeedbackModal from './FeedbackModal';
+import HistoryModal from './HistoryModal';
+import ChangePasswordModal from './ChangePasswordModal';
+import { Loader2 } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
 import { useNotification } from '../hooks/useNotification';
+import { useToast } from '../contexts/ToastContext';
+import OnboardingTour from './OnboardingTour';
 
 interface MainAppProps {
   session: any;
@@ -39,11 +45,15 @@ export default function MainApp({
   // UI STATE
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [showSettings, setShowSettings] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [prefilledTime, setPrefilledTime] = useState<{ hours: number; minutes: number; seconds: number } | undefined>();
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerMode, setTimerMode] = useState<'cronometro' | 'temporizador' | 'pomodoro'>('cronometro');
   const { sendNotification } = useNotification();
+  const { addToast } = useToast();
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [showRestartSuccess, setShowRestartSuccess] = useState(false);
@@ -241,6 +251,53 @@ export default function MainApp({
     setShowLogoutConfirm(false);
   }, []);
 
+  // Handlers para MorePage
+  const handleNavigateToGamification = useCallback(() => {
+    setActiveTab('gamification');
+  }, []);
+
+  const handleOpenHistory = useCallback(() => {
+    setShowHistoryModal(true);
+  }, []);
+
+  const handleOpenTutorial = useCallback(() => {
+    // Navegar para dashboard
+    setActiveTab('dashboard');
+    // Reiniciar o tutorial
+    localStorage.removeItem('studyflow_tour_completed');
+    if ((window as any).restartOnboardingTour) {
+      (window as any).restartOnboardingTour();
+      addToast('Tutorial reiniciado! O tour começará em breve.', 'success');
+    } else {
+      addToast('Tutorial reiniciado! Recarregue a página para ver o tour.', 'success');
+      setTimeout(() => window.location.reload(), 1000);
+    }
+  }, [addToast]);
+
+  const handleOpenSecurity = useCallback(() => {
+    setShowChangePasswordModal(true);
+  }, []);
+
+  const handleOpenStatistics = useCallback(() => {
+    addToast('📊 Estatísticas detalhadas em breve!', 'info');
+  }, [addToast]);
+
+  const handleOpenAppearance = useCallback(() => {
+    addToast('🎨 Configuração de aparência em breve!', 'info');
+  }, [addToast]);
+
+  const handleOpenGoals = useCallback(() => {
+    addToast('🎯 Gerenciamento de metas em breve!', 'info');
+  }, [addToast]);
+
+  const handleOpenSettings = useCallback(() => {
+    setShowSettings(true);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    setShowLogoutConfirm(true);
+  }, []);
+
   const renderPage = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -265,6 +322,21 @@ export default function MainApp({
             <GamificationPage logs={logs} streak={streak} isLoading={loadingData} />
           </Suspense>
         );
+      case 'more':
+        return (
+          <MorePage
+            session={session}
+            logs={logs}
+            subjects={subjects}
+            onNavigateToGamification={handleNavigateToGamification}
+            onOpenHistory={handleOpenHistory}
+            onOpenFeedback={() => setShowFeedbackModal(true)}
+            onOpenTutorial={handleOpenTutorial}
+            onOpenSecurity={handleOpenSecurity}
+            onOpenSettings={handleOpenSettings}
+            onLogout={handleLogout}
+          />
+        );
       default:
         return null;
     }
@@ -285,6 +357,7 @@ export default function MainApp({
         subjects={subjects}
         logs={logs}
         userEmail={session?.user?.email}
+        userId={session?.user?.id}
       />
 
       <ConfirmModal 
@@ -328,17 +401,51 @@ export default function MainApp({
         onCancel={handleCancelLogout} 
       />
       
-      {/* Sidebar para Desktop */}
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Onboarding Tour */}
+      <OnboardingTour 
+        isDarkMode={isDarkMode} 
+        onCloseSettings={() => setShowSettings(false)}
+      />
 
-      {/* BOTÃO FLUTUANTE: CONFIGURAÇÕES */}
-      <button 
-        onClick={() => setShowSettings(true)}
-        className="fixed top-6 right-6 z-50 h-12 w-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all active:scale-95 duration-300 group"
-        title="Configurações"
-      >
-        <Settings size={24} className="transition-transform duration-300 group-hover:rotate-90" />
-      </button>
+      {/* Feedback Modal */}
+      <FeedbackModal 
+        isOpen={showFeedbackModal} 
+        onClose={() => setShowFeedbackModal(false)}
+        userEmail={session?.user?.email}
+        userId={session?.user?.id}
+      />
+
+      {/* History Modal */}
+      <HistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        logs={logs}
+        subjects={subjects}
+        onDeleteLog={handleDeleteLog}
+        onEditLog={handleEditLog}
+      />
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
+
+      {/* Sidebar para Desktop */}
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        session={session}
+        onOpenFeedback={() => setShowFeedbackModal(true)}
+        onOpenHistory={handleOpenHistory}
+        onOpenTutorial={handleOpenTutorial}
+        onOpenSecurity={handleOpenSecurity}
+        onOpenStatistics={handleOpenStatistics}
+        onOpenAppearance={handleOpenAppearance}
+        onOpenGoals={handleOpenGoals}
+        onOpenSettings={handleOpenSettings}
+        onLogout={handleLogout}
+      />
 
       {/* Conteúdo Principal com Ajuste de Margem para Desktop */}
       <div className="pb-24 pt-2 md:ml-64 md:pb-8"> 

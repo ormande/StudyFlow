@@ -326,8 +326,6 @@ export default function MainApp({
         return (
           <MorePage
             session={session}
-            logs={logs}
-            subjects={subjects}
             onNavigateToGamification={handleNavigateToGamification}
             onOpenHistory={handleOpenHistory}
             onOpenFeedback={() => setShowFeedbackModal(true)}

@@ -4,12 +4,9 @@ import {
   HelpCircle, Lock, LogOut, ChevronRight, Settings 
 } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
-import { StudyLog, Subject } from '../types';
 
 interface MorePageProps {
   session: any;
-  logs: StudyLog[];
-  subjects: Subject[];
   onNavigateToGamification: () => void;
   onOpenHistory: () => void;
   onOpenFeedback: () => void;
@@ -21,8 +18,6 @@ interface MorePageProps {
 
 export default function MorePage({
   session,
-  logs,
-  subjects,
   onNavigateToGamification,
   onOpenHistory,
   onOpenFeedback,

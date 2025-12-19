@@ -18,7 +18,7 @@ export function AchievementToastWithNavigation({
     <div className="flex items-center gap-3">
       <Trophy className="text-emerald-500 flex-shrink-0" size={20} />
       <p className="text-sm text-gray-900 dark:text-white">
-        Você desbloqueou a conquista: <span className="font-semibold">{achievement.name} - Nível {getLevelRoman(level)}</span>
+        Você desbloqueou a conquista: <span className="font-semibold">{achievement.name} - Nível {getLevelRoman(level as 1 | 2 | 3)}</span>
       </p>
     </div>
   );

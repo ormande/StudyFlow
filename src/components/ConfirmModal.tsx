@@ -45,16 +45,16 @@ export default function ConfirmModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0 }}
-          animate={shouldReduceMotion ? false : { opacity: 1 }}
-          exit={shouldReduceMotion ? false : { opacity: 0 }}
+          initial={shouldReduceMotion ? undefined : { opacity: 0 }}
+          animate={shouldReduceMotion ? undefined : { opacity: 1 }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0 }}
           transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
           className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm"
         >
           <motion.div
-            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.9, y: 20 }}
-            animate={shouldReduceMotion ? false : { opacity: 1, scale: 1, y: 0 }}
-            exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.9, y: 20 }}
+            initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.9, y: 20 }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.9, y: 20 }}
             transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
             className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
           >

@@ -76,9 +76,9 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
   return (
     <motion.div
       layout={!shouldReduceMotion}
-      initial={shouldReduceMotion ? false : { opacity: 0, y: -20, scale: 0.9 }}
-      animate={shouldReduceMotion ? false : { opacity: 1, y: 0, scale: 1 }}
-      exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+      initial={shouldReduceMotion ? undefined : { opacity: 0, y: -20, scale: 0.9 }}
+      animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+      exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
       transition={shouldReduceMotion ? { duration: 0 } : undefined}
       className={`pointer-events-auto bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border-l-4 ${borders[toast.type]} ${
         isCustomContent ? 'flex items-start gap-3' : 'flex items-center gap-3'

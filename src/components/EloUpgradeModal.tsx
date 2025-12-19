@@ -21,9 +21,9 @@ export default function EloUpgradeModal({ isOpen, onClose, oldElo, newElo, total
         <>
           {/* Backdrop */}
           <motion.div
-            initial={shouldReduceMotion ? false : { opacity: 0 }}
-            animate={shouldReduceMotion ? false : { opacity: 1 }}
-            exit={shouldReduceMotion ? false : { opacity: 0 }}
+            initial={shouldReduceMotion ? undefined : { opacity: 0 }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0 }}
             transition={shouldReduceMotion ? { duration: 0 } : undefined}
             onClick={onClose}
             className="fixed inset-0 bg-black/70 z-[60]"
@@ -31,9 +31,9 @@ export default function EloUpgradeModal({ isOpen, onClose, oldElo, newElo, total
 
           {/* Modal */}
           <motion.div
-            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.8 }}
-            animate={shouldReduceMotion ? false : { opacity: 1, scale: 1 }}
-            exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.8 }}
+            initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.8 }}
+            animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.8 }}
             transition={shouldReduceMotion ? { duration: 0 } : undefined}
             className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-md md:w-full z-[60] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
           >

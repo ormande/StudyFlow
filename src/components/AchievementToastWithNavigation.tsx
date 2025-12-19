@@ -11,8 +11,8 @@ interface AchievementToastWithNavigationProps {
 export function AchievementToastWithNavigation({ 
   achievement, 
   level, 
-  onNavigate,
-  onDismiss 
+  onNavigate: _onNavigate,
+  onDismiss: _onDismiss 
 }: AchievementToastWithNavigationProps) {
   return (
     <div className="flex items-center gap-3">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar, Clock, FileText, AlertTriangle } from 'lucide-react';
+import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar, Clock, FileText } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -116,7 +116,7 @@ export default function AchievementsPage({
 }: AchievementsPageProps) {
   const {
     pendingAchievements,
-    pendingCount,
+    pendingCount: _pendingCount,
     claimedCount,
     totalCount,
     claimAchievement,

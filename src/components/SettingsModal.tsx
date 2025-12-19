@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Instagram, AlertTriangle, Moon, Sun, Target, Settings, Eye, EyeOff, Lock, Database, FileSpreadsheet, FileText, Bell, BellOff, LogOut, Trash2, Zap, MessageSquare } from 'lucide-react';
+import { X, Instagram, AlertTriangle, Settings, Eye, EyeOff, Lock, Database, FileSpreadsheet, FileText, Bell, BellOff, LogOut, Trash2, Zap, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Subject, StudyLog } from '../types';
@@ -38,17 +38,17 @@ export default function SettingsModal({
   isOpen, 
   onClose, 
   onHardReset, 
-  isDarkMode, 
-  onToggleTheme,
-  dailyGoal,
-  onSetDailyGoal,
+  isDarkMode: _isDarkMode, 
+  onToggleTheme: _onToggleTheme,
+  dailyGoal: _dailyGoal,
+  onSetDailyGoal: _onSetDailyGoal,
   showPerformance,
   onTogglePerformance,
   subjects,
   logs,
   userEmail,
   userId,
-  onNavigateToGoals
+  onNavigateToGoals: _onNavigateToGoals
 }: SettingsModalProps) {
   // Estados para confirmações
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);

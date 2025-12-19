@@ -11,7 +11,7 @@ interface GoalsPageProps {
 }
 
 export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
-  const { goals, updateGoals, saveGoals } = useGoals(logs);
+  const { goals, updateGoals: _updateGoals, saveGoals } = useGoals(logs);
   const { addToast } = useToast();
   
   const [localGoals, setLocalGoals] = useState<Goals>(goals);

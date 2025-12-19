@@ -1,7 +1,6 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { StudyLog } from '../types';
 import { useXP } from '../hooks/useXP';
-import { Elo } from '../types/elo';
 
 interface XPContextData {
   totalXP: number;

@@ -579,7 +579,6 @@ export default function StatsPage({
                 borderRadius: '8px',
                 color: '#1f2937'
               }}
-              className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             />
             <Legend />
             <Line 
@@ -624,14 +623,13 @@ export default function StatsPage({
                 tick={{ fill: '#6b7280' }}
               />
               <Tooltip 
-                formatter={(value: number) => `${value.toFixed(1)}h`}
+                formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(1)}h` : ''}
                 contentStyle={{ 
                   backgroundColor: '#fff',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   color: '#1f2937'
                 }}
-                className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
               />
               <Bar 
                 dataKey="hours" 
@@ -661,7 +659,7 @@ export default function StatsPage({
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
                     outerRadius={isMobile ? 80 : 100}
                     fill="#8884d8"
                     dataKey="value"
@@ -671,14 +669,13 @@ export default function StatsPage({
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number) => value.toLocaleString('pt-BR')}
+                    formatter={(value: number | undefined) => value !== undefined ? value.toLocaleString('pt-BR') : ''}
                     contentStyle={{ 
                       backgroundColor: '#fff',
                       border: '1px solid #e5e7eb',
                       borderRadius: '8px',
                       color: '#1f2937'
                     }}
-                    className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                   />
                 </RechartsPieChart>
               </ResponsiveContainer>
@@ -736,14 +733,13 @@ export default function StatsPage({
                 tick={{ fill: '#6b7280' }}
               />
               <Tooltip 
-                formatter={(value: number) => `${value}%`}
+                formatter={(value: number | undefined) => value !== undefined ? `${value}%` : ''}
                 contentStyle={{ 
                   backgroundColor: '#fff',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   color: '#1f2937'
                 }}
-                className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
               />
               <Legend />
               <Line 
@@ -789,14 +785,13 @@ export default function StatsPage({
               tick={{ fill: '#6b7280' }}
             />
             <Tooltip 
-              formatter={(value: number) => `${value.toFixed(1)}h`}
+              formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(1)}h` : ''}
               contentStyle={{ 
                 backgroundColor: '#fff',
                 border: '1px solid #e5e7eb',
                 borderRadius: '8px',
                 color: '#1f2937'
               }}
-              className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             />
             <Bar dataKey="hours" radius={[8, 8, 0, 0]}>
               {timeDistributionData.map((entry, index) => (

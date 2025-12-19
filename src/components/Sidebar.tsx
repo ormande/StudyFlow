@@ -16,7 +16,7 @@ interface SidebarProps {
   onOpenSecurity?: () => void;
   onNavigateToStats?: () => void;
   onNavigateToAppearance?: () => void;
-  onOpenGoals?: () => void;
+  onNavigateToGoals?: () => void;
   onOpenSettings?: () => void;
   onLogout?: () => void;
 }
@@ -32,7 +32,7 @@ export default function Sidebar({
   onOpenSecurity,
   onNavigateToStats,
   onNavigateToAppearance,
-  onOpenGoals,
+  onNavigateToGoals,
   onOpenSettings,
   onLogout,
 }: SidebarProps) {
@@ -130,7 +130,7 @@ export default function Sidebar({
         <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2 text-base">Configurações</p>
         {renderNavButton('settings', Settings, 'Configurações', onOpenSettings)}
         {renderNavButton('appearance', Palette, 'Aparência', onNavigateToAppearance)}
-        {renderNavButton('goals', TargetIcon, 'Metas', onOpenGoals)}
+        {renderNavButton('goals', TargetIcon, 'Metas', onNavigateToGoals)}
         {renderNavButton('feedback', MessageSquare, 'Dar Feedback', onOpenFeedback)}
         {renderNavButton('tutorial', HelpCircle, 'Tutorial', onOpenTutorial)}
         {renderNavButton('security', Lock, 'Segurança', onOpenSecurity)}

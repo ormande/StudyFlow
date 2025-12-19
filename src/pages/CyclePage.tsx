@@ -340,7 +340,19 @@ export default function CyclePage({
     if (!newSubtopic.trim()) return;
     const subject = subjects.find((s) => s.id === subjectId);
     if (!subject) return;
-    const subtopic: Subtopic = { id: Date.now().toString(), name: newSubtopic.trim(), completed: false };
+    // Gerar UUID válido usando crypto.randomUUID() ou fallback
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      // Fallback para browsers antigos
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+    const subtopic: Subtopic = { id: generateUUID(), name: newSubtopic.trim(), completed: false };
     onUpdateSubject(subjectId, { subtopics: [...subject.subtopics, subtopic] });
     setNewSubtopic('');
   };

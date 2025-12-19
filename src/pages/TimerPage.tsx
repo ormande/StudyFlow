@@ -550,7 +550,7 @@ export default function TimerPage({
                   />
                 )}
                 {/* Display estático (sem animação individual) */}
-                <div className="text-4xl font-bold text-gray-800 dark:text-white tracking-tight text-center font-mono relative z-10">
+                <div className="text-4xl font-bold text-gray-800 dark:text-white tracking-tight text-center font-mono relative z-10 timer-display">
                   {display}
                 </div>
               </motion.div>
@@ -1084,7 +1084,7 @@ export default function TimerPage({
                           boxShadow: "0 0 0 4px rgba(16, 185, 129, 0.1)"
                         }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        className="w-full bg-gray-100 dark:bg-gray-700 text-center text-4xl font-bold p-4 rounded-xl text-gray-800 dark:text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full bg-gray-100 dark:bg-gray-700 text-center text-4xl font-bold p-4 rounded-xl text-gray-800 dark:text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 timer-display"
                         min="0"
                         max={field.max}
                         placeholder="0"

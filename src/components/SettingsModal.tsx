@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useNotification } from '../hooks/useNotification';
 import { useToast } from '../contexts/ToastContext';
+import { useAchievementsContext } from '../contexts/AchievementsContext';
 import ConfirmModal from './ConfirmModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import FeedbackModal from './FeedbackModal';
@@ -30,6 +31,7 @@ interface SettingsModalProps {
   logs: StudyLog[];
   userEmail: string | undefined;
   userId?: string;
+  onNavigateToGoals?: () => void;
 }
 
 export default function SettingsModal({ 
@@ -45,7 +47,8 @@ export default function SettingsModal({
   subjects,
   logs,
   userEmail,
-  userId
+  userId,
+  onNavigateToGoals
 }: SettingsModalProps) {
   // Estados para confirmações
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -57,6 +60,16 @@ export default function SettingsModal({
   // Hook de notificações
   const { permission, requestPermission, sendNotification } = useNotification();
   const { addToast } = useToast();
+  
+  // Tentar obter contexto de conquistas (pode não estar disponível)
+  let resetAchievements: (() => Promise<void>) | null = null;
+  try {
+    const achievementsContext = useAchievementsContext();
+    resetAchievements = achievementsContext.resetAchievements;
+  } catch (e) {
+    // Contexto não disponível, continuar sem reset de conquistas
+    console.warn('Contexto de conquistas não disponível no SettingsModal');
+  }
   
   // i18n guardado para uso futuro:
   // const { t, i18n } = useTranslation();
@@ -840,7 +853,48 @@ export default function SettingsModal({
 
       const userId = session.user.id;
 
-      // Deletar todos os logs de estudo
+      // IMPORTANTE: Deletar conquistas e XP PRIMEIRO para evitar recálculo automático
+      
+      // 1. Resetar conquistas usando a função do contexto (limpa estado React + localStorage + Supabase)
+      if (resetAchievements) {
+        try {
+          await resetAchievements();
+        } catch (error) {
+          console.error('Erro ao resetar conquistas via contexto:', error);
+          // Continuar mesmo se falhar, vamos tentar limpar manualmente
+        }
+      }
+      
+      // 2. Deletar conquistas do Supabase manualmente (garantia extra)
+      const { data: existingAchievements } = await supabase
+        .from('user_achievements')
+        .select('id')
+        .eq('user_id', userId);
+      
+      if (existingAchievements && existingAchievements.length > 0) {
+        const { error: achievementsError } = await supabase
+          .from('user_achievements')
+          .delete()
+          .eq('user_id', userId);
+
+        if (achievementsError && achievementsError.code !== 'PGRST116') {
+          // PGRST116 = não encontrado, não é erro crítico
+          console.warn('Aviso ao deletar conquistas manualmente:', achievementsError);
+        }
+      }
+
+      // 3. Deletar XP do usuário
+      const { error: xpError } = await supabase
+        .from('user_xp')
+        .delete()
+        .eq('user_id', userId);
+
+      if (xpError && xpError.code !== 'PGRST116') {
+        // PGRST116 = não encontrado, não é erro crítico
+        console.warn('Aviso ao deletar XP:', xpError);
+      }
+
+      // 4. Deletar todos os logs de estudo
       const { error: logsError } = await supabase
         .from('study_logs')
         .delete()
@@ -848,7 +902,7 @@ export default function SettingsModal({
 
       if (logsError) throw logsError;
 
-      // Deletar todas as matérias (e subtópicos via cascade se configurado)
+      // 5. Deletar todas as matérias (e subtópicos via cascade se configurado)
       const { error: subjectsError } = await supabase
         .from('subjects')
         .delete()
@@ -856,14 +910,109 @@ export default function SettingsModal({
 
       if (subjectsError) throw subjectsError;
 
+      // Limpar dados do localStorage relacionados a gamificação
+      // IMPORTANTE: Fazer isso ANTES do reload para garantir limpeza
+      // Limpar múltiplas vezes para garantir (alguns browsers podem ter cache)
+      const keysToClean = [
+        'studyflow_total_xp',
+        'studyflow_xp_history',
+        'studyflow_user_achievements',
+        'studyflow_achievements',
+        'studyflow_logs', // Se existir
+        'studyflow_processed_logs' // Se existir no localStorage
+      ];
+      
+      // Limpar 3 vezes para garantir (problemas de cache do browser)
+      for (let i = 0; i < 3; i++) {
+        keysToClean.forEach(key => {
+          localStorage.removeItem(key);
+          // Tentar também com variações (caso haja algum prefixo/sufixo)
+          localStorage.removeItem(`_${key}`);
+          localStorage.removeItem(`${key}_`);
+        });
+      }
+      
+      // Limpar TODAS as flags de streak bonus e conquistas do localStorage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.startsWith('studyflow_streak_bonus_') || 
+          key.includes('achievement') || 
+          key.includes('conquista') ||
+          key.startsWith('studyflow_xp') ||
+          key.startsWith('studyflow_elo')
+        )) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.warn(`Erro ao remover chave ${key}:`, e);
+        }
+      });
+
+      // Limpar dados do sessionStorage relacionados a gamificação
+      const sessionKeysToClean = [
+        'studyflow_processed_logs',
+        'studyflow_xp_history',
+        'studyflow_user_achievements'
+      ];
+      sessionKeysToClean.forEach(key => {
+        try {
+          sessionStorage.removeItem(key);
+        } catch (e) {
+          console.warn(`Erro ao remover chave do sessionStorage ${key}:`, e);
+        }
+      });
+      
+      // Verificar se realmente foi limpo
+      const remainingAchievements = localStorage.getItem('studyflow_user_achievements');
+      if (remainingAchievements) {
+        console.error('ERRO: Conquistas ainda presentes no localStorage após limpeza');
+        // Tentar deletar novamente
+        try {
+          localStorage.removeItem('studyflow_user_achievements');
+        } catch (e) {
+          console.error('Erro ao tentar limpar conquistas novamente:', e);
+        }
+      }
+      
+      // Verificar novamente no Supabase se as conquistas foram deletadas
+      const { data: verifyAchievements } = await supabase
+        .from('user_achievements')
+        .select('id')
+        .eq('user_id', userId);
+      
+      if (verifyAchievements && verifyAchievements.length > 0) {
+        console.error('ERRO: Ainda existem conquistas no Supabase após delete:', verifyAchievements.length);
+        // Tentar deletar novamente
+        await supabase
+          .from('user_achievements')
+          .delete()
+          .eq('user_id', userId);
+      }
+      
       // Fechar modal de confirmação
       setShowFactoryResetConfirm(false);
       
-      // Mostrar sucesso e recarregar página
+      // Mostrar sucesso
       addToast('Todos os dados foram apagados com sucesso! A página será recarregada.', 'success');
+      
+      // Recarregar página IMEDIATAMENTE para evitar que o sistema recrie conquistas
+      // Usar setTimeout mínimo para garantir que o toast apareça
       setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+        // Limpar novamente antes do reload (garantia extra)
+        localStorage.removeItem('studyflow_user_achievements');
+        localStorage.removeItem('studyflow_total_xp');
+        localStorage.removeItem('studyflow_xp_history');
+        sessionStorage.removeItem('studyflow_processed_logs');
+        
+        // Forçar reload completo
+        window.location.href = window.location.href;
+      }, 1000);
     } catch (error: any) {
       console.error('Erro ao resetar dados:', error);
       addToast('Erro ao apagar dados: ' + (error?.message || 'Erro desconhecido'), 'error');
@@ -953,51 +1102,8 @@ export default function SettingsModal({
                     <span className="text-xs font-bold uppercase tracking-wider">Preferências & Foco</span>
                   </div>
 
-                  {/* Meta Diária - Destaque */}
-                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-800">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Target size={18} className="text-emerald-500" />
-                      <p className="font-bold text-gray-800 dark:text-white text-base">Meta Diária</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="12" 
-                        step="1"
-                        value={Math.floor(dailyGoal / 60)}
-                        onChange={(e) => onSetDailyGoal(parseInt(e.target.value) * 60)}
-                        className="flex-1 h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-600 accent-emerald-500"
-                      />
-                      <div className="w-20 text-center">
-                        <span className="text-3xl font-black text-emerald-500">{Math.floor(dailyGoal / 60)}h</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                      {dailyGoal === 0 ? "Arraste para definir sua meta diária" : "Meta definida! Foco na missão."}
-                    </p>
-                  </div>
-
-                  {/* Ajustes Rápidos - Grid de 3 cartões */}
-                  <div className="grid grid-cols-3 gap-3">
-                    {/* Tema */}
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 flex flex-col items-center gap-2">
-                      <button
-                        onClick={onToggleTheme}
-                        className={`p-3 rounded-xl transition-all active:scale-95 ${
-                          isDarkMode 
-                            ? 'bg-amber-500 hover:bg-amber-600 text-white' 
-                            : 'bg-indigo-500 hover:bg-indigo-600 text-white'
-                        }`}
-                      >
-                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                      </button>
-                      <p className="text-xs font-semibold text-gray-800 dark:text-white text-center">Tema</p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 text-center">
-                        {isDarkMode ? 'Escuro' : 'Claro'}
-                      </p>
-                    </div>
-
+                  {/* Ajustes Rápidos - Grid de 2 cartões */}
+                  <div className="grid grid-cols-2 gap-3">
                     {/* Privacidade */}
                     <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 flex flex-col items-center gap-2">
                       <button

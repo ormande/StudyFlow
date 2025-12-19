@@ -1,13 +1,17 @@
 import { motion } from 'framer-motion';
 import { 
-  Trophy, Star, BarChart2, History, Palette, Target, MessageSquare, 
+  Trophy, Star, BarChart3, History, Palette, Target, MessageSquare, 
   HelpCircle, Lock, LogOut, ChevronRight, Settings 
 } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
 interface MorePageProps {
   session: any;
-  onNavigateToGamification: () => void;
+  onNavigateToAchievements: () => void;
+  onNavigateToElo: () => void;
+  onNavigateToGoals: () => void;
+  onNavigateToStats?: () => void;
+  onNavigateToAppearance: () => void;
   onOpenHistory: () => void;
   onOpenFeedback: () => void;
   onOpenTutorial: () => void;
@@ -18,7 +22,11 @@ interface MorePageProps {
 
 export default function MorePage({
   session,
-  onNavigateToGamification,
+  onNavigateToAchievements,
+  onNavigateToElo,
+  onNavigateToGoals,
+  onNavigateToStats,
+  onNavigateToAppearance,
   onOpenHistory,
   onOpenFeedback,
   onOpenTutorial,
@@ -26,6 +34,9 @@ export default function MorePage({
   onOpenSettings,
   onLogout,
 }: MorePageProps) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:36',message:'MorePage props received',data:{hasOnNavigateToStats:!!onNavigateToStats,type:typeof onNavigateToStats,hasOnNavigateToGoals:!!onNavigateToGoals,hasOnNavigateToAchievements:!!onNavigateToAchievements},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   const { addToast } = useToast();
 
   const user = {
@@ -33,8 +44,8 @@ export default function MorePage({
     email: session?.user?.email || '',
   };
 
-  const handleNavigateToGamification = () => {
-    onNavigateToGamification();
+  const handleNavigateToAchievements = () => {
+    onNavigateToAchievements();
   };
 
   const handleOpenHistory = () => {
@@ -54,15 +65,28 @@ export default function MorePage({
   };
 
   const handleStatistics = () => {
-    addToast('Estatísticas detalhadas em breve!', 'info');
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:64',message:'handleStatistics called',data:{onNavigateToStats:typeof onNavigateToStats,isFunction:typeof onNavigateToStats==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    if (onNavigateToStats) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:67',message:'Calling onNavigateToStats',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      onNavigateToStats();
+    } else {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:71',message:'onNavigateToStats is undefined',data:{onNavigateToStats},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      addToast('Navegação para estatísticas não disponível', 'error');
+    }
   };
 
   const handleAppearance = () => {
-    addToast('Configuração de aparência em breve!', 'info');
+    onNavigateToAppearance();
   };
 
   const handleGoals = () => {
-    addToast('Gerenciamento de metas em breve!', 'info');
+    onNavigateToGoals();
   };
 
   const handleEditProfile = () => {
@@ -102,8 +126,9 @@ export default function MorePage({
         </h3>
         <div className="space-y-2">
           <button
-            onClick={handleNavigateToGamification}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            type="button"
+            onClick={handleNavigateToAchievements}
+            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95 relative z-10"
           >
             <div className="flex items-center gap-3">
               <Trophy size={20} className="text-emerald-600 dark:text-emerald-400" />
@@ -113,12 +138,13 @@ export default function MorePage({
           </button>
 
           <button
-            onClick={handleNavigateToGamification}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            type="button"
+            onClick={onNavigateToElo}
+            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95 relative z-10"
           >
             <div className="flex items-center gap-3">
               <Star size={20} className="text-amber-500" />
-              <span className="font-semibold text-gray-900 dark:text-white">Ranking & Elo</span>
+              <span className="font-semibold text-gray-900 dark:text-white">Elo</span>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -136,8 +162,11 @@ export default function MorePage({
             className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
           >
             <div className="flex items-center gap-3">
-              <BarChart2 size={20} className="text-blue-600 dark:text-blue-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Estatísticas</span>
+              <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Estatísticas</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Gráficos e análises detalhadas</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -178,7 +207,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <Palette size={20} className="text-purple-600 dark:text-purple-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Aparência</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Aparência</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Tema, fonte e animações</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -189,7 +221,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <Target size={20} className="text-orange-600 dark:text-orange-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Metas</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Metas</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Configure suas metas diárias e semanais</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>

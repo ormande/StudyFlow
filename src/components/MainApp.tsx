@@ -10,7 +10,11 @@ import MorePage from '../pages/MorePage';
 // Lazy loading para páginas grandes
 const TimerPage = lazy(() => import('../pages/TimerPage'));
 const CyclePage = lazy(() => import('../pages/CyclePage'));
-const GamificationPage = lazy(() => import('../pages/GamificationPage'));
+const AchievementsPage = lazy(() => import('../pages/AchievementsPage'));
+const EloPage = lazy(() => import('../pages/EloPage'));
+const GoalsPage = lazy(() => import('../pages/GoalsPage'));
+const StatsPage = lazy(() => import('../pages/StatsPage'));
+const AppearancePage = lazy(() => import('../pages/AppearancePage'));
 import SettingsModal from './SettingsModal';
 import FeedbackModal from './FeedbackModal';
 import HistoryModal from './HistoryModal';
@@ -20,6 +24,8 @@ import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
 import { useNotification } from '../hooks/useNotification';
 import { useToast } from '../contexts/ToastContext';
+import { AchievementsProvider, useAchievementsContext } from '../contexts/AchievementsContext';
+import { XPProvider } from '../contexts/XPContext';
 import OnboardingTour from './OnboardingTour';
 
 interface MainAppProps {
@@ -65,6 +71,28 @@ export default function MainApp({
   const countdownIntervalRef = useRef<number | null>(null);
   const countdownSecondsRef = useRef<number>(0);
   const lastTimerSecondsRef = useRef<number>(0);
+
+  // useMemo para calcular streak (evita recálculo desnecessário) - DEVE VIR ANTES DE useAchievements
+  const streak = useMemo(() => {
+    if (logs.length === 0) return 0;
+    const studyDates = new Set(logs.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR')));
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('pt-BR');
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString('pt-BR');
+    let streak = 0;
+    let currentCheckDate = new Date();
+    if (!studyDates.has(todayStr) && !studyDates.has(yesterdayStr)) return 0;
+    for (let i = 0; i < 365; i++) {
+      const dateString = currentCheckDate.toLocaleDateString('pt-BR');
+      if (studyDates.has(dateString)) { streak++; } else { if (i === 0 && !studyDates.has(todayStr)) { currentCheckDate.setDate(currentCheckDate.getDate() - 1); continue; } break; }
+      currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+    }
+    return streak;
+  }, [logs]);
+
+  // O hook será usado via contexto no componente interno
 
   // Resetar countdown ao mudar de modo
   useEffect(() => {
@@ -178,26 +206,6 @@ export default function MainApp({
     setPrefilledTime(undefined);
   }, []);
 
-  // useMemo para calcular streak (evita recálculo desnecessário)
-  const streak = useMemo(() => {
-    if (logs.length === 0) return 0;
-    const studyDates = new Set(logs.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR')));
-    const today = new Date();
-    const todayStr = today.toLocaleDateString('pt-BR');
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toLocaleDateString('pt-BR');
-    let streak = 0;
-    let currentCheckDate = new Date();
-    if (!studyDates.has(todayStr) && !studyDates.has(yesterdayStr)) return 0;
-    for (let i = 0; i < 365; i++) {
-      const dateString = currentCheckDate.toLocaleDateString('pt-BR');
-      if (studyDates.has(dateString)) { streak++; } else { if (i === 0 && !studyDates.has(todayStr)) { currentCheckDate.setDate(currentCheckDate.getDate() - 1); continue; } break; }
-      currentCheckDate.setDate(currentCheckDate.getDate() - 1);
-    }
-    return streak;
-  }, [logs]);
-
   // useCallback para callbacks passados como props
   const handleAddSubject = useCallback((subject: Omit<import('../types').Subject, 'id'>) => {
     addSubject(subject);
@@ -252,8 +260,16 @@ export default function MainApp({
   }, []);
 
   // Handlers para MorePage
-  const handleNavigateToGamification = useCallback(() => {
-    setActiveTab('gamification');
+  const handleNavigateToAchievements = useCallback(() => {
+    setActiveTab('achievements');
+  }, []);
+
+  const handleNavigateToElo = useCallback(() => {
+    setActiveTab('elo');
+  }, []);
+
+  const handleNavigateToMore = useCallback(() => {
+    setActiveTab('more');
   }, []);
 
   const handleOpenHistory = useCallback(() => {
@@ -278,17 +294,20 @@ export default function MainApp({
     setShowChangePasswordModal(true);
   }, []);
 
-  const handleOpenStatistics = useCallback(() => {
-    addToast('📊 Estatísticas detalhadas em breve!', 'info');
-  }, [addToast]);
+  const handleNavigateToStats = useCallback(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MainApp.tsx:297',message:'handleNavigateToStats called',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    setActiveTab('stats');
+  }, []);
 
-  const handleOpenAppearance = useCallback(() => {
-    addToast('🎨 Configuração de aparência em breve!', 'info');
-  }, [addToast]);
+  const handleNavigateToAppearance = useCallback(() => {
+    setActiveTab('appearance');
+  }, []);
 
-  const handleOpenGoals = useCallback(() => {
-    addToast('🎯 Gerenciamento de metas em breve!', 'info');
-  }, [addToast]);
+  const handleNavigateToGoals = useCallback(() => {
+    setActiveTab('goals');
+  }, []);
 
   const handleOpenSettings = useCallback(() => {
     setShowSettings(true);
@@ -298,7 +317,204 @@ export default function MainApp({
     setShowLogoutConfirm(true);
   }, []);
 
-  const renderPage = () => {
+  return (
+    <XPProvider
+      logs={logs}
+      userId={session?.user?.id}
+    >
+      <AchievementsProvider
+        logs={logs}
+        streak={streak}
+        dailyGoal={dailyGoal}
+        cycleStartDate={cycleStartDate}
+        userCreatedAt={session?.user?.created_at ? new Date(session.user.created_at).getTime() : undefined}
+        userId={session?.user?.id}
+        onNavigateToAchievements={() => setActiveTab('achievements')}
+      >
+        <MainAppContent
+        session={session}
+        isDarkMode={isDarkMode}
+        onToggleTheme={onToggleTheme}
+        onHardReset={onHardReset}
+        subjects={subjects}
+        logs={logs}
+        cycleStartDate={cycleStartDate}
+        dailyGoal={dailyGoal}
+        showPerformance={showPerformance}
+        loadingData={loadingData}
+        streak={streak}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        showFeedbackModal={showFeedbackModal}
+        setShowFeedbackModal={setShowFeedbackModal}
+        showHistoryModal={showHistoryModal}
+        setShowHistoryModal={setShowHistoryModal}
+        showChangePasswordModal={showChangePasswordModal}
+        setShowChangePasswordModal={setShowChangePasswordModal}
+        prefilledTime={prefilledTime}
+        setPrefilledTime={setPrefilledTime}
+        timerSeconds={timerSeconds}
+        setTimerSeconds={setTimerSeconds}
+        isTimerRunning={isTimerRunning}
+        setIsTimerRunning={setIsTimerRunning}
+        timerMode={timerMode}
+        setTimerMode={setTimerMode}
+        deleteLogId={deleteLogId}
+        setDeleteLogId={setDeleteLogId}
+        showRestartConfirm={showRestartConfirm}
+        setShowRestartConfirm={setShowRestartConfirm}
+        showRestartSuccess={showRestartSuccess}
+        setShowRestartSuccess={setShowRestartSuccess}
+        showLogoutConfirm={showLogoutConfirm}
+        setShowLogoutConfirm={setShowLogoutConfirm}
+        timerIntervalRef={timerIntervalRef}
+        timerStartRef={timerStartRef}
+        timerBaseRef={timerBaseRef}
+        countdownIntervalRef={countdownIntervalRef}
+        countdownSecondsRef={countdownSecondsRef}
+        lastTimerSecondsRef={lastTimerSecondsRef}
+        handleTimerStop={handleTimerStop}
+        handleDeleteLog={handleDeleteLog}
+        confirmDeleteLog={confirmDeleteLog}
+        confirmRestartCycle={confirmRestartCycle}
+        handleSettingsLogoutClick={handleSettingsLogoutClick}
+        confirmLogout={confirmLogout}
+        handleRestartCycle={handleRestartCycle}
+        handleTimeClear={handleTimeClear}
+        handleAddSubject={handleAddSubject}
+        handleDeleteSubject={handleDeleteSubject}
+        handleUpdateSubject={handleUpdateSubject}
+        handleReorderSubjects={handleReorderSubjects}
+        handleAddLog={handleAddLog}
+        handleEditLog={handleEditLog}
+        handleSetDailyGoal={handleSetDailyGoal}
+        handleTogglePerformance={handleTogglePerformance}
+        handleCloseSettings={handleCloseSettings}
+        handleCancelDeleteLog={handleCancelDeleteLog}
+        handleCancelRestartCycle={handleCancelRestartCycle}
+        handleCloseRestartSuccess={handleCloseRestartSuccess}
+        handleCancelLogout={handleCancelLogout}
+        handleNavigateToAchievements={handleNavigateToAchievements}
+        handleNavigateToElo={handleNavigateToElo}
+        handleNavigateToMore={handleNavigateToMore}
+        handleOpenHistory={handleOpenHistory}
+        handleOpenTutorial={handleOpenTutorial}
+        handleOpenSecurity={handleOpenSecurity}
+        handleNavigateToStats={handleNavigateToStats}
+        handleNavigateToAppearance={handleNavigateToAppearance}
+        handleNavigateToGoals={handleNavigateToGoals}
+        handleOpenSettings={handleOpenSettings}
+        handleLogout={handleLogout}
+        addSubject={addSubject}
+        deleteSubject={deleteSubject}
+        updateSubject={updateSubject}
+        reorderSubjects={reorderSubjects}
+        addLog={addLog}
+        deleteLog={deleteLog}
+        editLog={editLog}
+        updateSettings={updateSettings}
+        sendNotification={sendNotification}
+        addToast={addToast}
+      />
+      </AchievementsProvider>
+    </XPProvider>
+  );
+}
+
+// Componente interno que usa o contexto
+function MainAppContent({
+  session,
+  isDarkMode,
+  onToggleTheme,
+  onHardReset,
+  subjects,
+  logs,
+  cycleStartDate,
+  dailyGoal,
+  showPerformance,
+  loadingData,
+  streak,
+  activeTab,
+  setActiveTab,
+  showSettings,
+  setShowSettings,
+  showFeedbackModal,
+  setShowFeedbackModal,
+  showHistoryModal,
+  setShowHistoryModal,
+  showChangePasswordModal,
+  setShowChangePasswordModal,
+  prefilledTime,
+  setPrefilledTime,
+  timerSeconds,
+  setTimerSeconds,
+  isTimerRunning,
+  setIsTimerRunning,
+  timerMode,
+  setTimerMode,
+  deleteLogId,
+  setDeleteLogId,
+  showRestartConfirm,
+  setShowRestartConfirm,
+  showRestartSuccess,
+  setShowRestartSuccess,
+  showLogoutConfirm,
+  setShowLogoutConfirm,
+  timerIntervalRef,
+  timerStartRef,
+  timerBaseRef,
+  countdownIntervalRef,
+  countdownSecondsRef,
+  lastTimerSecondsRef,
+  handleTimerStop,
+  handleDeleteLog,
+  confirmDeleteLog,
+  confirmRestartCycle,
+  handleSettingsLogoutClick,
+  confirmLogout,
+  handleRestartCycle,
+  handleTimeClear,
+  handleAddSubject,
+  handleDeleteSubject,
+  handleUpdateSubject,
+  handleReorderSubjects,
+  handleAddLog,
+  handleEditLog,
+  handleSetDailyGoal,
+  handleTogglePerformance,
+  handleCloseSettings,
+  handleCancelDeleteLog,
+  handleCancelRestartCycle,
+  handleCloseRestartSuccess,
+  handleCancelLogout,
+  handleNavigateToAchievements,
+  handleNavigateToElo,
+  handleNavigateToMore,
+  handleOpenHistory,
+  handleOpenTutorial,
+  handleOpenSecurity,
+        handleNavigateToStats,
+  handleNavigateToAppearance,
+  handleNavigateToGoals,
+  handleOpenSettings,
+  handleLogout,
+  addSubject,
+  deleteSubject,
+  updateSubject,
+  reorderSubjects,
+  addLog,
+  deleteLog,
+  editLog,
+  updateSettings,
+  sendNotification,
+  addToast
+}: any) {
+  const { pendingCount } = useAchievementsContext();
+
+  // Função renderPage dentro do MainAppContent
+  const renderPage = useCallback(() => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} dailyGoal={dailyGoal} showPerformance={showPerformance} streak={streak} isLoading={loadingData} />;
@@ -309,24 +525,44 @@ export default function MainApp({
           </Suspense>
         );
       case 'register':
-        return <RegisterPage subjects={subjects} onAddLog={handleAddLog} prefilledTime={prefilledTime} onTimeClear={handleTimeClear} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
+        return <RegisterPage subjects={subjects} onAddLog={handleAddLog} onUpdateSubject={handleUpdateSubject} prefilledTime={prefilledTime} onTimeClear={handleTimeClear} timerSeconds={timerSeconds} isTimerRunning={isTimerRunning} />;
       case 'cycle':
         return (
           <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
             <CyclePage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject} onUpdateSubject={handleUpdateSubject} onRestartCycle={handleRestartCycle} onReorderSubjects={handleReorderSubjects} isLoading={loadingData} />
           </Suspense>
         );
-      case 'gamification':
+      case 'achievements':
         return (
           <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
-            <GamificationPage logs={logs} streak={streak} isLoading={loadingData} />
+            <AchievementsPage 
+              isLoading={loadingData}
+              onNavigateToMore={handleNavigateToMore}
+            />
+          </Suspense>
+        );
+      case 'elo':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <EloPage 
+              logs={logs}
+              userId={session?.user?.id}
+              onNavigateToMore={handleNavigateToMore}
+            />
           </Suspense>
         );
       case 'more':
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MainApp.tsx:551',message:'Rendering MorePage',data:{hasHandleNavigateToStats:!!handleNavigateToStats,type:typeof handleNavigateToStats},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         return (
           <MorePage
             session={session}
-            onNavigateToGamification={handleNavigateToGamification}
+            onNavigateToAchievements={handleNavigateToAchievements}
+            onNavigateToElo={handleNavigateToElo}
+            onNavigateToGoals={handleNavigateToGoals}
+            onNavigateToStats={handleNavigateToStats}
+            onNavigateToAppearance={handleNavigateToAppearance}
             onOpenHistory={handleOpenHistory}
             onOpenFeedback={() => setShowFeedbackModal(true)}
             onOpenTutorial={handleOpenTutorial}
@@ -335,10 +571,39 @@ export default function MainApp({
             onLogout={handleLogout}
           />
         );
+      case 'goals':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <GoalsPage
+              logs={logs}
+              onNavigateBack={() => setActiveTab('more')}
+            />
+          </Suspense>
+        );
+      case 'stats':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <StatsPage
+              logs={logs}
+              subjects={subjects}
+              cycleStartDate={cycleStartDate}
+              streak={streak}
+              onNavigateBack={() => setActiveTab('more')}
+            />
+          </Suspense>
+        );
+      case 'appearance':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <AppearancePage
+              onNavigateBack={() => setActiveTab('more')}
+            />
+          </Suspense>
+        );
       default:
         return null;
     }
-  };
+  }, [activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLog, dailyGoal, showPerformance, streak, loadingData, handleTimerStop, timerSeconds, setTimerSeconds, isTimerRunning, setIsTimerRunning, timerMode, setTimerMode, handleAddLog, prefilledTime, handleTimeClear, handleAddSubject, handleDeleteSubject, handleUpdateSubject, handleRestartCycle, handleReorderSubjects, session, handleNavigateToAchievements, handleNavigateToElo, handleNavigateToStats, handleNavigateToGoals, handleNavigateToAppearance, handleOpenHistory, setShowFeedbackModal, handleOpenTutorial, handleOpenSecurity, handleOpenSettings, handleLogout]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative transition-colors duration-300">
@@ -356,6 +621,7 @@ export default function MainApp({
         logs={logs}
         userEmail={session?.user?.email}
         userId={session?.user?.id}
+        onNavigateToGoals={handleNavigateToGoals}
       />
 
       <ConfirmModal 
@@ -434,13 +700,14 @@ export default function MainApp({
         activeTab={activeTab} 
         onTabChange={setActiveTab}
         session={session}
+        pendingAchievementsCount={pendingCount}
         onOpenFeedback={() => setShowFeedbackModal(true)}
         onOpenHistory={handleOpenHistory}
         onOpenTutorial={handleOpenTutorial}
         onOpenSecurity={handleOpenSecurity}
-        onOpenStatistics={handleOpenStatistics}
-        onOpenAppearance={handleOpenAppearance}
-        onOpenGoals={handleOpenGoals}
+        onNavigateToStats={handleNavigateToStats}
+        onNavigateToAppearance={handleNavigateToAppearance}
+        onNavigateToGoals={handleNavigateToGoals}
         onOpenSettings={handleOpenSettings}
         onLogout={handleLogout}
       />
@@ -456,7 +723,7 @@ export default function MainApp({
 
       {/* BottomNav - Apenas Mobile */}
       <div className="md:hidden">
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} pendingAchievementsCount={pendingCount} />
       </div>
     </div>
   );

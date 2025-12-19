@@ -1,26 +1,37 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
+import { useAppearance } from '../hooks/useAppearance';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
+interface Toast {
+  id: string;
+  content: string | ReactElement;
+  type: ToastType;
+  duration?: number;
+}
+
 interface ToastContextData {
-  addToast: (message: string, type?: ToastType) => void;
+  addToast: (content: string | ReactElement, type?: ToastType, duration?: number) => string;
+  removeToast: (id: string) => void;
 }
 
 const ToastContext = createContext<ToastContextData>({} as ToastContextData);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<{ id: string; message: string; type: ToastType }[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = (message: string, type: ToastType = 'info') => {
-    const id = Date.now().toString();
-    setToasts((state) => [...state, { id, message, type }]);
+  const addToast = (content: string | ReactElement, type: ToastType = 'info', duration: number = 3000): string => {
+    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    setToasts((state) => [...state, { id, content, type, duration }]);
 
-    // Auto remove após 3 segundos
+    // Auto remove após duration
     setTimeout(() => {
       removeToast(id);
-    }, 3000);
+    }, duration);
+
+    return id;
   };
 
   const removeToast = (id: string) => {
@@ -28,7 +39,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ToastContext.Provider value={{ addToast }}>
+    <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
       
       {/* Container dos Toasts (Fixo no topo) */}
@@ -44,7 +55,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 // Componente visual individual
-function ToastItem({ toast, onRemove }: { toast: { id: string; message: string; type: ToastType }; onRemove: (id: string) => void }) {
+function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
+  const { shouldReduceMotion } = useAppearance();
   const icons = {
     success: <CheckCircle className="w-5 h-5 text-emerald-500" />,
     error: <XCircle className="w-5 h-5 text-red-500" />,
@@ -59,19 +71,34 @@ function ToastItem({ toast, onRemove }: { toast: { id: string; message: string; 
     info: 'border-blue-500',
   };
 
+  const isCustomContent = typeof toast.content !== 'string';
+
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: -20, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-      className={`pointer-events-auto bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border-l-4 ${borders[toast.type]} flex items-center gap-3 min-w-[300px]`}
+      layout={!shouldReduceMotion}
+      initial={shouldReduceMotion ? false : { opacity: 0, y: -20, scale: 0.9 }}
+      animate={shouldReduceMotion ? false : { opacity: 1, y: 0, scale: 1 }}
+      exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+      transition={shouldReduceMotion ? { duration: 0 } : undefined}
+      className={`pointer-events-auto bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border-l-4 ${borders[toast.type]} ${
+        isCustomContent ? 'flex items-start gap-3' : 'flex items-center gap-3'
+      } min-w-[300px] relative`}
     >
-      {icons[toast.type]}
-      <p className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-200">
-        {toast.message}
-      </p>
-      <button onClick={() => onRemove(toast.id)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+      {!isCustomContent && icons[toast.type]}
+      <div className={isCustomContent ? 'flex-1 min-w-0' : 'flex-1'}>
+        {typeof toast.content === 'string' ? (
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {toast.content}
+          </p>
+        ) : (
+          toast.content
+        )}
+      </div>
+      <button 
+        onClick={() => onRemove(toast.id)} 
+        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex-shrink-0 absolute top-1/2 right-2 -translate-y-1/2"
+        aria-label="Fechar"
+      >
         <X size={16} />
       </button>
     </motion.div>

@@ -9,12 +9,13 @@ interface SidebarProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
   session: any;
+  pendingAchievementsCount?: number;
   onOpenFeedback?: () => void;
   onOpenHistory?: () => void;
   onOpenTutorial?: () => void;
   onOpenSecurity?: () => void;
-  onOpenStatistics?: () => void;
-  onOpenAppearance?: () => void;
+  onNavigateToStats?: () => void;
+  onNavigateToAppearance?: () => void;
   onOpenGoals?: () => void;
   onOpenSettings?: () => void;
   onLogout?: () => void;
@@ -24,12 +25,13 @@ export default function Sidebar({
   activeTab, 
   onTabChange, 
   session,
+  pendingAchievementsCount = 0,
   onOpenFeedback,
   onOpenHistory,
   onOpenTutorial,
   onOpenSecurity,
-  onOpenStatistics,
-  onOpenAppearance,
+  onNavigateToStats,
+  onNavigateToAppearance,
   onOpenGoals,
   onOpenSettings,
   onLogout,
@@ -50,7 +52,9 @@ export default function Sidebar({
     id: TabType | string,
     icon: any,
     label: string,
-    onClick?: () => void
+    onClick?: () => void,
+    showBadge?: boolean,
+    badgeCount?: number
   ) => {
     const Icon = icon;
     const isActive = activeTab === id;
@@ -71,8 +75,19 @@ export default function Sidebar({
         {isActive && (
           <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-emerald-500 rounded-r-full" />
         )}
-        <Icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110 stroke-[2.5]' : 'group-hover:scale-105'}`} />
-        <span className={`font-medium transition-all ${isActive ? 'font-bold' : ''}`}>
+        <div className="relative">
+          <Icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110 stroke-[2.5]' : 'group-hover:scale-105'}`} />
+          {showBadge && badgeCount !== undefined && badgeCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-lg"
+            >
+              {badgeCount > 9 ? '9+' : badgeCount}
+            </motion.span>
+          )}
+        </div>
+        <span className={`text-base font-medium transition-all flex-1 ${isActive ? 'font-bold' : ''}`}>
           {label}
         </span>
       </motion.button>
@@ -89,7 +104,7 @@ export default function Sidebar({
           </div>
           <div>
             <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">StudyFlow</h1>
-            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+            <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
               Versão 1.5.0
             </p>
           </div>
@@ -102,19 +117,19 @@ export default function Sidebar({
 
         {/* Separador */}
         <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
-        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2">Gamificação</p>
-        {renderNavButton('gamification', Trophy, 'Conquistas')}
-        {renderNavButton('gamification', Star, 'Ranking & Elo', () => onTabChange('gamification'))}
+        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2 text-base">Gamificação</p>
+        {renderNavButton('achievements', Trophy, 'Conquistas', undefined, true, (pendingAchievementsCount && pendingAchievementsCount > 0) ? pendingAchievementsCount : undefined)}
+        {renderNavButton('elo', Star, 'Elo', undefined)}
 
         <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
-        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2">Dados</p>
-        {renderNavButton('stats', BarChart2, 'Estatísticas', onOpenStatistics)}
+        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2 text-base">Dados</p>
+        {renderNavButton('stats', BarChart2, 'Estatísticas', onNavigateToStats)}
         {renderNavButton('history', History, 'Histórico', onOpenHistory)}
 
         <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
-        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2">Configurações</p>
+        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2 text-base">Configurações</p>
         {renderNavButton('settings', Settings, 'Configurações', onOpenSettings)}
-        {renderNavButton('appearance', Palette, 'Aparência', onOpenAppearance)}
+        {renderNavButton('appearance', Palette, 'Aparência', onNavigateToAppearance)}
         {renderNavButton('goals', TargetIcon, 'Metas', onOpenGoals)}
         {renderNavButton('feedback', MessageSquare, 'Dar Feedback', onOpenFeedback)}
         {renderNavButton('tutorial', HelpCircle, 'Tutorial', onOpenTutorial)}
@@ -128,8 +143,8 @@ export default function Sidebar({
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+            <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
           </div>
         </div>
         {onLogout && (

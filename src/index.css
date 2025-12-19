@@ -167,3 +167,187 @@
 .react-joyride__tooltip button[data-action="next"] span:first-of-type {
   display: none;
 }
+
+/* ============================================
+   SISTEMA DE ESCALA DE FONTE NÃO-LINEAR
+   Mantém hierarquia visual em todos os tamanhos
+   ============================================ */
+
+/* Base sizes (Medium - 100% - Padrão do Tailwind) */
+:root {
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px - timer */
+}
+
+/* Small (87.5% base, títulos mantêm diferença) */
+html.font-size-sm {
+  --text-xs: 0.65rem;      /* 10.4px */
+  --text-sm: 0.75rem;      /* 12px */
+  --text-base: 0.875rem;   /* 14px - BASE */
+  --text-lg: 1rem;         /* 16px - +2px diff */
+  --text-xl: 1.125rem;     /* 18px - +2px diff */
+  --text-2xl: 1.375rem;    /* 22px - +4px diff */
+  --text-3xl: 1.75rem;     /* 28px */
+  --text-4xl: 2rem;        /* 32px - timer */
+}
+
+/* Large (112.5% base, títulos crescem MENOS) */
+html.font-size-lg {
+  --text-xs: 0.8125rem;    /* 13px */
+  --text-sm: 0.9375rem;    /* 15px */
+  --text-base: 1.0625rem;  /* 17px - BASE (+1px, não +2) */
+  --text-lg: 1.1875rem;    /* 19px - +2px diff */
+  --text-xl: 1.3125rem;    /* 21px - +2px diff */
+  --text-2xl: 1.625rem;    /* 26px - +5px diff (não +6) */
+  --text-3xl: 2rem;        /* 32px */
+  --text-4xl: 2.375rem;    /* 38px - timer (+2px só) */
+}
+
+/* Sobrescrever classes Tailwind para usar CSS variables */
+.text-xs { font-size: var(--text-xs) !important; }
+.text-sm { font-size: var(--text-sm) !important; }
+.text-base { font-size: var(--text-base) !important; }
+.text-lg { font-size: var(--text-lg) !important; }
+.text-xl { font-size: var(--text-xl) !important; }
+.text-2xl { font-size: var(--text-2xl) !important; }
+.text-3xl { font-size: var(--text-3xl) !important; }
+.text-4xl { font-size: var(--text-4xl) !important; }
+
+/* Timer sempre mantém tamanho maior relativo */
+.timer-display {
+  font-size: var(--text-4xl) !important;
+}
+
+/* Forçar herança de font-size em elementos sem classes Tailwind */
+html.font-size-sm,
+html.font-size-lg {
+  /* Sidebar items */
+  nav a,
+  nav button,
+  .sidebar-item,
+  [class*="sidebar"] span:not([class*="text-"]),
+  
+  /* Dashboard cards */
+  [class*="card"] p:not([class*="text-"]),
+  [class*="card"] span:not([class*="text-"]),
+  [class*="card"] div:not([class*="text-"]):not([class*="icon"]):not([class*="flex"]):not([class*="grid"]),
+  
+  /* Textos genéricos sem classe */
+  p:not([class*="text-"]):not([class*="text-xs"]):not([class*="text-sm"]):not([class*="text-base"]):not([class*="text-lg"]):not([class*="text-xl"]):not([class*="text-2xl"]):not([class*="text-3xl"]):not([class*="text-4xl"]),
+  span:not([class*="text-"]):not([class*="text-xs"]):not([class*="text-sm"]):not([class*="text-base"]):not([class*="text-lg"]):not([class*="text-xl"]):not([class*="text-2xl"]):not([class*="text-3xl"]):not([class*="text-4xl"]) {
+    font-size: inherit !important;
+  }
+}
+
+/* ============================================
+   MODO CONTRASTE ALTO
+   ============================================ */
+html.high-contrast {
+  /* Background preto puro */
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  
+  /* Texto branco puro */
+  --text-primary: #ffffff;
+  --text-secondary: #e5e5e5;
+  
+  /* Bordas mais fortes */
+  --border-color: #ffffff;
+  
+  /* Cores de destaque mantém contraste */
+  --emerald: #10b981;
+  --red: #ef4444;
+  --amber: #f59e0b;
+}
+
+/* Aplicar classes de contraste alto */
+.high-contrast {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+.high-contrast .bg-white,
+.high-contrast .bg-gray-50,
+.high-contrast .bg-gray-100 {
+  background: #000000 !important;
+}
+
+.high-contrast .bg-gray-800,
+.high-contrast .bg-gray-900 {
+  background: #0a0a0a !important;
+}
+
+.high-contrast .text-gray-900,
+.high-contrast .text-gray-800,
+.high-contrast .text-gray-700 {
+  color: #ffffff !important;
+}
+
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-500,
+.high-contrast .text-gray-400 {
+  color: #e5e5e5 !important;
+}
+
+.high-contrast .text-white {
+  color: #ffffff !important;
+}
+
+.high-contrast .border-gray-200,
+.high-contrast .border-gray-300,
+.high-contrast .border-gray-700 {
+  border-color: #ffffff !important;
+  border-width: 2px !important;
+}
+
+.high-contrast .bg-emerald-500 {
+  background: #10b981 !important;
+}
+
+.high-contrast .bg-red-500 {
+  background: #ef4444 !important;
+}
+
+.high-contrast .bg-amber-500 {
+  background: #f59e0b !important;
+}
+
+/* Remover gradientes no modo contraste alto */
+.high-contrast .bg-gradient-to-br,
+.high-contrast .bg-gradient-to-r {
+  background: #000000 !important;
+}
+
+/* Bordas mais visíveis */
+.high-contrast * {
+  border-color: #ffffff !important;
+}
+
+/* ============================================
+   REDUZIR MOVIMENTO (ANIMAÇÕES)
+   ============================================ */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Manter algumas transições essenciais */
+html.reduce-motion button:active {
+  transition: transform 0.1s !important;
+}
+
+/* Desabilitar animações do Framer Motion quando reduce-motion está ativo */
+html.reduce-motion [data-framer-motion] {
+  animation: none !important;
+  transition: none !important;
+}

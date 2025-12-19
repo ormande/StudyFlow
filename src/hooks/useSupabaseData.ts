@@ -164,6 +164,43 @@ export function useSupabaseData(session: any) {
         if (error) throw error;
       }
       
+      // Se subtópicos foram atualizados, salvar no banco
+      if (subtopics !== undefined) {
+        // Buscar subtópicos existentes no banco
+        const { data: existingSubtopics } = await supabase
+          .from('subtopics')
+          .select('id')
+          .eq('subject_id', id);
+        
+        const existingIds = new Set((existingSubtopics || []).map((st: any) => st.id));
+        const newIds = new Set(subtopics.map(st => st.id));
+        
+        // Deletar subtópicos que foram removidos
+        const toDelete = Array.from(existingIds).filter(id => !newIds.has(id));
+        if (toDelete.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('subtopics')
+            .delete()
+            .in('id', toDelete);
+          if (deleteError) throw deleteError;
+        }
+        
+        // Inserir/atualizar subtópicos
+        const subtopicsToUpsert = subtopics.map(st => ({
+          id: st.id,
+          subject_id: id,
+          name: st.name,
+          completed: st.completed || false
+        }));
+        
+        if (subtopicsToUpsert.length > 0) {
+          const { error: upsertError } = await supabase
+            .from('subtopics')
+            .upsert(subtopicsToUpsert, { onConflict: 'id' });
+          if (upsertError) throw upsertError;
+        }
+      }
+      
       // Atualiza estado local com valor validado
       const validatedUpdates = { ...updates };
       if (goalMinutes !== undefined) {
@@ -212,7 +249,9 @@ export function useSupabaseData(session: any) {
       };
 
       const { data, error } = await supabase.from('study_logs').insert([dbLog]).select().single();
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       // Adiciona localmente já traduzido e validado
       const newLocalLog = {

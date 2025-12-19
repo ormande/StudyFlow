@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppearance } from '../hooks/useAppearance';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const { shouldReduceMotion } = useAppearance();
   const variantStyles = {
     danger: {
       icon: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
@@ -43,17 +45,17 @@ export default function ConfirmModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          initial={shouldReduceMotion ? false : { opacity: 0 }}
+          animate={shouldReduceMotion ? false : { opacity: 1 }}
+          exit={shouldReduceMotion ? false : { opacity: 0 }}
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
           className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm"
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ duration: 0.2 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.9, y: 20 }}
+            animate={shouldReduceMotion ? false : { opacity: 1, scale: 1, y: 0 }}
+            exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.9, y: 20 }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
             className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
           >
             {/* Header */}

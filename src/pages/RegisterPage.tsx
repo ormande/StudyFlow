@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar, Clock, FileText } from 'lucide-react';
+import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar, Clock, FileText, AlertTriangle } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import { useToast } from '../contexts/ToastContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface RegisterPageProps {
   subjects: Subject[];
   onAddLog: (log: Omit<StudyLog, 'id' | 'timestamp'>) => void;
+  onUpdateSubject?: (subjectId: string, updates: Partial<Subject>) => void;
   prefilledTime?: { hours: number; minutes: number; seconds: number };
   onTimeClear: () => void;
   timerSeconds: number;
@@ -24,6 +26,7 @@ const sanitizeNumericInput = (value: string, max?: number): string => {
 export default function RegisterPage({
   subjects,
   onAddLog,
+  onUpdateSubject,
   prefilledTime,
   onTimeClear,
   timerSeconds,
@@ -33,6 +36,7 @@ export default function RegisterPage({
   const [subjectId, setSubjectId] = useState('');
   const [subtopicId, setSubtopicId] = useState('');
   const [type, setType] = useState<'teoria' | 'questoes' | 'revisao'>('teoria');
+  const [dateOption, setDateOption] = useState<'today' | 'yesterday' | 'other'>('today');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [hours, setHours] = useState('');
   const [seconds, setSeconds] = useState('');
@@ -43,10 +47,20 @@ export default function RegisterPage({
   const [correct, setCorrect] = useState('');
   const [wrong, setWrong] = useState('');
   const [blank, setBlank] = useState('');
+  const [markSubtopicCompleted, setMarkSubtopicCompleted] = useState(false);
 
   const selectedSubject = subjects.find(s => s.id === subjectId);
+  const selectedSubtopic = selectedSubject?.subtopics.find(st => st.id === subtopicId);
 
-  useEffect(() => { setSubtopicId(''); }, [subjectId]);
+  useEffect(() => { 
+    setSubtopicId(''); 
+    setMarkSubtopicCompleted(false);
+  }, [subjectId]);
+  
+  useEffect(() => {
+    // Resetar checkbox quando subtópico muda
+    setMarkSubtopicCompleted(false);
+  }, [subtopicId]);
   
   useEffect(() => {
     if (prefilledTime) {
@@ -64,9 +78,86 @@ export default function RegisterPage({
       setHours(h > 0 ? h.toString() : '');
       setMinutes(m > 0 ? m.toString() : '');
       setSeconds(s > 0 ? s.toString() : '');
-      setDate(new Date().toISOString().split('T')[0]);
+      const today = new Date().toISOString().split('T')[0];
+      setDate(today);
+      setDateOption('today');
     }
   }, [timerSeconds, isTimerRunning]);
+
+  // Função para validar data
+  const isValidDate = (dateString: string): boolean => {
+    const selectedDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return selectedDate <= today;
+  };
+
+  // Função para calcular dias de diferença
+  const getDaysDifference = (dateString: string): number => {
+    const selectedDate = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    const diffTime = today.getTime() - selectedDate.getTime();
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  // Handler para mudança de opção de data
+  const handleDateOptionChange = (option: 'today' | 'yesterday' | 'other') => {
+    setDateOption(option);
+    
+    if (option === 'today') {
+      const today = new Date().toISOString().split('T')[0];
+      setDate(today);
+    } else if (option === 'yesterday') {
+      const now = new Date();
+      const currentHour = now.getHours();
+      
+      // Validação de madrugada (00:00 - 05:59)
+      if (currentHour < 6) {
+        const confirmMessage = `São ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}. Você quis dizer o dia anterior mesmo?`;
+        if (!window.confirm(confirmMessage)) {
+          // Se cancelar, volta para "Hoje"
+          setDateOption('today');
+          setDate(now.toISOString().split('T')[0]);
+          return;
+        }
+      }
+      
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      setDate(yesterday.toISOString().split('T')[0]);
+    }
+    // Se for "other", mantém a data atual e mostra o date picker
+  };
+
+  // Handler para mudança direta do date picker
+  const handleDateChange = (newDate: string) => {
+    if (!isValidDate(newDate)) {
+      addToast('Não é possível registrar estudo futuro', 'error');
+      // Reverter para data válida (hoje)
+      const today = new Date().toISOString().split('T')[0];
+      setDate(today);
+      setDateOption('today');
+      return;
+    }
+
+    const daysDiff = getDaysDifference(newDate);
+    if (daysDiff > 30) {
+      const confirmMessage = `Este estudo foi há ${daysDiff} dias. Confirma?`;
+      if (!window.confirm(confirmMessage)) {
+        // Reverter para data anterior válida
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        setDate(yesterday.toISOString().split('T')[0]);
+        setDateOption('yesterday');
+        return;
+      }
+    }
+
+    setDate(newDate);
+    setDateOption('other');
+  };
 
   const handleHoursChange = (value: string) => setHours(sanitizeNumericInput(value));
   const handleMinutesChange = (value: string) => setMinutes(sanitizeNumericInput(value, 59));
@@ -106,7 +197,16 @@ export default function RegisterPage({
       wrong: Math.max(0, parseInt(wrong) || 0),
       blank: Math.max(0, parseInt(blank) || 0),
     };
+    
     onAddLog(newLog);
+    
+    // Marcar subtópico como concluído se opção estiver marcada
+    if (markSubtopicCompleted && subtopicId && subjectId && onUpdateSubject && selectedSubject) {
+      const updatedSubtopics = selectedSubject.subtopics.map((st) =>
+        st.id === subtopicId ? { ...st, completed: true } : st
+      );
+      onUpdateSubject(subjectId, { subtopics: updatedSubtopics });
+    }
     
     setSubjectId('');
     setSubtopicId('');
@@ -118,7 +218,10 @@ export default function RegisterPage({
     setCorrect('');
     setWrong('');
     setBlank('');
-    setDate(new Date().toISOString().split('T')[0]);
+    setMarkSubtopicCompleted(false);
+    const today = new Date().toISOString().split('T')[0];
+    setDate(today);
+    setDateOption('today');
     onTimeClear();
     
     if (navigator.vibrate) navigator.vibrate(200);
@@ -161,15 +264,69 @@ export default function RegisterPage({
           </div>
 
           {selectedSubject && selectedSubject.subtopics.length > 0 && (
-             <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
-                <Layers size={14} className="text-emerald-500" /> Subtópico <span className="text-[10px] font-normal opacity-70 normal-case">(Opcional)</span>
-              </label>
-              {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, font-size text-sm para legibilidade */}
-              <select value={subtopicId} onChange={(e) => setSubtopicId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors">
-                <option value="">Geral (Sem subtópico específico)</option>
-                {selectedSubject.subtopics.map((st) => (<option key={st.id} value={st.id}>{st.name}</option>))}
-              </select>
+             <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
+                  <Layers size={14} className="text-emerald-500" /> Subtópico <span className="text-[10px] font-normal opacity-70 normal-case">(Opcional)</span>
+                </label>
+                {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, font-size text-sm para legibilidade */}
+                <select value={subtopicId} onChange={(e) => setSubtopicId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors">
+                  <option value="">Geral (Sem subtópico específico)</option>
+                  {selectedSubject.subtopics.map((st) => (
+                    <option key={st.id} value={st.id}>
+                      {st.name} {st.completed ? '(Concluído)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Opção para marcar subtópico como concluído */}
+              {subtopicId && selectedSubtopic && !selectedSubtopic.completed && (
+                <button
+                  type="button"
+                  onClick={() => setMarkSubtopicCompleted(!markSubtopicCompleted)}
+                  className={`w-full flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition-all active:scale-95 ${
+                    markSubtopicCompleted
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 dark:border-emerald-700'
+                      : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-emerald-300 dark:hover:border-emerald-700'
+                  }`}
+                >
+                  {/* Círculo customizado */}
+                  <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    markSubtopicCompleted
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'bg-transparent border-gray-300 dark:border-gray-500'
+                  }`}>
+                    {markSubtopicCompleted && (
+                      <Check size={14} className="text-white" strokeWidth={3} />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <span className={`text-sm font-semibold flex items-center gap-2 ${
+                      markSubtopicCompleted
+                        ? 'text-emerald-700 dark:text-emerald-300'
+                        : 'text-gray-800 dark:text-white'
+                    }`}>
+                      Marcar subtópico como concluído
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      "{selectedSubtopic.name}" será marcado como concluído após salvar
+                    </p>
+                  </div>
+                </button>
+              )}
+              
+              {/* Indicador se subtópico já está concluído */}
+              {subtopicId && selectedSubtopic && selectedSubtopic.completed && (
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                  <div className="flex items-center gap-2">
+                    <Check size={16} className="text-emerald-500" />
+                    <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                      Este subtópico já está concluído
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -177,20 +334,70 @@ export default function RegisterPage({
         {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 2 - Data */}
         <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
-            <Calendar size={14} className="text-emerald-500" /> Data
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
+            <Calendar size={14} className="text-emerald-500" /> Data do Estudo
           </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none" size={20} />
-            {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, font-size text-sm no mobile para legibilidade */}
-            <input 
-              type="date" 
-              value={date} 
-              max={new Date().toISOString().split('T')[0]} 
-              onChange={(e) => setDate(e.target.value)} 
-              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark]" 
-            />
+          
+          {/* Seletor de Opções Rápidas */}
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => handleDateOptionChange('today')}
+              className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 min-h-[44px] flex items-center justify-center ${
+                dateOption === 'today'
+                  ? 'bg-emerald-500 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              Hoje
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDateOptionChange('yesterday')}
+              className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 min-h-[44px] flex items-center justify-center ${
+                dateOption === 'yesterday'
+                  ? 'bg-emerald-500 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              Ontem
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDateOptionChange('other')}
+              className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 min-h-[44px] flex items-center justify-center ${
+                dateOption === 'other'
+                  ? 'bg-emerald-500 text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              Outro
+            </button>
           </div>
+
+          {/* Date Picker (apenas quando "Outro" está selecionado) */}
+          <AnimatePresence>
+            {dateOption === 'other' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none z-10" size={20} />
+                  <input 
+                    type="date" 
+                    value={date} 
+                    max={new Date().toISOString().split('T')[0]} 
+                    onChange={(e) => handleDateChange(e.target.value)} 
+                    className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark]" 
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}

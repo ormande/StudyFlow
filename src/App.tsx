@@ -5,6 +5,7 @@ import MainApp from './components/MainApp';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import LandingPage from './pages/LandingPage';
 import LoginScreen from './components/LoginScreen';
+import { useAppearance } from './hooks/useAppearance';
 
 // --- APP PRINCIPAL ---
 function App() {
@@ -13,29 +14,30 @@ function App() {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [authView, setAuthView] = useState<'landing' | 'login' | 'forgot'>('landing');
 
-  // Tema
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('studyflow_theme');
-      if (saved) return saved === 'dark';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-  });
-
+  // Usar hook de aparência para gerenciar tema
+  const { settings, updateTheme } = useAppearance();
+  
+  // Manter compatibilidade com MainApp (que ainda espera isDarkMode e toggleTheme)
+  // Calcular isDarkMode baseado no tema atual
+  const isDarkMode = settings.theme === 'dark' || 
+    (settings.theme === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  
+  const toggleTheme = () => {
+    // Alternar entre light e dark (não usar auto aqui para manter compatibilidade)
+    const newTheme = isDarkMode ? 'light' : 'dark';
+    updateTheme(newTheme);
+  };
+  
+  // Atualizar cor de fundo do body baseado no tema
   useEffect(() => {
-    const color = isDarkMode ? '#111827' : '#f9fafb';
-    document.body.style.backgroundColor = color;
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('studyflow_theme', 'dark');
+    if (settings.theme === 'high-contrast') {
+      document.body.style.backgroundColor = '#000000';
+    } else if (isDarkMode) {
+      document.body.style.backgroundColor = '#111827';
     } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('studyflow_theme', 'light');
+      document.body.style.backgroundColor = '#f9fafb';
     }
-  }, [isDarkMode]);
-
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+  }, [settings.theme, isDarkMode]);
 
   // Auth Listener
   useEffect(() => {

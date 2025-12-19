@@ -62,8 +62,8 @@ function AchievementCard({ achievement, userProgress, onClaim }: AchievementCard
               }`}
             >
               {/* Badge de nível */}
-              <span className={`inline-block ${getLevelBadgeColor(level.level)} text-white text-xs font-bold px-2 py-0.5 rounded mb-1`}>
-                {getLevelRoman(level.level)}
+              <span className={`inline-block ${getLevelBadgeColor(level.level as 1 | 2 | 3)} text-white text-xs font-bold px-2 py-0.5 rounded mb-1`}>
+                {getLevelRoman(level.level as 1 | 2 | 3)}
               </span>
               
               {/* Ícone de status */}
@@ -189,15 +189,15 @@ export default function AchievementsPage({
                       <achievement.icon className={achievement.color} size={32} />
                     </div>
                     {/* Badge de nível */}
-                    <span className={`absolute -bottom-1 -right-1 ${getLevelBadgeColor(achievement.level)} text-white text-xs font-bold px-2 py-0.5 rounded`}>
-                      {getLevelRoman(achievement.level)}
+                    <span className={`absolute -bottom-1 -right-1 ${getLevelBadgeColor(achievement.level as 1 | 2 | 3)} text-white text-xs font-bold px-2 py-0.5 rounded`}>
+                      {getLevelRoman(achievement.level as 1 | 2 | 3)}
                     </span>
                   </div>
                   
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                      {achievement.name} - Nível {getLevelRoman(achievement.level)}
+                      {achievement.name} - Nível {getLevelRoman(achievement.level as 1 | 2 | 3)}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {achievement.description}

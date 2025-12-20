@@ -41,7 +41,14 @@ export interface DashboardStats {
   todayQuestions: number;
 }
 
-export type TabType = 'dashboard' | 'timer' | 'register' | 'cycle' | 'achievements' | 'elo' | 'more' | 'goals' | 'appearance' | 'stats';
+export interface UserStats {
+  total_minutes: number;
+  total_questions: number;
+  total_correct: number;
+  total_xp: number;
+}
+
+export type TabType = 'dashboard' | 'timer' | 'register' | 'cycle' | 'achievements' | 'elo' | 'more' | 'goals' | 'appearance' | 'stats' | 'history' | 'about' | 'tutorial' | 'settings' | 'profile';
 
 export type FeedbackType = 'bug' | 'suggestion' | 'compliment';
 

@@ -5,6 +5,8 @@ interface OnboardingTourProps {
   isDarkMode: boolean;
   onComplete?: () => void;
   onCloseSettings?: () => void;
+  tutorialCompleted?: boolean;
+  onMarkTutorialCompleted?: () => Promise<void>;
 }
 
 const TOUR_STYLES: Partial<Styles> = {
@@ -97,7 +99,7 @@ const TOUR_STYLES_DARK: Partial<Styles> = {
   },
 };
 
-export default function OnboardingTour({ isDarkMode, onComplete, onCloseSettings }: OnboardingTourProps) {
+export default function OnboardingTour({ isDarkMode, onComplete, onCloseSettings, tutorialCompleted = false, onMarkTutorialCompleted }: OnboardingTourProps) {
   const [runTour, setRunTour] = useState(false);
 
   // Gerar steps
@@ -246,7 +248,9 @@ export default function OnboardingTour({ isDarkMode, onComplete, onCloseSettings
   
   // Iniciar tour automaticamente
   useEffect(() => {
-    const hasCompletedTour = localStorage.getItem('studyflow_onboarding_completed') === 'true';
+    // Usar tutorial_completed do Supabase (mais confiável que localStorage)
+    // Se não estiver disponível, fallback para localStorage (compatibilidade)
+    const hasCompletedTour = tutorialCompleted || localStorage.getItem('studyflow_onboarding_completed') === 'true';
     
     if (!hasCompletedTour) {
       const startTour = () => {
@@ -290,7 +294,7 @@ export default function OnboardingTour({ isDarkMode, onComplete, onCloseSettings
     }
   }, []);
 
-  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+  const handleJoyrideCallback = useCallback(async (data: CallBackProps) => {
     const { status, action, type } = data;
 
     console.log('Joyride callback:', { status, action, type });
@@ -298,6 +302,17 @@ export default function OnboardingTour({ isDarkMode, onComplete, onCloseSettings
     // Se fechou ou completou
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       console.log('Tour finalizado');
+      
+      // Salvar no Supabase (prioridade)
+      if (onMarkTutorialCompleted) {
+        try {
+          await onMarkTutorialCompleted();
+        } catch (error) {
+          console.error('Erro ao salvar tutorial_completed no Supabase:', error);
+        }
+      }
+      
+      // Fallback para localStorage (compatibilidade)
       localStorage.setItem('studyflow_onboarding_completed', 'true');
       setRunTour(false);
       
@@ -309,14 +324,33 @@ export default function OnboardingTour({ isDarkMode, onComplete, onCloseSettings
     // Se fechou manualmente
     if (action === 'close') {
       console.log('Tour fechado');
+      
+      // Salvar no Supabase (prioridade)
+      if (onMarkTutorialCompleted) {
+        try {
+          await onMarkTutorialCompleted();
+        } catch (error) {
+          console.error('Erro ao salvar tutorial_completed no Supabase:', error);
+        }
+      }
+      
+      // Fallback para localStorage (compatibilidade)
       localStorage.setItem('studyflow_onboarding_completed', 'true');
       setRunTour(false);
     }
-  }, [onComplete]);
+  }, [onComplete, onMarkTutorialCompleted]);
 
   // Função para reiniciar o tour
-  const restartTour = useCallback(() => {
+  const restartTour = useCallback(async () => {
+    // Limpar localStorage (compatibilidade)
     localStorage.removeItem('studyflow_onboarding_completed');
+    
+    // Resetar no Supabase (se houver função)
+    if (onMarkTutorialCompleted) {
+      // Nota: Para resetar, precisaríamos de uma função separada
+      // Por enquanto, apenas limpa localStorage e inicia o tour
+      // O Supabase será atualizado quando o tour for completado novamente
+    }
     
     if (onCloseSettings) {
       onCloseSettings();
@@ -325,7 +359,7 @@ export default function OnboardingTour({ isDarkMode, onComplete, onCloseSettings
     setTimeout(() => {
       setRunTour(true);
     }, 300);
-  }, [onCloseSettings]);
+  }, [onCloseSettings, onMarkTutorialCompleted]);
 
   // Expor função de restart
   useEffect(() => {

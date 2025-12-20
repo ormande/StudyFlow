@@ -15,7 +15,11 @@ const EloPage = lazy(() => import('../pages/EloPage'));
 const GoalsPage = lazy(() => import('../pages/GoalsPage'));
 const StatsPage = lazy(() => import('../pages/StatsPage'));
 const AppearancePage = lazy(() => import('../pages/AppearancePage'));
-import SettingsModal from './SettingsModal';
+const HistoryPage = lazy(() => import('../pages/HistoryPage'));
+const AboutPage = lazy(() => import('../pages/AboutPage'));
+const TutorialPage = lazy(() => import('../pages/TutorialPage'));
+const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 import FeedbackModal from './FeedbackModal';
 import HistoryModal from './HistoryModal';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -25,32 +29,31 @@ import AlertModal from './AlertModal';
 import { useNotification } from '../hooks/useNotification';
 import { useToast } from '../contexts/ToastContext';
 import { AchievementsProvider, useAchievementsContext } from '../contexts/AchievementsContext';
-import { XPProvider } from '../contexts/XPContext';
+import { XPProvider, useXPContext } from '../contexts/XPContext';
 import OnboardingTour from './OnboardingTour';
+import FabTimer from './FabTimer';
+import EloUpgradeModal from './EloUpgradeModal';
 
 interface MainAppProps {
   session: any;
   isDarkMode: boolean;
-  onToggleTheme: () => void;
   onHardReset: () => void;
 }
 
 export default function MainApp({
   session,
   isDarkMode,
-  onToggleTheme,
   onHardReset,
 }: MainAppProps) {
   // DATA HOOK
   const {
-    subjects, logs, cycleStartDate, dailyGoal, showPerformance, loadingData,
+    subjects, logs, allLogDates, cycleStartDate, dailyGoal, showPerformance, tutorialCompleted, loadingData,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
-    addLog, deleteLog, editLog, updateSettings
+    addLog, deleteLog, editLog, updateSettings, markTutorialCompleted
   } = useSupabaseData(session);
 
   // UI STATE
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [showSettings, setShowSettings] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
@@ -73,9 +76,11 @@ export default function MainApp({
   const lastTimerSecondsRef = useRef<number>(0);
 
   // useMemo para calcular streak (evita recálculo desnecessário) - DEVE VIR ANTES DE useAchievements
+  // ✅ OTIMIZADO: Usa allLogDates (apenas date + timestamp) ao invés de logs completos
+  // Isso permite calcular streak corretamente mesmo com apenas 100 logs carregados na UI
   const streak = useMemo(() => {
-    if (logs.length === 0) return 0;
-    const studyDates = new Set(logs.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR')));
+    if (allLogDates.length === 0) return 0;
+    const studyDates = new Set(allLogDates.map(log => new Date(log.timestamp).toLocaleDateString('pt-BR')));
     const today = new Date();
     const todayStr = today.toLocaleDateString('pt-BR');
     const yesterday = new Date();
@@ -90,7 +95,7 @@ export default function MainApp({
       currentCheckDate.setDate(currentCheckDate.getDate() - 1);
     }
     return streak;
-  }, [logs]);
+  }, [allLogDates]);
 
   // O hook será usado via contexto no componente interno
 
@@ -188,14 +193,10 @@ export default function MainApp({
     setShowRestartSuccess(true);
   }, [updateSettings]);
 
-  const handleSettingsLogoutClick = useCallback(() => {
-    setShowLogoutConfirm(true); 
-  }, []);
 
   const confirmLogout = useCallback(() => {
     onHardReset();
     setShowLogoutConfirm(false);
-    setShowSettings(false);
   }, [onHardReset]);
 
   const handleRestartCycle = useCallback(() => {
@@ -231,17 +232,10 @@ export default function MainApp({
     editLog(id, updates);
   }, [editLog]);
 
-  const handleSetDailyGoal = useCallback((val: number) => {
-    updateSettings({ dailyGoal: val });
-  }, [updateSettings]);
 
   const handleTogglePerformance = useCallback(() => {
     updateSettings({ showPerformance: !showPerformance });
   }, [showPerformance, updateSettings]);
-
-  const handleCloseSettings = useCallback(() => {
-    setShowSettings(false);
-  }, []);
 
   const handleCancelDeleteLog = useCallback(() => {
     setDeleteLogId(null);
@@ -273,10 +267,10 @@ export default function MainApp({
   }, []);
 
   const handleOpenHistory = useCallback(() => {
-    setShowHistoryModal(true);
+    setActiveTab('history');
   }, []);
 
-  const handleOpenTutorial = useCallback(() => {
+  const handleStartTour = useCallback(() => {
     // Navegar para dashboard
     setActiveTab('dashboard');
     // Reiniciar o tutorial
@@ -289,6 +283,10 @@ export default function MainApp({
       setTimeout(() => window.location.reload(), 1000);
     }
   }, [addToast]);
+
+  const handleNavigateToTutorial = useCallback(() => {
+    setActiveTab('tutorial');
+  }, []);
 
   const handleOpenSecurity = useCallback(() => {
     setShowChangePasswordModal(true);
@@ -309,12 +307,20 @@ export default function MainApp({
     setActiveTab('goals');
   }, []);
 
+  const handleNavigateToAbout = useCallback(() => {
+    setActiveTab('about');
+  }, []);
+
   const handleOpenSettings = useCallback(() => {
-    setShowSettings(true);
+    setActiveTab('settings');
   }, []);
 
   const handleLogout = useCallback(() => {
     setShowLogoutConfirm(true);
+  }, []);
+
+  const handleNavigateToProfile = useCallback(() => {
+    setActiveTab('profile');
   }, []);
 
   return (
@@ -334,19 +340,17 @@ export default function MainApp({
         <MainAppContent
         session={session}
         isDarkMode={isDarkMode}
-        onToggleTheme={onToggleTheme}
         onHardReset={onHardReset}
         subjects={subjects}
         logs={logs}
         cycleStartDate={cycleStartDate}
         dailyGoal={dailyGoal}
         showPerformance={showPerformance}
+        tutorialCompleted={tutorialCompleted}
         loadingData={loadingData}
         streak={streak}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        showSettings={showSettings}
-        setShowSettings={setShowSettings}
         showFeedbackModal={showFeedbackModal}
         setShowFeedbackModal={setShowFeedbackModal}
         showHistoryModal={showHistoryModal}
@@ -379,7 +383,6 @@ export default function MainApp({
         handleDeleteLog={handleDeleteLog}
         confirmDeleteLog={confirmDeleteLog}
         confirmRestartCycle={confirmRestartCycle}
-        handleSettingsLogoutClick={handleSettingsLogoutClick}
         confirmLogout={confirmLogout}
         handleRestartCycle={handleRestartCycle}
         handleTimeClear={handleTimeClear}
@@ -389,9 +392,7 @@ export default function MainApp({
         handleReorderSubjects={handleReorderSubjects}
         handleAddLog={handleAddLog}
         handleEditLog={handleEditLog}
-        handleSetDailyGoal={handleSetDailyGoal}
         handleTogglePerformance={handleTogglePerformance}
-        handleCloseSettings={handleCloseSettings}
         handleCancelDeleteLog={handleCancelDeleteLog}
         handleCancelRestartCycle={handleCancelRestartCycle}
         handleCloseRestartSuccess={handleCloseRestartSuccess}
@@ -400,13 +401,16 @@ export default function MainApp({
         handleNavigateToElo={handleNavigateToElo}
         handleNavigateToMore={handleNavigateToMore}
         handleOpenHistory={handleOpenHistory}
-        handleOpenTutorial={handleOpenTutorial}
+        handleStartTour={handleStartTour}
+        handleNavigateToTutorial={handleNavigateToTutorial}
         handleOpenSecurity={handleOpenSecurity}
         handleNavigateToStats={handleNavigateToStats}
         handleNavigateToAppearance={handleNavigateToAppearance}
         handleNavigateToGoals={handleNavigateToGoals}
+        handleNavigateToAbout={handleNavigateToAbout}
         handleOpenSettings={handleOpenSettings}
         handleLogout={handleLogout}
+        handleNavigateToProfile={handleNavigateToProfile}
         addSubject={addSubject}
         deleteSubject={deleteSubject}
         updateSubject={updateSubject}
@@ -415,6 +419,7 @@ export default function MainApp({
         deleteLog={deleteLog}
         editLog={editLog}
         updateSettings={updateSettings}
+        markTutorialCompleted={markTutorialCompleted}
         sendNotification={sendNotification}
         addToast={addToast}
       />
@@ -427,19 +432,17 @@ export default function MainApp({
 function MainAppContent({
   session,
   isDarkMode,
-  onToggleTheme,
   onHardReset: _onHardReset,
   subjects,
   logs,
   cycleStartDate,
   dailyGoal,
   showPerformance,
+  tutorialCompleted,
   loadingData,
   streak,
   activeTab,
   setActiveTab,
-  showSettings,
-  setShowSettings,
   showFeedbackModal,
   setShowFeedbackModal,
   showHistoryModal,
@@ -472,7 +475,6 @@ function MainAppContent({
   handleDeleteLog,
   confirmDeleteLog,
   confirmRestartCycle,
-  handleSettingsLogoutClick,
   confirmLogout,
   handleRestartCycle,
   handleTimeClear,
@@ -482,9 +484,7 @@ function MainAppContent({
   handleReorderSubjects,
   handleAddLog,
   handleEditLog,
-  handleSetDailyGoal,
   handleTogglePerformance,
-  handleCloseSettings,
   handleCancelDeleteLog,
   handleCancelRestartCycle,
   handleCloseRestartSuccess,
@@ -493,13 +493,16 @@ function MainAppContent({
   handleNavigateToElo,
   handleNavigateToMore,
   handleOpenHistory,
-  handleOpenTutorial,
+  handleStartTour,
+  handleNavigateToTutorial,
   handleOpenSecurity,
         handleNavigateToStats,
   handleNavigateToAppearance,
   handleNavigateToGoals,
+  handleNavigateToAbout,
   handleOpenSettings,
   handleLogout,
+  handleNavigateToProfile: _handleNavigateToProfile,
   addSubject: _addSubject,
   deleteSubject: _deleteSubject,
   updateSubject: _updateSubject,
@@ -508,16 +511,18 @@ function MainAppContent({
   deleteLog: _deleteLog,
   editLog: _editLog,
   updateSettings: _updateSettings,
+  markTutorialCompleted: _markTutorialCompleted,
   sendNotification: _sendNotification,
   addToast: _addToast
 }: any) {
   const { pendingCount } = useAchievementsContext();
+  const xpContext = useXPContext();
 
   // Função renderPage dentro do MainAppContent
   const renderPage = useCallback(() => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} dailyGoal={dailyGoal} showPerformance={showPerformance} streak={streak} isLoading={loadingData} />;
+        return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} dailyGoal={dailyGoal} showPerformance={showPerformance} streak={streak} isLoading={loadingData} onNavigateToCycle={() => setActiveTab('cycle')} />;
       case 'timer':
         return (
           <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
@@ -565,10 +570,12 @@ function MainAppContent({
             onNavigateToAppearance={handleNavigateToAppearance}
             onOpenHistory={handleOpenHistory}
             onOpenFeedback={() => setShowFeedbackModal(true)}
-            onOpenTutorial={handleOpenTutorial}
+            onOpenTutorial={handleNavigateToTutorial}
             onOpenSecurity={handleOpenSecurity}
             onOpenSettings={handleOpenSettings}
+            onNavigateToAbout={handleNavigateToAbout}
             onLogout={handleLogout}
+            onNavigateToProfile={_handleNavigateToProfile}
           />
         );
       case 'goals':
@@ -592,6 +599,18 @@ function MainAppContent({
             />
           </Suspense>
         );
+      case 'history':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <HistoryPage 
+              logs={logs} 
+              subjects={subjects} 
+              onDeleteLog={handleDeleteLog} 
+              onEditLog={handleEditLog}
+              onNavigateBack={() => setActiveTab('more')}
+            />
+          </Suspense>
+        );
       case 'appearance':
         return (
           <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
@@ -600,29 +619,52 @@ function MainAppContent({
             />
           </Suspense>
         );
+      case 'about':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <AboutPage
+              onNavigateBack={() => setActiveTab('more')}
+            />
+          </Suspense>
+        );
+      case 'tutorial':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <TutorialPage 
+              onStartTour={handleStartTour} 
+              onNavigateBack={() => setActiveTab('more')}
+            />
+          </Suspense>
+        );
+      case 'settings':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <SettingsPage
+              onNavigateBack={() => setActiveTab('more')}
+              showPerformance={showPerformance}
+              onTogglePerformance={handleTogglePerformance}
+              subjects={subjects}
+              logs={logs}
+              userEmail={session?.user?.email}
+            />
+          </Suspense>
+        );
+      case 'profile':
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
+            <ProfilePage
+              session={session}
+              onNavigateBack={() => setActiveTab('more')}
+            />
+          </Suspense>
+        );
       default:
         return null;
     }
-  }, [activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLog, dailyGoal, showPerformance, streak, loadingData, handleTimerStop, timerSeconds, setTimerSeconds, isTimerRunning, setIsTimerRunning, timerMode, setTimerMode, handleAddLog, prefilledTime, handleTimeClear, handleAddSubject, handleDeleteSubject, handleUpdateSubject, handleRestartCycle, handleReorderSubjects, session, handleNavigateToAchievements, handleNavigateToElo, handleNavigateToStats, handleNavigateToGoals, handleNavigateToAppearance, handleOpenHistory, setShowFeedbackModal, handleOpenTutorial, handleOpenSecurity, handleOpenSettings, handleLogout]);
+  }, [activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLog, dailyGoal, showPerformance, streak, loadingData, handleTimerStop, timerSeconds, setTimerSeconds, isTimerRunning, setIsTimerRunning, timerMode, setTimerMode, handleAddLog, prefilledTime, handleTimeClear, handleAddSubject, handleDeleteSubject, handleUpdateSubject, handleRestartCycle, handleReorderSubjects, session, handleNavigateToAchievements, handleNavigateToElo, handleNavigateToStats, handleNavigateToGoals, handleNavigateToAppearance, handleNavigateToAbout, handleOpenHistory, setShowFeedbackModal, handleStartTour, handleNavigateToTutorial, handleOpenSecurity, handleOpenSettings, handleLogout, _handleNavigateToProfile, setActiveTab, handleTogglePerformance]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative transition-colors duration-300">
-      <SettingsModal 
-        isOpen={showSettings} 
-        onClose={handleCloseSettings} 
-        onHardReset={handleSettingsLogoutClick}
-        isDarkMode={isDarkMode}
-        onToggleTheme={onToggleTheme}
-        dailyGoal={dailyGoal}
-        onSetDailyGoal={handleSetDailyGoal}
-        showPerformance={showPerformance}
-        onTogglePerformance={handleTogglePerformance}
-        subjects={subjects}
-        logs={logs}
-        userEmail={session?.user?.email}
-        userId={session?.user?.id}
-        onNavigateToGoals={handleNavigateToGoals}
-      />
 
       <ConfirmModal 
         isOpen={deleteLogId !== null} 
@@ -667,8 +709,9 @@ function MainAppContent({
       
       {/* Onboarding Tour */}
       <OnboardingTour 
-        isDarkMode={isDarkMode} 
-        onCloseSettings={() => setShowSettings(false)}
+        isDarkMode={isDarkMode}
+        tutorialCompleted={tutorialCompleted}
+        onMarkTutorialCompleted={_markTutorialCompleted}
       />
 
       {/* Feedback Modal */}
@@ -703,13 +746,15 @@ function MainAppContent({
         pendingAchievementsCount={pendingCount}
         onOpenFeedback={() => setShowFeedbackModal(true)}
         onOpenHistory={handleOpenHistory}
-        onOpenTutorial={handleOpenTutorial}
+        onOpenTutorial={handleNavigateToTutorial}
         onOpenSecurity={handleOpenSecurity}
         onNavigateToStats={handleNavigateToStats}
         onNavigateToAppearance={handleNavigateToAppearance}
         onNavigateToGoals={handleNavigateToGoals}
+        onNavigateToAbout={handleNavigateToAbout}
         onOpenSettings={handleOpenSettings}
         onLogout={handleLogout}
+        onNavigateToProfile={_handleNavigateToProfile}
       />
 
       {/* Conteúdo Principal com Ajuste de Margem para Desktop */}
@@ -725,6 +770,23 @@ function MainAppContent({
       <div className="md:hidden">
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} pendingAchievementsCount={pendingCount} />
       </div>
+
+      {/* FAB Timer - Apenas Desktop */}
+      {activeTab !== 'timer' && (
+        <FabTimer 
+          onClick={() => setActiveTab('timer')} 
+          isRunning={isTimerRunning} 
+        />
+      )}
+
+      {/* Modal de Upgrade de Elo */}
+      <EloUpgradeModal
+        isOpen={xpContext.showUpgradeModal}
+        onClose={xpContext.closeUpgradeModal}
+        oldElo={xpContext.oldLevelData}
+        newElo={xpContext.newLevelData}
+        totalXP={xpContext.totalXP}
+      />
     </div>
   );
 }

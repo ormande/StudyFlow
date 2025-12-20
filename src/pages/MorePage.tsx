@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { 
   Trophy, Star, BarChart3, History, Palette, Target, MessageSquare, 
-  HelpCircle, Lock, LogOut, ChevronRight, Settings 
+  HelpCircle, Lock, LogOut, ChevronRight, Settings, Info, User
 } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
@@ -17,7 +17,9 @@ interface MorePageProps {
   onOpenTutorial: () => void;
   onOpenSecurity: () => void;
   onOpenSettings: () => void;
+  onNavigateToAbout?: () => void;
   onLogout: () => void;
+  onNavigateToProfile?: () => void;
 }
 
 export default function MorePage({
@@ -32,7 +34,9 @@ export default function MorePage({
   onOpenTutorial,
   onOpenSecurity,
   onOpenSettings,
+  onNavigateToAbout,
   onLogout,
+  onNavigateToProfile,
 }: MorePageProps) {
   // #region agent log
   fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:36',message:'MorePage props received',data:{hasOnNavigateToStats:!!onNavigateToStats,type:typeof onNavigateToStats,hasOnNavigateToGoals:!!onNavigateToGoals,hasOnNavigateToAchievements:!!onNavigateToAchievements},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
@@ -112,12 +116,35 @@ export default function MorePage({
           </div>
         </div>
         <button
-          onClick={handleEditProfile}
+          onClick={onNavigateToProfile ? onNavigateToProfile : handleEditProfile}
           className="mt-4 w-full text-center text-emerald-600 dark:text-emerald-400 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
         >
           Editar Perfil →
         </button>
       </div>
+
+      {/* Seção: Perfil */}
+      {onNavigateToProfile && (
+        <div className="mb-6">
+          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-2">
+            Conta
+          </h3>
+          <button
+            type="button"
+            onClick={onNavigateToProfile}
+            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95 relative z-10"
+          >
+            <div className="flex items-center gap-3">
+              <User size={20} className="text-emerald-600 dark:text-emerald-400" />
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Meu Perfil</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Edite suas informações pessoais</span>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-gray-400" />
+          </button>
+        </div>
+      )}
 
       {/* Seção: Gamificação */}
       <div className="mb-6">
@@ -132,7 +159,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <Trophy size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Conquistas</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Conquistas</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Badges e medalhas desbloqueadas</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -144,7 +174,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <Star size={20} className="text-amber-500" />
-              <span className="font-semibold text-gray-900 dark:text-white">Elo</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Elo</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Sistema de ranking e progressão</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -165,7 +198,7 @@ export default function MorePage({
               <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
               <div className="flex flex-col items-start">
                 <span className="font-semibold text-gray-900 dark:text-white">Estatísticas</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Gráficos e análises detalhadas</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Gráficos e análises detalhadas</span>
               </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
@@ -177,7 +210,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <History size={20} className="text-gray-600 dark:text-gray-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Histórico</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Histórico</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Todos os seus registros de estudo</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -196,7 +232,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <Settings size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Configurações</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Configurações</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Preferências e opções do app</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -209,7 +248,7 @@ export default function MorePage({
               <Palette size={20} className="text-purple-600 dark:text-purple-400" />
               <div className="flex flex-col items-start">
                 <span className="font-semibold text-gray-900 dark:text-white">Aparência</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Tema, fonte e animações</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Tema, fonte e animações</span>
               </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
@@ -223,7 +262,7 @@ export default function MorePage({
               <Target size={20} className="text-orange-600 dark:text-orange-400" />
               <div className="flex flex-col items-start">
                 <span className="font-semibold text-gray-900 dark:text-white">Metas</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Configure suas metas diárias e semanais</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Configure suas metas diárias e semanais</span>
               </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
@@ -235,7 +274,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <MessageSquare size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Dar Feedback</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Dar Feedback</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Envie sugestões e reporte bugs</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -246,7 +288,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <HelpCircle size={20} className="text-blue-600 dark:text-blue-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Tutorial</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Tutorial</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Guia interativo do app</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -257,7 +302,10 @@ export default function MorePage({
           >
             <div className="flex items-center gap-3">
               <Lock size={20} className="text-gray-600 dark:text-gray-400" />
-              <span className="font-semibold text-gray-900 dark:text-white">Segurança</span>
+              <div className="flex flex-col items-start">
+                <span className="font-semibold text-gray-900 dark:text-white">Segurança</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Alterar senha e segurança</span>
+              </div>
             </div>
             <ChevronRight size={16} className="text-gray-400" />
           </button>
@@ -267,7 +315,7 @@ export default function MorePage({
       {/* Botão Sair */}
       <button
         onClick={onLogout}
-        className="w-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl p-4 flex items-center justify-center gap-2 font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95"
+        className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-xl p-4 flex items-center justify-center gap-2 font-semibold transition-all active:scale-95 shadow-sm"
       >
         <LogOut size={20} />
         Sair

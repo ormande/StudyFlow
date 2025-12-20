@@ -316,9 +316,7 @@ export default function AppearancePage({ onNavigateBack }: AppearancePageProps) 
               {/* Header do preview */}
               <div className="flex items-center justify-between pb-3 border-b-2 mb-4" style={{ borderColor: previewTheme === 'high-contrast' ? 'rgba(255,255,255,0.2)' : (previewTheme === 'dark' || (previewTheme === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)) ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-                    <span className="text-white font-bold" style={{ fontSize: '0.875em' }}>SF</span>
-                  </div>
+                  <img src="/icon-192.png" alt="SF" className="w-6 h-6 rounded-lg" />
                   <span className="font-bold" style={{ fontSize: '1.125em' }}>StudyFlow</span>
                 </div>
               </div>

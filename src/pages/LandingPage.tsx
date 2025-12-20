@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  BookOpen, 
   Target, 
   Trophy, 
   BarChart3, 
@@ -68,9 +67,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               transition={{ duration: 0.5 }}
               className="flex items-center gap-3"
             >
-              <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
-                <BookOpen size={20} />
-              </div>
+              <img src="/icon-192.png" alt="StudyFlow" className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
                 StudyFlow
               </span>
@@ -180,9 +177,9 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                   ease: "easeInOut",
                   delay: 0.5
                 }}
-                className="relative w-64 h-64 lg:w-80 lg:h-80 bg-emerald-500 rounded-3xl flex items-center justify-center shadow-2xl"
+                className="relative w-64 h-64 lg:w-80 lg:h-80 flex items-center justify-center"
               >
-                <BookOpen size={120} className="text-white" />
+                <img src="/icon-512.png" alt="StudyFlow App" className="w-48 h-48 lg:w-64 lg:h-64 rounded-xl animate-pulse shadow-xl" />
               </motion.div>
             </div>
           </motion.div>
@@ -333,9 +330,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white">
-                <BookOpen size={20} />
-              </div>
+              <img src="/icon-192.png" alt="StudyFlow" className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-black text-white">StudyFlow</span>
             </div>
             

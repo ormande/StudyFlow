@@ -1,6 +1,6 @@
 import { 
   Home, Clock, Plus, Target, Trophy, Star, BarChart2, History, 
-  Palette, Target as TargetIcon, MessageSquare, HelpCircle, Lock, LogOut, BookOpen, Settings 
+  Palette, Target as TargetIcon, MessageSquare, HelpCircle, Lock, LogOut, Settings, Info 
 } from 'lucide-react';
 import { TabType } from '../types';
 import { motion } from 'framer-motion';
@@ -17,8 +17,10 @@ interface SidebarProps {
   onNavigateToStats?: () => void;
   onNavigateToAppearance?: () => void;
   onNavigateToGoals?: () => void;
+  onNavigateToAbout?: () => void;
   onOpenSettings?: () => void;
   onLogout?: () => void;
+  onNavigateToProfile?: () => void;
 }
 
 export default function Sidebar({ 
@@ -33,19 +35,42 @@ export default function Sidebar({
   onNavigateToStats,
   onNavigateToAppearance,
   onNavigateToGoals,
+  onNavigateToAbout,
   onOpenSettings,
   onLogout,
+  onNavigateToProfile,
 }: SidebarProps) {
   const user = {
     name: session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'Usuário',
     email: session?.user?.email || '',
   };
 
-  const mainTabs = [
+  // Itens organizados em grupos lógicos sem títulos
+  const menuItems = [
+    // GRUPO 1: PRINCIPAL
     { id: 'dashboard' as TabType, icon: Home, label: 'Dashboard' },
+    { id: 'cycle' as TabType, icon: Target, label: 'Ciclo' },
     { id: 'timer' as TabType, icon: Clock, label: 'Timer' },
     { id: 'register' as TabType, icon: Plus, label: 'Registrar' },
-    { id: 'cycle' as TabType, icon: Target, label: 'Ciclo' },
+    
+    // GRUPO 2: DADOS (mt-6)
+    { id: 'stats' as TabType, icon: BarChart2, label: 'Estatísticas', onClick: onNavigateToStats, mt: true },
+    { id: 'history' as TabType, icon: History, label: 'Histórico', onClick: onOpenHistory },
+    { id: 'goals' as TabType, icon: TargetIcon, label: 'Metas', onClick: onNavigateToGoals },
+    
+    // GRUPO 3: GAMIFICAÇÃO (mt-6)
+    { id: 'achievements' as TabType, icon: Trophy, label: 'Conquistas', showBadge: true, badgeCount: (pendingAchievementsCount && pendingAchievementsCount > 0) ? pendingAchievementsCount : undefined, mt: true },
+    { id: 'elo' as TabType, icon: Star, label: 'Elo' },
+    
+    // GRUPO 4: SISTEMA (mt-6)
+    { id: 'appearance' as TabType, icon: Palette, label: 'Aparência', onClick: onNavigateToAppearance, mt: true },
+    { id: 'security' as TabType, icon: Lock, label: 'Segurança', onClick: onOpenSecurity },
+    { id: 'settings' as TabType, icon: Settings, label: 'Configurações', onClick: onOpenSettings },
+    
+    // GRUPO 5: RODAPÉ (mt-6)
+    { id: 'tutorial' as TabType, icon: HelpCircle, label: 'Tutorial', onClick: onOpenTutorial, mt: true },
+    { id: 'feedback' as TabType, icon: MessageSquare, label: 'Feedback', onClick: onOpenFeedback },
+    { id: 'about' as TabType, icon: Info, label: 'Sobre', onClick: onNavigateToAbout },
   ];
 
   const renderNavButton = (
@@ -99,9 +124,7 @@ export default function Sidebar({
       {/* Header */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
-            <BookOpen size={24} />
-          </div>
+          <img src="/icon-192.png" alt="Logo" className="w-8 h-8 rounded-lg" />
           <div>
             <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">StudyFlow</h1>
             <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
@@ -113,40 +136,51 @@ export default function Sidebar({
 
       {/* Navegação Principal */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-2" data-tour="navigation">
-        {mainTabs.map((tab) => renderNavButton(tab.id, tab.icon, tab.label))}
-
-        {/* Separador */}
-        <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
-        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2 text-base">Gamificação</p>
-        {renderNavButton('achievements', Trophy, 'Conquistas', undefined, true, (pendingAchievementsCount && pendingAchievementsCount > 0) ? pendingAchievementsCount : undefined)}
-        {renderNavButton('elo', Star, 'Elo', undefined)}
-
-        <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
-        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2 text-base">Dados</p>
-        {renderNavButton('stats', BarChart2, 'Estatísticas', onNavigateToStats)}
-        {renderNavButton('history', History, 'Histórico', onOpenHistory)}
-
-        <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
-        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase px-2 mb-2 text-base">Configurações</p>
-        {renderNavButton('settings', Settings, 'Configurações', onOpenSettings)}
-        {renderNavButton('appearance', Palette, 'Aparência', onNavigateToAppearance)}
-        {renderNavButton('goals', TargetIcon, 'Metas', onNavigateToGoals)}
-        {renderNavButton('feedback', MessageSquare, 'Dar Feedback', onOpenFeedback)}
-        {renderNavButton('tutorial', HelpCircle, 'Tutorial', onOpenTutorial)}
-        {renderNavButton('security', Lock, 'Segurança', onOpenSecurity)}
+        {menuItems.map((item) => {
+          const button = renderNavButton(
+            item.id,
+            item.icon,
+            item.label,
+            item.onClick,
+            item.showBadge,
+            item.badgeCount
+          );
+          
+          // Adicionar espaçamento mt-6 para itens que marcam início de grupo
+          return (
+            <div key={item.id} className={item.mt ? 'mt-6' : ''}>
+              {button}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Footer - Perfil + Sair */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold flex-shrink-0">
-            {user.name.charAt(0).toUpperCase()}
+        {onNavigateToProfile ? (
+          <button
+            onClick={onNavigateToProfile}
+            className="w-full flex items-center gap-3 mb-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left"
+          >
+            <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold flex-shrink-0">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+            </div>
+          </button>
+        ) : (
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold flex-shrink-0">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-          </div>
-        </div>
+        )}
         {onLogout && (
           <button
             onClick={onLogout}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Subject, StudyLog } from '../types';
+import { Subject, StudyLog, UserStats } from '../types';
 import { useToast } from '../contexts/ToastContext';
 
 // ✅ FUNÇÃO DE VALIDAÇÃO - Garante que números nunca sejam negativos
@@ -13,9 +13,12 @@ export function useSupabaseData(session: any) {
   const { addToast } = useToast();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [logs, setLogs] = useState<StudyLog[]>([]);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [allLogDates, setAllLogDates] = useState<Array<{ date: string; timestamp: number }>>([]);
   const [cycleStartDate, setCycleStartDate] = useState<number>(Date.now());
   const [dailyGoal, setDailyGoal] = useState<number>(0);
   const [showPerformance, setShowPerformance] = useState<boolean>(true);
+  const [tutorialCompleted, setTutorialCompleted] = useState<boolean>(false);
   const [loadingData, setLoadingData] = useState(false);
 
   // 1. CARREGAR DADOS INICIAIS
@@ -43,11 +46,46 @@ export function useSupabaseData(session: any) {
         }));
         setSubjects(mappedSubjects);
 
-        // --- CARREGAR LOGS ---
+        // --- CARREGAR ESTATÍSTICAS AGREGADAS (Server-Side Aggregation) ---
+        // Usa RPC para calcular totais no servidor, evitando transferir todos os logs
+        const { data: statsData, error: statsError } = await supabase.rpc('get_user_stats', {
+          p_user_id: session.user.id
+        });
+
+        if (statsError) {
+          console.error('Erro ao carregar estatísticas:', statsError);
+          addToast('Erro ao carregar estatísticas. Detalhe: ' + statsError.message, 'error');
+        } else if (statsData) {
+          setStats(statsData as UserStats);
+        }
+
+        // --- CARREGAR DATAS PARA CÁLCULO DE STREAK (Fetch Leve) ---
+        // Busca apenas date e timestamp de TODOS os logs para calcular streak corretamente
+        // Isso é muito mais leve que buscar todos os campos
+        const { data: datesData, error: datesError } = await supabase
+          .from('study_logs')
+          .select('date, timestamp')
+          .order('timestamp', { ascending: true });
+
+        if (datesError) {
+          console.error('Erro ao carregar datas para streak:', datesError);
+          addToast('Erro ao carregar dados. Detalhe: ' + datesError.message, 'error');
+        } else if (datesData) {
+          // Armazena todas as datas para cálculo de streak
+          setAllLogDates(datesData.map((d: any) => ({
+            date: d.date,
+            timestamp: d.timestamp
+          })));
+        }
+
+        // --- CARREGAR LOGS COMPLETOS (Limitado aos últimos 100) ---
+        // Busca apenas os últimos 100 registros para a lista de atividades
+        // Isso garante que a UI não trave mesmo com muitos registros
         const { data: logData, error: logError } = await supabase
           .from('study_logs')
           .select('*')
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: false })
+          .limit(100);
 
         if (logError) {
           console.error('Erro logs:', logError);
@@ -85,14 +123,18 @@ export function useSupabaseData(session: any) {
           setCycleStartDate(settingsData.cycle_start_date || Date.now());
           setDailyGoal(sanitizeNumber(settingsData.daily_goal));
           setShowPerformance(settingsData.show_performance ?? true);
+          setTutorialCompleted(settingsData.tutorial_completed ?? false);
         } else {
-          // Se não existir, cria agora
-          const { error: insertError } = await supabase.from('user_settings').insert([{ 
+          // Se não existir, cria agora usando upsert para evitar erro 409
+          const { error: insertError } = await supabase.from('user_settings').upsert([{ 
             user_id: session.user.id,
             cycle_start_date: Date.now(),
             daily_goal: 0,
-            show_performance: true
-          }]);
+            show_performance: true,
+            tutorial_completed: false
+          }], {
+            onConflict: 'user_id'
+          });
           if (insertError) {
             console.error('Erro ao criar configurações:', insertError);
             addToast('Erro ao criar configurações. Detalhe: ' + insertError.message, 'error');
@@ -267,7 +309,15 @@ export function useSupabaseData(session: any) {
         wrong: sanitizeNumber(data.wrong),
         blank: sanitizeNumber(data.blank),
       };
-      setLogs([...logs, newLocalLog]);
+      setLogs([newLocalLog, ...logs].slice(0, 100)); // Mantém apenas os últimos 100
+
+      // Atualiza estatísticas após adicionar log
+      const { data: updatedStats } = await supabase.rpc('get_user_stats', {
+        p_user_id: session.user.id
+      });
+      if (updatedStats) {
+        setStats(updatedStats as UserStats);
+      }
     } catch (error: any) {
       console.error('Erro ao salvar log:', error);
       addToast('Erro ao registrar estudo. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
@@ -275,10 +325,19 @@ export function useSupabaseData(session: any) {
   };
 
   const deleteLog = async (id: string) => {
+    if (!session?.user) return;
     try {
       const { error } = await supabase.from('study_logs').delete().eq('id', id);
       if (error) throw error;
       setLogs(logs.filter(l => l.id !== id));
+
+      // Atualiza estatísticas após deletar log
+      const { data: updatedStats } = await supabase.rpc('get_user_stats', {
+        p_user_id: session.user.id
+      });
+      if (updatedStats) {
+        setStats(updatedStats as UserStats);
+      }
     } catch (error: any) {
       console.error(error);
       addToast('Erro ao excluir registro de estudo. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
@@ -286,24 +345,33 @@ export function useSupabaseData(session: any) {
   };
 
   const editLog = async (id: string, updates: Partial<StudyLog>) => {
-     try {
-       // ✅ VALIDAÇÃO: Sanitiza campos numéricos na edição
-       const sanitizedUpdates: any = { ...updates };
-       if (updates.hours !== undefined) sanitizedUpdates.hours = sanitizeNumber(updates.hours);
-       if (updates.minutes !== undefined) sanitizedUpdates.minutes = sanitizeNumber(updates.minutes);
-       if (updates.seconds !== undefined) sanitizedUpdates.seconds = sanitizeNumber(updates.seconds);
-       if (updates.pages !== undefined) sanitizedUpdates.pages = sanitizeNumber(updates.pages);
-       if (updates.correct !== undefined) sanitizedUpdates.correct = sanitizeNumber(updates.correct);
-       if (updates.wrong !== undefined) sanitizedUpdates.wrong = sanitizeNumber(updates.wrong);
-       if (updates.blank !== undefined) sanitizedUpdates.blank = sanitizeNumber(updates.blank);
+    if (!session?.user) return;
+    try {
+      // ✅ VALIDAÇÃO: Sanitiza campos numéricos na edição
+      const sanitizedUpdates: any = { ...updates };
+      if (updates.hours !== undefined) sanitizedUpdates.hours = sanitizeNumber(updates.hours);
+      if (updates.minutes !== undefined) sanitizedUpdates.minutes = sanitizeNumber(updates.minutes);
+      if (updates.seconds !== undefined) sanitizedUpdates.seconds = sanitizeNumber(updates.seconds);
+      if (updates.pages !== undefined) sanitizedUpdates.pages = sanitizeNumber(updates.pages);
+      if (updates.correct !== undefined) sanitizedUpdates.correct = sanitizeNumber(updates.correct);
+      if (updates.wrong !== undefined) sanitizedUpdates.wrong = sanitizeNumber(updates.wrong);
+      if (updates.blank !== undefined) sanitizedUpdates.blank = sanitizeNumber(updates.blank);
 
-       const { error } = await supabase.from('study_logs').update(sanitizedUpdates).eq('id', id);
-       if (error) throw error;
-       setLogs(logs.map(l => l.id === id ? { ...l, ...sanitizedUpdates } : l));
-     } catch(error: any) {
-       console.error(error);
-       addToast('Erro ao editar registro de estudo. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
-     }
+      const { error } = await supabase.from('study_logs').update(sanitizedUpdates).eq('id', id);
+      if (error) throw error;
+      setLogs(logs.map(l => l.id === id ? { ...l, ...sanitizedUpdates } : l));
+
+      // Atualiza estatísticas após editar log
+      const { data: updatedStats } = await supabase.rpc('get_user_stats', {
+        p_user_id: session.user.id
+      });
+      if (updatedStats) {
+        setStats(updatedStats as UserStats);
+      }
+    } catch(error: any) {
+      console.error(error);
+      addToast('Erro ao editar registro de estudo. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+    }
   }
 
   const updateSettings = async (updates: any) => {
@@ -313,6 +381,7 @@ export function useSupabaseData(session: any) {
       if (updates.cycleStartDate !== undefined) dbUpdates.cycle_start_date = updates.cycleStartDate;
       if (updates.dailyGoal !== undefined) dbUpdates.daily_goal = sanitizeNumber(updates.dailyGoal);
       if (updates.showPerformance !== undefined) dbUpdates.show_performance = updates.showPerformance;
+      if (updates.tutorialCompleted !== undefined) dbUpdates.tutorial_completed = updates.tutorialCompleted;
 
       const { error } = await supabase.from('user_settings').update(dbUpdates).eq('user_id', session.user.id);
       if (error) throw error;
@@ -320,15 +389,21 @@ export function useSupabaseData(session: any) {
       if (updates.cycleStartDate !== undefined) setCycleStartDate(updates.cycleStartDate);
       if (updates.dailyGoal !== undefined) setDailyGoal(sanitizeNumber(updates.dailyGoal));
       if (updates.showPerformance !== undefined) setShowPerformance(updates.showPerformance);
+      if (updates.tutorialCompleted !== undefined) setTutorialCompleted(updates.tutorialCompleted);
     } catch (error: any) {
       console.error(error);
       addToast('Erro ao atualizar configurações. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
     }
   };
 
+  // Função específica para marcar tutorial como completo
+  const markTutorialCompleted = async () => {
+    await updateSettings({ tutorialCompleted: true });
+  };
+
   return {
-    subjects, logs, cycleStartDate, dailyGoal, showPerformance, loadingData,
+    subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, tutorialCompleted, loadingData,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
-    addLog, deleteLog, editLog, updateSettings
+    addLog, deleteLog, editLog, updateSettings, markTutorialCompleted
   };
 }

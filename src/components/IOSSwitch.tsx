@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 interface IOSSwitchProps {
   checked: boolean;
@@ -22,7 +23,7 @@ export default function IOSSwitch({
   };
 
   return (
-    <button
+    <motion.button
       type="button"
       role="switch"
       aria-checked={checked}
@@ -32,32 +33,43 @@ export default function IOSSwitch({
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       onMouseLeave={() => setIsPressed(false)}
+      animate={{
+        scale: isPressed ? 0.95 : 1,
+        backgroundColor: checked 
+          ? 'rgb(16, 185, 129)' // emerald-500
+          : 'rgb(209, 213, 219)' // gray-300
+      }}
+      transition={{
+        duration: 0.2,
+        ease: 'easeInOut'
+      }}
       className={`
         relative inline-flex items-center
         w-[51px] h-[31px]
         rounded-full
-        transition-colors duration-200 ease-in-out
         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        ${isPressed ? 'scale-95' : 'scale-100'}
-        ${checked 
-          ? 'bg-emerald-500 dark:bg-emerald-500' 
-          : 'bg-gray-300 dark:bg-gray-600'
-        }
+        dark:bg-gray-600
       `}
     >
       {/* Círculo interno deslizante */}
-      <span
+      <motion.span
+        animate={{
+          x: checked ? 22 : 2
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 500,
+          damping: 30
+        }}
         className={`
           absolute
           w-[27px] h-[27px]
           rounded-full
           bg-white
           shadow-sm
-          transition-transform duration-200 ease-in-out
-          ${checked ? 'translate-x-[22px]' : 'translate-x-[2px]'}
         `}
       />
-    </button>
+    </motion.button>
   );
 }

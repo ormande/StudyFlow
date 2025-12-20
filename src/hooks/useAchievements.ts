@@ -79,6 +79,11 @@ export function useAchievements({
 
   // Salvar conquistas no Supabase e localStorage
   const saveAchievements = useCallback(async (achievements: UserAchievement[]) => {
+    // BLOQUEIO: Se estiver em modo de reset, não salvar nada
+    if (isResettingRef.current) {
+      return;
+    }
+    
     // Salvar no localStorage sempre
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(achievements));
@@ -122,6 +127,10 @@ export function useAchievements({
   
   // Rastrear toasts já mostrados para evitar duplicação
   const shownToastsRef = useRef<Set<string>>(new Set());
+  
+  // TRAVAMENTO CRÍTICO: Bloqueia todas as operações durante factory reset
+  // Impede que conquistas "ressuscitem" após o reset
+  const isResettingRef = useRef(false);
 
   // Carregar conquistas na inicialização
   useEffect(() => {
@@ -142,6 +151,9 @@ export function useAchievements({
 
   // Salvar sempre que userAchievements mudar (mas não na inicialização)
   useEffect(() => {
+    // BLOQUEIO: Se estiver em modo de reset, não salvar nada
+    if (isResettingRef.current) return;
+    
     // Não salvar durante o carregamento inicial ou se não houver conquistas
     if (isLoading) return;
     
@@ -425,6 +437,9 @@ export function useAchievements({
   // Detectar ofensiva de 7 dias e adicionar XP bônus
   const [lastStreakBonus, setLastStreakBonus] = useState<number>(0);
   useEffect(() => {
+    // BLOQUEIO: Se estiver em modo de reset, não processar bônus
+    if (isResettingRef.current) return;
+    
     if (isLoading || !addXP) return;
     
     // Verificar se streak atingiu 7, 14, 21, etc. (múltiplos de 7)
@@ -473,9 +488,14 @@ export function useAchievements({
 
   // Verificar e atualizar conquistas (só executa após carregar dados iniciais)
   useEffect(() => {
+    // BLOQUEIO: Se estiver em modo de reset, não verificar nada
+    if (isResettingRef.current) return;
+    
     if (isLoading) return; // Não verificar enquanto está carregando
     
     const checkAchievements = () => {
+      // BLOQUEIO DUPLO: Verificar novamente dentro da função
+      if (isResettingRef.current) return;
       setUserAchievements(prevAchievements => {
         // Criar um mapa para acesso rápido
         const achievementsMap = new Map<string, UserAchievement>();
@@ -581,6 +601,9 @@ export function useAchievements({
 
   // Resgatar conquista
   const claimAchievement = useCallback((achievementId: string, level: number) => {
+    // BLOQUEIO: Se estiver em modo de reset, não permitir resgates
+    if (isResettingRef.current) return;
+    
     // Criar chave única para esta conquista+nível
     const claimKey = `${achievementId}-${level}`;
     
@@ -691,6 +714,9 @@ export function useAchievements({
 
   // Função para resetar todas as conquistas
   const resetAchievements = useCallback(async () => {
+    // ATIVAR TRAVAMENTO: Primeira coisa a fazer - bloqueia todas as operações
+    isResettingRef.current = true;
+    
     // Resetar estado do React
     setUserAchievements([]);
     
@@ -737,6 +763,10 @@ export function useAchievements({
     } catch (error) {
       console.error('Erro ao limpar flags de streak bonus:', error);
     }
+    
+    // IMPORTANTE: NÃO resetar isResettingRef.current aqui
+    // Ele deve permanecer true até o reload da página
+    // Isso garante que nenhum useEffect ou função tente restaurar conquistas
   }, [userId]);
 
   return {

@@ -113,7 +113,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-32 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -413,8 +413,8 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
         </div>
       </div>
 
-      {/* Botão Salvar - Fixo no mobile */}
-      <div className="fixed bottom-0 left-0 right-0 md:relative md:mt-6 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:border-0 md:bg-transparent p-4 md:p-0">
+      {/* Botão Salvar */}
+      <div className="mt-6">
         <button
           onClick={handleSave}
           className="w-full md:w-auto md:px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-base transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Mail, ArrowRight, BookOpen, Loader2, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import { motion } from 'framer-motion';
@@ -72,8 +72,12 @@ export default function LoginScreen({ onBack, initialMode = 'login' }: LoginScre
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-center"
         >
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-600 mb-4 shadow-lg shadow-emerald-500/20">
-            <BookOpen size={40} className="text-white" />
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/icon-512.png" 
+              alt="StudyFlow Logo" 
+              className="w-20 h-20 rounded-full mx-auto animate-pulse"
+            />
           </div>
           <h1 className="text-3xl font-black tracking-tight mb-2 text-gray-900 dark:text-white">STUDYFLOW</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm">

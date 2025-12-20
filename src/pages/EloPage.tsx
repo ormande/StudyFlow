@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, TrendingUp, Sparkles, ArrowLeft, Check, Lock, Lightbulb, BookOpen, FileText, Book, Flame, BarChart2, Star } from 'lucide-react';
 import { useXPContext } from '../contexts/XPContext';
-import { ELOS, Elo } from '../types/elo';
+import { ELOS } from '../types/elo';
 import { StudyLog } from '../types';
 import EloHistoryModal from '../components/EloHistoryModal';
-import EloUpgradeModal from '../components/EloUpgradeModal';
 
 interface EloPageProps {
   logs: StudyLog[];
@@ -15,21 +14,8 @@ interface EloPageProps {
 
 export default function EloPage({ onNavigateToMore }: EloPageProps) {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeData, setUpgradeData] = useState<{ oldElo: Elo; newElo: Elo } | null>(null);
-  const previousEloRef = useRef<Elo | null>(null);
 
-  const { totalXP, xpHistory, progress, isLoading } = useXPContext();
-  
-  // Detectar upgrade de elo
-  useEffect(() => {
-    const currentElo = progress.currentElo;
-    if (previousEloRef.current && previousEloRef.current.id !== currentElo.id) {
-      setUpgradeData({ oldElo: previousEloRef.current, newElo: currentElo });
-      setShowUpgradeModal(true);
-    }
-    previousEloRef.current = currentElo;
-  }, [progress.currentElo.id]);
+  const { totalXP, xpHistory, progress, isLoading, addXP } = useXPContext();
 
   const currentElo = progress.currentElo;
   const nextElo = progress.nextElo;
@@ -325,16 +311,7 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
         totalXP={totalXP}
       />
 
-      <EloUpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => {
-          setShowUpgradeModal(false);
-          setUpgradeData(null);
-        }}
-        oldElo={upgradeData?.oldElo}
-        newElo={upgradeData?.newElo}
-        totalXP={totalXP}
-      />
+      {/* Modal de Upgrade removido - agora é gerenciado pelo XPContext no MainApp */}
     </div>
   );
 }

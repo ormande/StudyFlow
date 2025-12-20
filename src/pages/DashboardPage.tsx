@@ -19,9 +19,10 @@ interface DashboardPageProps {
   showPerformance: boolean;
   streak: number;
   isLoading: boolean;
+  onNavigateToCycle?: () => void;
 }
 
-export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog, dailyGoal, showPerformance, streak, isLoading }: DashboardPageProps) {
+export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog, dailyGoal, showPerformance, streak, isLoading, onNavigateToCycle }: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showHeatmapModal, setShowHeatmapModal] = useState(false);
@@ -108,7 +109,17 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
     });
   };
 
-  const getRecentActivities = () => { return [...logs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5); };
+  const getRecentActivities = () => {
+    // Obter data de hoje no formato YYYY-MM-DD
+    const today = new Date();
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    // Filtrar apenas logs de hoje, ordenar por timestamp (mais recente primeiro) e limitar a 5
+    return [...logs]
+      .filter(log => log.date === todayString)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 5);
+  };
   
   const getTotalHours = () => {
     const totalMinutes = logs.reduce((sum, log) => sum + log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60), 0);
@@ -614,42 +625,61 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             )}
 
             {/* LINHA 6 - Mobile: Recentes */}
-            {recentActivities.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
-                <div className="flex items-center gap-2 mb-4">
-                  <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  <h2 className="text-lg font-bold text-gray-800 dark:text-white">Recentes</h2>
-                </div>
-                <div className="space-y-3">
-                  {recentActivities.map((log) => { 
-                    const subject = subjects.find((s) => s.id === log.subjectId); 
-                    const logMinutes = log.hours * 60 + log.minutes; 
-                    return ( 
-                      <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"> 
-                        <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: subject?.color || '#6b7280' }} /> 
-                        <div className="flex-1 min-w-0"> 
-                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{subject?.name || 'Matéria Excluída'}</p> 
-                          <p className="text-xs text-gray-600 dark:text-gray-400">{getTypeLabel(log.type)} • {logMinutes} min</p> 
-                          {log.notes && (<p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{log.notes}</p>)} 
-                        </div> 
-                        <div className="flex items-center gap-2 flex-shrink-0"> 
-                          <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span> 
-                          <button 
-                            onClick={() => onDeleteLog(log.id)} 
-                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"
-                            aria-label="Excluir registro"
-                            title="Excluir registro"
-                          > 
-                            <Trash2 size={16} /> 
-                          </button> 
-                        </div> 
-                      </div> 
-                    ); 
-                  })}
-                </div>
-                <button onClick={() => setShowHistoryModal(true)} className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"> <History size={18} /> Ver histórico </button>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Hoje</h2>
               </div>
-            )}
+              {recentActivities.length > 0 ? (
+                <>
+                  <div className="space-y-3">
+                    {recentActivities.map((log) => { 
+                      const subject = subjects.find((s) => s.id === log.subjectId); 
+                      const logMinutes = log.hours * 60 + log.minutes; 
+                      return ( 
+                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"> 
+                          <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: subject?.color || '#6b7280' }} /> 
+                          <div className="flex-1 min-w-0"> 
+                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{subject?.name || 'Matéria Excluída'}</p> 
+                            <p className="text-xs text-gray-600 dark:text-gray-400">{getTypeLabel(log.type)} • {logMinutes} min</p> 
+                            {log.notes && (<p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{log.notes}</p>)} 
+                          </div> 
+                          <div className="flex items-center gap-2 flex-shrink-0"> 
+                            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span> 
+                            <button 
+                              onClick={() => onDeleteLog(log.id)} 
+                              className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"
+                              aria-label="Excluir registro"
+                              title="Excluir registro"
+                            > 
+                              <Trash2 size={16} /> 
+                            </button> 
+                          </div> 
+                        </div> 
+                      ); 
+                    })}
+                  </div>
+                  <button 
+                    onClick={() => setShowHistoryModal(true)} 
+                    className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                  > 
+                    <History size={18} /> Ver histórico completo
+                  </button>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Nenhum registro de hoje ainda.
+                  </p>
+                  <button 
+                    onClick={() => setShowHistoryModal(true)} 
+                    className="w-full py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                  > 
+                    <History size={18} /> Ver histórico completo
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* DESKTOP LAYOUT */}
@@ -1071,42 +1101,61 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               )}
 
               {/* Atividades Recentes */}
-              {recentActivities.length > 0 && (
-                <div className="col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    <h2 className="text-lg font-bold text-gray-800 dark:text-white">Recentes</h2>
-                  </div>
-                  <div className="space-y-3">
-                    {recentActivities.map((log) => { 
-                      const subject = subjects.find((s) => s.id === log.subjectId); 
-                      const logMinutes = log.hours * 60 + log.minutes; 
-                      return ( 
-                        <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"> 
-                          <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: subject?.color || '#6b7280' }} /> 
-                          <div className="flex-1 min-w-0"> 
-                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{subject?.name || 'Matéria Excluída'}</p> 
-                            <p className="text-xs text-gray-600 dark:text-gray-400">{getTypeLabel(log.type)} • {logMinutes} min</p> 
-                            {log.notes && (<p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{log.notes}</p>)} 
-                          </div> 
-                          <div className="flex items-center gap-2 flex-shrink-0"> 
-                            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{new Date(log.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span> 
-                            <button 
-                            onClick={() => onDeleteLog(log.id)} 
-                            className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"
-                            aria-label="Excluir registro"
-                            title="Excluir registro"
-                          > 
-                            <Trash2 size={16} /> 
-                          </button> 
-                          </div> 
-                        </div> 
-                      ); 
-                    })}
-                  </div>
-                  <button onClick={() => setShowHistoryModal(true)} className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"> <History size={18} /> Ver histórico </button>
+              <div className="col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
+                <div className="flex items-center gap-2 mb-4">
+                  <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <h2 className="text-lg font-bold text-gray-800 dark:text-white">Hoje</h2>
                 </div>
-              )}
+                {recentActivities.length > 0 ? (
+                  <>
+                    <div className="space-y-3">
+                      {recentActivities.map((log) => { 
+                        const subject = subjects.find((s) => s.id === log.subjectId); 
+                        const logMinutes = log.hours * 60 + log.minutes; 
+                        return ( 
+                          <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"> 
+                            <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: subject?.color || '#6b7280' }} /> 
+                            <div className="flex-1 min-w-0"> 
+                              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{subject?.name || 'Matéria Excluída'}</p> 
+                              <p className="text-xs text-gray-600 dark:text-gray-400">{getTypeLabel(log.type)} • {logMinutes} min</p> 
+                              {log.notes && (<p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{log.notes}</p>)} 
+                            </div> 
+                            <div className="flex items-center gap-2 flex-shrink-0"> 
+                              <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span> 
+                              <button 
+                                onClick={() => onDeleteLog(log.id)} 
+                                className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"
+                                aria-label="Excluir registro"
+                                title="Excluir registro"
+                              > 
+                                <Trash2 size={16} /> 
+                              </button> 
+                            </div> 
+                          </div> 
+                        ); 
+                      })}
+                    </div>
+                    <button 
+                      onClick={() => setShowHistoryModal(true)} 
+                      className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                    > 
+                      <History size={18} /> Ver histórico completo
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Nenhum registro de hoje ainda.
+                    </p>
+                    <button 
+                      onClick={() => setShowHistoryModal(true)} 
+                      className="w-full py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                    > 
+                      <History size={18} /> Ver histórico completo
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1114,7 +1163,20 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 text-center transition-colors duration-300 mt-10">
           <p className="text-gray-600 dark:text-gray-300 mb-2">Bem-vindo ao StudyFlow!</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">Comece adicionando matérias na aba <strong className="text-emerald-500">Ciclo</strong>.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            Comece adicionando matérias na aba{' '}
+            {onNavigateToCycle ? (
+              <span
+                onClick={onNavigateToCycle}
+                className="text-emerald-500 hover:underline cursor-pointer font-medium"
+              >
+                Ciclo
+              </span>
+            ) : (
+              <strong className="text-emerald-500">Ciclo</strong>
+            )}
+            .
+          </p>
         </div>
       )}
 

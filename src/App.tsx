@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import MainApp from './components/MainApp';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import LandingPage from './pages/LandingPage';
@@ -13,20 +13,14 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [authView, setAuthView] = useState<'landing' | 'login' | 'forgot'>('landing');
+  const [forceLanding, setForceLanding] = useState(false);
 
   // Usar hook de aparência para gerenciar tema
   const { settings, updateTheme } = useAppearance();
   
-  // Manter compatibilidade com MainApp (que ainda espera isDarkMode e toggleTheme)
   // Calcular isDarkMode baseado no tema atual
   const isDarkMode = settings.theme === 'dark' || 
     (settings.theme === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  
-  const toggleTheme = () => {
-    // Alternar entre light e dark (não usar auto aqui para manter compatibilidade)
-    const newTheme = isDarkMode ? 'light' : 'dark';
-    updateTheme(newTheme);
-  };
   
   // Atualizar cor de fundo do body baseado no tema
   useEffect(() => {
@@ -39,6 +33,11 @@ function App() {
     }
   }, [settings.theme, isDarkMode]);
 
+  // Verificar se deve mostrar landing page mesmo com sessão
+  const shouldShowLanding = () => {
+    return forceLanding;
+  };
+
   // Auth Listener
   useEffect(() => {
     // Verificar se há hash de recuperação na URL
@@ -50,6 +49,16 @@ function App() {
         window.history.replaceState(null, '', window.location.pathname);
       }
     };
+
+    // Verificar parâmetro landing na URL na inicialização
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('landing') === 'true') {
+      setForceLanding(true);
+      // Limpar parâmetro da URL imediatamente
+      const url = new URL(window.location.href);
+      url.searchParams.delete('landing');
+      window.history.replaceState(null, '', url.pathname + url.search);
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -86,11 +95,27 @@ function App() {
     setIsRecoveryMode(false);
   };
 
-  // Loading state - primeira trava de segurança
+  // Loading state - Splash Screen com logo
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
-        <Loader2 className="animate-spin text-emerald-500 w-10 h-10" />
+        <div className="flex flex-col items-center gap-4">
+          <motion.img
+            src="/icon-512.png"
+            alt="StudyFlow"
+            className="w-32 h-32"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ 
+              opacity: [0.5, 1, 0.5],
+              scale: [1, 1.05, 1]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
       </div>
     );
   }
@@ -105,18 +130,25 @@ function App() {
       />
 
       {/* Renderização condicional do conteúdo principal */}
-      {!session ? (
+      {!session || shouldShowLanding() ? (
         <>
           {authView === 'landing' && (
             <LandingPage 
               onNavigate={(screen) => {
                 setAuthView(screen === 'signup' ? 'login' : screen);
+                // Quando usuário navega para login/signup, desativar forceLanding
+                if (screen !== 'landing') {
+                  setForceLanding(false);
+                }
               }} 
             />
           )}
           {(authView === 'login' || authView === 'forgot') && (
             <LoginScreen 
-              onBack={() => setAuthView('landing')}
+              onBack={() => {
+                setAuthView('landing');
+                setForceLanding(false);
+              }}
               initialMode={authView}
             />
           )}
@@ -125,7 +157,6 @@ function App() {
         <MainApp
           session={session}
           isDarkMode={isDarkMode}
-          onToggleTheme={toggleTheme}
           onHardReset={handleLogout}
         />
       )}

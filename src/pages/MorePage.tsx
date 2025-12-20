@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { 
   Trophy, Star, BarChart3, History, Palette, Target, MessageSquare, 
-  HelpCircle, Lock, LogOut, ChevronRight, Settings, Info, User
+  HelpCircle, Lock, LogOut, ChevronRight, Settings, User
 } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
@@ -34,7 +34,7 @@ export default function MorePage({
   onOpenTutorial,
   onOpenSecurity,
   onOpenSettings,
-  onNavigateToAbout,
+  onNavigateToAbout: _onNavigateToAbout,
   onLogout,
   onNavigateToProfile,
 }: MorePageProps) {

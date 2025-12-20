@@ -15,7 +15,7 @@ interface EloPageProps {
 export default function EloPage({ onNavigateToMore }: EloPageProps) {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
-  const { totalXP, xpHistory, progress, isLoading, addXP } = useXPContext();
+  const { totalXP, xpHistory, progress, isLoading } = useXPContext();
 
   const currentElo = progress.currentElo;
   const nextElo = progress.nextElo;

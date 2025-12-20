@@ -111,7 +111,7 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
       const fileName = `${session.user.id}/${timestamp}.${fileExt}`;
 
       // Upload para o bucket 'avatars'
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
           cacheControl: '3600',
@@ -191,12 +191,6 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
       return (firstName + lastName).toUpperCase();
     }
     return session?.user?.email?.charAt(0).toUpperCase() || 'U';
-  };
-
-  // Obter nome completo ou email
-  const getDisplayName = () => {
-    const fullName = `${profile.first_name} ${profile.last_name}`.trim();
-    return fullName || session?.user?.email?.split('@')[0] || 'Usuário';
   };
 
   if (loading) {

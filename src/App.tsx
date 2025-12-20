@@ -16,7 +16,7 @@ function App() {
   const [forceLanding, setForceLanding] = useState(false);
 
   // Usar hook de aparência para gerenciar tema
-  const { settings, updateTheme } = useAppearance();
+  const { settings } = useAppearance();
   
   // Calcular isDarkMode baseado no tema atual
   const isDarkMode = settings.theme === 'dark' || 
@@ -137,9 +137,7 @@ function App() {
               onNavigate={(screen) => {
                 setAuthView(screen === 'signup' ? 'login' : screen);
                 // Quando usuário navega para login/signup, desativar forceLanding
-                if (screen !== 'landing') {
-                  setForceLanding(false);
-                }
+                setForceLanding(false);
               }} 
             />
           )}

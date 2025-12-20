@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, EyeOff, Volume2, VolumeX, Database, FileSpreadsheet, FileText, AlertTriangle, Trash2, Play } from 'lucide-react';
+import { ArrowLeft, Eye, Volume2, VolumeX, Database, FileSpreadsheet, FileText, AlertTriangle, Trash2, Play } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';

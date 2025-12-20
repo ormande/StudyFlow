@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Target, Clock, Plus, Trophy, Star, Play, ArrowLeft } from 'lucide-react';
+import { Target, Clock, Trophy, Play, ArrowLeft } from 'lucide-react';
 
 interface TutorialPageProps {
   onStartTour: () => void;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Mail, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import { motion } from 'framer-motion';

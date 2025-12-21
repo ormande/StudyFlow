@@ -32,7 +32,7 @@ export default function SettingsPage({
 }: SettingsPageProps) {
   const { addToast } = useToast();
   const { resetAchievements } = useAchievementsContext();
-  const { permission, requestPermission, sendNotification, isEnabled } = useNotification();
+  const { permission, requestPermission, sendNotification } = useNotification();
   const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);

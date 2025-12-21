@@ -405,7 +405,7 @@ export default function TimerPage({
               transition={{ duration: 0.4, ease: "easeInOut" }}
               className="flex gap-2 mb-4 justify-center flex-wrap max-w-md mx-auto w-full"
             >
-              {POMODORO_PRESETS.map((preset, index) => (
+              {POMODORO_PRESETS.map((preset) => (
                 <Button
                   key={preset.label}
                   onClick={() => handlePresetSelect(preset)}

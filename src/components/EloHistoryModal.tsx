@@ -2,7 +2,6 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, TrendingUp } from 'lucide-react';
 import { XPHistoryEntry } from '../types/elo';
-import { useAppearance } from '../hooks/useAppearance';
 
 interface EloHistoryModalProps {
   isOpen: boolean;
@@ -12,7 +11,6 @@ interface EloHistoryModalProps {
 }
 
 export default function EloHistoryModal({ isOpen, onClose, xpHistory, totalXP }: EloHistoryModalProps) {
-  const { shouldReduceMotion } = useAppearance();
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -42,12 +40,9 @@ export default function EloHistoryModal({ isOpen, onClose, xpHistory, totalXP }:
         >
           {/* Backdrop Escuro (Cobre tudo) */}
           <motion.div
-            {...(shouldReduceMotion ? {} : {
-              initial: { opacity: 0 },
-              animate: { opacity: 1 },
-              exit: { opacity: 0 },
-              transition: undefined
-            })}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             style={{ width: '100vw', height: '100vh', left: 0, top: 0, right: 0, bottom: 0 }}
@@ -55,12 +50,9 @@ export default function EloHistoryModal({ isOpen, onClose, xpHistory, totalXP }:
 
           {/* Card do Modal (Centralizado) */}
           <motion.div
-            {...(shouldReduceMotion ? {} : {
-              initial: { opacity: 0, scale: 0.95, y: 20 },
-              animate: { opacity: 1, scale: 1, y: 0 },
-              exit: { opacity: 0, scale: 0.95, y: 20 },
-              transition: undefined
-            })}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()} // Evita fechar ao clicar dentro
           >

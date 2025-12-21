@@ -154,7 +154,6 @@ function App() {
       ) : (
         <MainApp
           session={session}
-          isDarkMode={isDarkMode}
           onHardReset={handleLogout}
         />
       )}

@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Instagram
 } from 'lucide-react';
+import Button from '../components/Button';
 
 interface LandingPageProps {
   onNavigate: (screen: 'login' | 'signup') => void;
@@ -79,18 +80,22 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="flex items-center gap-3"
             >
-              <button
+              <Button
                 onClick={() => onNavigate('login')}
-                className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                variant="ghost"
+                size="sm"
+                className="px-4 py-2"
               >
                 Entrar
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => onNavigate('signup')}
-                className="px-6 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all transform active:scale-95 shadow-lg shadow-emerald-600/20"
+                variant="primary"
+                size="sm"
+                className="px-6 py-2 shadow-lg shadow-emerald-600/20"
               >
                 Assine já
-              </button>
+              </Button>
             </motion.div>
           </div>
         </div>
@@ -131,21 +136,25 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex flex-col sm:flex-row gap-4 pt-4"
             >
-              <button
+              <Button
                 onClick={() => onNavigate('login')}
-                className="group px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all transform active:scale-95 shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2"
+                variant="primary"
+                size="lg"
+                rightIcon={<ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />}
+                className="px-8 py-4 shadow-xl shadow-emerald-600/30 font-bold rounded-2xl"
               >
-                <span>Começar Agora</span>
-                <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
-              </button>
-              <button
+                Começar Agora
+              </Button>
+              <Button
                 onClick={() => {
                   document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="px-8 py-4 border-2 border-gray-300 dark:border-gray-700 hover:border-emerald-600 dark:hover:border-emerald-400 text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-bold rounded-2xl transition-all"
+                variant="outline"
+                size="lg"
+                className="px-8 py-4 font-bold rounded-2xl"
               >
                 Saiba Mais
-              </button>
+              </Button>
             </motion.div>
           </motion.div>
 
@@ -258,20 +267,22 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
               >
-                <button
+                <Button
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                >
-                  <span className="font-bold text-gray-900 dark:text-white">
-                    {faq.question}
-                  </span>
-                  <ChevronDown
+                  variant="ghost"
+                  fullWidth
+                  className="w-full px-6 py-4 justify-between h-auto"
+                  rightIcon={<ChevronDown
                     className={`text-gray-500 transition-transform duration-300 ${
                       openFaq === index ? 'rotate-180' : ''
                     }`}
                     size={20}
-                  />
-                </button>
+                  />}
+                >
+                  <span className="font-bold text-gray-900 dark:text-white">
+                    {faq.question}
+                  </span>
+                </Button>
                 <AnimatePresence>
                   {openFaq === index && (
                     <motion.div
@@ -314,13 +325,15 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             <p className="text-xl text-emerald-50">
               Comece agora e veja a diferença na sua preparação
             </p>
-            <button
+            <Button
               onClick={() => onNavigate('login')}
-              className="group mt-8 px-10 py-5 bg-white hover:bg-gray-50 text-emerald-600 font-bold rounded-2xl transition-all transform active:scale-95 shadow-2xl flex items-center justify-center gap-2 mx-auto"
+              variant="secondary"
+              size="lg"
+              rightIcon={<ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />}
+              className="mt-8 px-10 py-5 bg-white hover:bg-gray-50 text-emerald-600 font-bold rounded-2xl shadow-2xl mx-auto"
             >
-              <span>Começar Agora</span>
-              <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
-            </button>
+              Começar Agora
+            </Button>
           </motion.div>
         </div>
       </section>

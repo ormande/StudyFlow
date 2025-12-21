@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, User, Camera, Save, Loader2, Crown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
+import Button from '../components/Button';
 
 interface ProfilePageProps {
   session: any;
@@ -212,13 +213,15 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
       <div className="mb-8">
         {/* Botão Voltar - Apenas Mobile */}
         {onNavigateBack && (
-          <button
+          <Button
             onClick={onNavigateBack}
-            className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+            variant="ghost"
+            size="md"
+            leftIcon={<ArrowLeft size={20} />}
+            className="md:hidden mb-4"
           >
-            <ArrowLeft size={20} />
-            <span className="font-semibold">Voltar</span>
-          </button>
+            Voltar
+          </Button>
         )}
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2">
           <User className="text-emerald-500" size={28} />
@@ -245,17 +248,16 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
                 {getInitials()}
               </div>
             )}
-            <button
+            <Button
               onClick={handleAvatarClick}
               disabled={uploadingAvatar}
-              className="absolute bottom-0 right-0 p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="primary"
+              size="sm"
+              isLoading={uploadingAvatar}
+              className="absolute bottom-0 right-0 p-3 rounded-full shadow-lg hover:scale-110"
             >
-              {uploadingAvatar ? (
-                <Loader2 className="animate-spin w-5 h-5" />
-              ) : (
-                <Camera size={20} />
-              )}
-            </button>
+              {!uploadingAvatar && <Camera size={20} />}
+            </Button>
           </div>
           <input
             ref={fileInputRef}
@@ -303,7 +305,7 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Data de Nascimento
             </label>
@@ -311,7 +313,7 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
               type="date"
               value={profile.birth_date}
               onChange={(e) => setProfile(prev => ({ ...prev, birth_date: e.target.value }))}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full max-w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent min-w-0"
             />
           </div>
         </div>
@@ -339,23 +341,17 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
         </div>
 
         {/* Botão Salvar */}
-        <button
+        <Button
           onClick={handleSave}
           disabled={saving}
-          className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+          variant="primary"
+          fullWidth
+          size="lg"
+          isLoading={saving}
+          leftIcon={!saving ? <Save size={20} /> : undefined}
         >
-          {saving ? (
-            <>
-              <Loader2 className="animate-spin w-5 h-5" />
-              Salvando...
-            </>
-          ) : (
-            <>
-              <Save size={20} />
-              Salvar Alterações
-            </>
-          )}
-        </button>
+          {saving ? 'Salvando...' : 'Salvar Alterações'}
+        </Button>
       </div>
 
       {/* Card de Status da Assinatura */}
@@ -371,12 +367,14 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Acesso Premium Ativo
             </p>
-            <button
+            <Button
               disabled
-              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded-lg font-semibold cursor-not-allowed"
+              variant="secondary"
+              size="md"
+              className="bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
             >
               Gerenciar Assinatura
-            </button>
+            </Button>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Funcionalidade em breve
             </p>

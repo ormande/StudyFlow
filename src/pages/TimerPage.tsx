@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Timer, Hourglass, Zap, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmModal from '../components/ConfirmModal';
+import Button from '../components/Button';
 
 interface TimerPageProps {
   onTimerStop: (hours: number, minutes: number, seconds: number) => void;
@@ -265,33 +266,16 @@ export default function TimerPage({
             {(['cronometro', 'temporizador', 'pomodoro'] as const).map((modeOption) => {
               const Icon = modeOption === 'cronometro' ? Timer : modeOption === 'temporizador' ? Hourglass : Zap;
               return (
-                <motion.button
+                <Button
                   key={modeOption}
                   onClick={() => handleModeChangeRequest(modeOption)}
-                  variants={{
-                    hidden: { opacity: 0, y: -20, scale: 0.9 },
-                    show: { opacity: 1, y: 0, scale: 1 }
-                  }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    transition: { type: "spring", stiffness: 400, damping: 10 }
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-xl font-semibold text-xs transition-all flex-1 ${
-                    mode === modeOption
-                      ? 'bg-emerald-500 text-white shadow-lg'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}
+                  variant={mode === modeOption ? 'primary' : 'secondary'}
+                  size="sm"
+                  className="flex flex-col items-center gap-1.5 px-3 py-2.5 flex-1"
                 >
-                  {/* Ícone com rotação suave no hover */}
-                  <motion.div
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.6, ease: "easeInOut" }}
-                  >
-                    <Icon size={18} />
-                  </motion.div>
+                  <Icon size={18} />
                   <span>{getModeLabel(modeOption)}</span>
-                </motion.button>
+                </Button>
               );
             })}
           </motion.div>
@@ -315,33 +299,16 @@ export default function TimerPage({
           {(['cronometro', 'temporizador', 'pomodoro'] as const).map((modeOption) => {
             const Icon = modeOption === 'cronometro' ? Timer : modeOption === 'temporizador' ? Hourglass : Zap;
             return (
-              <motion.button
+              <Button
                 key={modeOption}
                 onClick={() => handleModeChangeRequest(modeOption)}
-                variants={{
-                  hidden: { opacity: 0, y: -20, scale: 0.9 },
-                  show: { opacity: 1, y: 0, scale: 1 }
-                }}
-                whileHover={{ 
-                  scale: 1.05,
-                  transition: { type: "spring", stiffness: 400, damping: 10 }
-                }}
-                whileTap={{ scale: 0.95 }}
-                className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold text-base transition-all ${
-                  mode === modeOption
-                    ? 'bg-emerald-500 text-white shadow-lg'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                }`}
+                variant={mode === modeOption ? 'primary' : 'secondary'}
+                size="md"
+                leftIcon={<Icon size={22} />}
+                className="px-6 py-3"
               >
-                {/* Ícone com rotação suave no hover */}
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                >
-                  <Icon size={22} />
-                </motion.div>
-                <span>{getModeLabel(modeOption)}</span>
-              </motion.button>
+                {getModeLabel(modeOption)}
+              </Button>
             );
           })}
         </motion.div>
@@ -439,31 +406,19 @@ export default function TimerPage({
               className="flex gap-2 mb-4 justify-center flex-wrap max-w-md mx-auto w-full"
             >
               {POMODORO_PRESETS.map((preset, index) => (
-                <motion.button
+                <Button
                   key={preset.label}
-                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.3 }}
-                  whileHover={{ 
-                    scale: 1.05,
-                    backgroundColor: selectedPreset?.label === preset.label ? undefined : "rgb(16, 185, 129)",
-                    color: selectedPreset?.label === preset.label ? undefined : "white",
-                    transition: { duration: 0.2 }
-                  }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => handlePresetSelect(preset)}
-                  className={`px-2 py-1.5 rounded-xl font-semibold text-xs transition-all ${
-                    selectedPreset?.label === preset.label
-                      ? 'bg-emerald-500 text-white shadow-lg'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}
+                  variant={selectedPreset?.label === preset.label ? 'primary' : 'secondary'}
+                  size="sm"
+                  className="px-2 py-1.5 flex flex-col items-center"
                   aria-label={`Selecionar preset Pomodoro: ${preset.label} (${preset.minutes} minutos)`}
                   title={`${preset.label} (${preset.minutes}min)`}
                 >
                   {preset.label}
                   <br />
                   <span className="text-xs opacity-90">({preset.minutes}min)</span>
-                </motion.button>
+                </Button>
               ))}
             </motion.div>
           )}
@@ -566,139 +521,88 @@ export default function TimerPage({
           {isTimerRunning ? (
             <>
               {/* Botão Pause Mobile */}
-              <motion.button
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0, rotate: 180 }}
-                whileHover={{ 
-                  scale: 1.1,
-                  boxShadow: "0 10px 30px rgba(245, 158, 11, 0.3)"
-                }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              <Button
                 onClick={handlePlayPause}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-2xl shadow-lg relative overflow-hidden flex items-center justify-center gap-2"
+                variant="primary"
+                fullWidth
+                size="lg"
+                leftIcon={<Pause className="w-6 h-6" />}
+                className="flex-1 bg-amber-500 hover:bg-amber-600 shadow-lg"
                 aria-label="Pausar timer"
               >
-                {/* Ripple effect no clique */}
-                <motion.div
-                  className="absolute inset-0 bg-white/30 rounded-2xl"
-                  initial={{ scale: 0, opacity: 1 }}
-                  whileTap={{ scale: 2, opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                />
-                <Pause className="w-6 h-6 relative z-10" />
-                <span className="relative z-10">Pause</span>
-              </motion.button>
+                Pause
+              </Button>
               
               {/* Botão Reset Mobile */}
               {timerSeconds > 0 && (
-                <motion.button
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0, rotate: 180 }}
-                  whileHover={{ 
-                    scale: 1.1,
-                    rotate: -15,
-                    boxShadow: "0 10px 30px rgba(239, 68, 68, 0.3)"
-                  }}
-                  whileTap={{ scale: 0.9, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                <Button
                   onClick={handleReset}
-                  className="px-6 py-6 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 shadow-lg relative"
+                  variant="secondary"
+                  size="lg"
+                  className="px-6 py-6 shadow-lg"
                   aria-label="Resetar timer"
                   title="Resetar timer"
                 >
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  >
-                    <RotateCcw className="w-6 h-6" />
-                  </motion.div>
-                </motion.button>
+                  <RotateCcw className="w-6 h-6" />
+                </Button>
               )}
             </>
           ) : (
             /* Botão Play Mobile */
-            <motion.button
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              whileHover={{ 
-                scale: 1.05,
-                boxShadow: "0 15px 40px rgba(16, 185, 129, 0.4)"
-              }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            <Button
               onClick={handlePlayPause}
               disabled={(mode === 'temporizador' && (timerHours === '' || timerHours === '0') && (timerMinutes === '' || timerMinutes === '0') && timerSeconds === 0) || (mode === 'pomodoro' && !selectedPreset)}
-              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-2xl shadow-lg text-base font-semibold relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              variant="primary"
+              fullWidth
+              size="lg"
+              leftIcon={<Play className="w-6 h-6" />}
+              className="flex-1 shadow-lg"
               aria-label="Iniciar timer"
             >
-              {/* Gradient shine effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              />
-              <motion.div 
-                className="flex items-center gap-2 relative z-10"
-                whileHover={{ x: 5 }}
-              >
-                <Play className="w-6 h-6" />
-                <span>Play</span>
-              </motion.div>
-            </motion.button>
+              Play
+            </Button>
           )}
         </motion.div>
 
         {/* Botão Parar e Registrar - Mobile */}
         <AnimatePresence mode="wait">
           {(mode === 'cronometro' && timerSeconds > 0 && !isTimerRunning) && (
-            <motion.button
+            <Button
               key="stop-cronometro-mobile"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
               onClick={handleStop}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full max-w-md mx-auto py-5 mb-8 rounded-2xl font-semibold text-base text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+              variant="danger"
+              fullWidth
+              size="lg"
+              className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
             >
               Parar e Registrar
-            </motion.button>
+            </Button>
           )}
 
           {(mode === 'temporizador' && initialTimerSeconds > 0 && !isTimerRunning) && (
-            <motion.button
+            <Button
               key="stop-temporizador-mobile"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
               onClick={handleStop}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full max-w-md mx-auto py-5 mb-8 rounded-2xl font-semibold text-base text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+              variant="danger"
+              fullWidth
+              size="lg"
+              className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
             >
               Parar e Registrar
-            </motion.button>
+            </Button>
           )}
 
           {(mode === 'pomodoro' && pomodoroStarted && pomodoroInitialSeconds > 0 && !isTimerRunning && selectedPreset?.label === 'Foco') && (
-            <motion.button
+            <Button
               key="stop-pomodoro-mobile"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
               onClick={handleStop}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full max-w-md mx-auto py-5 mb-8 rounded-2xl font-semibold text-base text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+              variant="danger"
+              fullWidth
+              size="lg"
+              className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
             >
               Parar e Registrar
-            </motion.button>
+            </Button>
           )}
         </AnimatePresence>
       </div>
@@ -800,138 +704,84 @@ export default function TimerPage({
             {isTimerRunning ? (
               <>
                 {/* Botão Pause */}
-                <motion.button
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0, rotate: 180 }}
-                  whileHover={{ 
-                    scale: 1.1,
-                    boxShadow: "0 10px 30px rgba(245, 158, 11, 0.3)"
-                  }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                <Button
                   onClick={handlePlayPause}
-                  className="bg-amber-500 hover:bg-amber-600 text-white p-6 rounded-full shadow-lg relative overflow-hidden"
+                  variant="primary"
+                  size="lg"
+                  className="bg-amber-500 hover:bg-amber-600 p-6 rounded-full shadow-lg"
                   aria-label="Pausar timer"
                 >
-                  {/* Ripple effect no clique */}
-                  <motion.div
-                    className="absolute inset-0 bg-white/30 rounded-full"
-                    initial={{ scale: 0, opacity: 1 }}
-                    whileTap={{ scale: 2, opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                  />
                   <Pause size={32} />
-                </motion.button>
+                </Button>
                 
                 {/* Botão Reset */}
                 {timerSeconds > 0 && (
-                  <motion.button
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    exit={{ scale: 0, rotate: 180 }}
-                    whileHover={{ 
-                      scale: 1.1,
-                      rotate: -15,
-                      boxShadow: "0 10px 30px rgba(239, 68, 68, 0.3)"
-                    }}
-                    whileTap={{ scale: 0.9, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  <Button
                     onClick={handleReset}
-                    className="bg-red-500 hover:bg-red-600 text-white p-6 rounded-full shadow-lg relative"
+                    variant="danger"
+                    size="lg"
+                    className="p-6 rounded-full shadow-lg"
                     aria-label="Resetar timer"
                   >
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    >
-                      <RotateCcw size={32} />
-                    </motion.div>
-                  </motion.button>
+                    <RotateCcw size={32} />
+                  </Button>
                 )}
               </>
             ) : (
               /* Botão Play */
-              <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: "0 15px 40px rgba(16, 185, 129, 0.4)"
-                }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              <Button
                 onClick={handlePlayPause}
                 disabled={(mode === 'temporizador' && (timerHours === '' || timerHours === '0') && (timerMinutes === '' || timerMinutes === '0') && timerSeconds === 0) || (mode === 'pomodoro' && !selectedPreset)}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white px-12 py-6 rounded-2xl shadow-lg text-xl font-semibold relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="primary"
+                size="lg"
+                leftIcon={<Play size={28} />}
+                className="px-12 py-6 shadow-lg text-xl"
                 aria-label="Iniciar timer"
               >
-                {/* Gradient shine effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  animate={{ x: ['-100%', '200%'] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                />
-                
-                <motion.div 
-                  className="flex items-center gap-2 relative z-10"
-                  whileHover={{ x: 5 }}
-                >
-                  <Play size={28} />
-                  <span>Iniciar</span>
-                </motion.div>
-              </motion.button>
+                Iniciar
+              </Button>
             )}
           </motion.div>
 
           {/* Botão Parar e Registrar - Desktop */}
           <AnimatePresence mode="wait">
             {(mode === 'cronometro' && timerSeconds > 0 && !isTimerRunning) && (
-              <motion.button
+              <Button
                 key="stop-cronometro-desktop"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
                 onClick={handleStop}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full max-w-md py-6 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+                variant="danger"
+                fullWidth
+                size="lg"
+                className="w-full max-w-md py-6 shadow-lg text-lg"
               >
                 Parar e Registrar
-              </motion.button>
+              </Button>
             )}
 
             {(mode === 'temporizador' && initialTimerSeconds > 0 && !isTimerRunning) && (
-              <motion.button
+              <Button
                 key="stop-temporizador-desktop"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
                 onClick={handleStop}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full max-w-md py-6 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+                variant="danger"
+                fullWidth
+                size="lg"
+                className="w-full max-w-md py-6 shadow-lg text-lg"
               >
                 Parar e Registrar
-              </motion.button>
+              </Button>
             )}
 
             {(mode === 'pomodoro' && pomodoroStarted && pomodoroInitialSeconds > 0 && !isTimerRunning && selectedPreset?.label === 'Foco') && (
-              <motion.button
+              <Button
                 key="stop-pomodoro-desktop"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
                 onClick={handleStop}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full max-w-md py-6 rounded-2xl font-semibold text-lg text-white bg-red-500 hover:bg-red-600 shadow-lg transition-all"
+                variant="danger"
+                fullWidth
+                size="lg"
+                className="w-full max-w-md py-6 shadow-lg text-lg"
               >
                 Parar e Registrar
-              </motion.button>
+              </Button>
             )}
           </AnimatePresence>
         </div>

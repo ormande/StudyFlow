@@ -12,6 +12,7 @@ import {
 } from '../types/achievements';
 import { Sparkles, Trophy, Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
+import Button from '../components/Button';
 
 interface AchievementsPageProps {
   isLoading: boolean;
@@ -95,12 +96,15 @@ function AchievementCard({ achievement, userProgress, onClaim }: AchievementCard
               
               {/* Botão de resgate (se desbloqueado mas não resgatado) */}
               {isUnlocked && !isClaimed && (
-                <button
+                <Button
                   onClick={() => onClaim(achievement.id, level.level)}
-                  className="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-1 px-2 rounded transition-all active:scale-95"
+                  variant="primary"
+                  size="sm"
+                  fullWidth
+                  className="mt-2 bg-yellow-500 hover:bg-yellow-600 text-xs font-bold"
                 >
                   Resgatar
-                </button>
+                </Button>
               )}
             </div>
           );
@@ -148,13 +152,15 @@ export default function AchievementsPage({
       {/* Header */}
       <div className="mb-6">
         {onNavigateToMore && (
-          <button
+          <Button
             onClick={onNavigateToMore}
-            className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+            variant="ghost"
+            size="md"
+            leftIcon={<ArrowLeft size={20} />}
+            className="md:hidden mb-4"
           >
-            <ArrowLeft size={20} />
-            <span className="font-semibold">Voltar</span>
-          </button>
+            Voltar
+          </Button>
         )}
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2">
           <Trophy className="text-emerald-500" size={28} />
@@ -208,13 +214,15 @@ export default function AchievementsPage({
                   </div>
                   
                   {/* Botão Resgatar */}
-                  <button
+                  <Button
                     onClick={() => claimAchievement(achievement.id, achievement.level)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-md transition-all active:scale-95 flex items-center gap-2 flex-shrink-0"
+                    variant="primary"
+                    size="md"
+                    leftIcon={<Trophy size={20} />}
+                    className="flex-shrink-0 shadow-md font-bold"
                   >
-                    <Trophy size={20} />
                     Resgatar!
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             ))}

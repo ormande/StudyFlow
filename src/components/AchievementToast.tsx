@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { Achievement, getLevelBadgeColor, getLevelRoman } from '../types/achievements';
-import { useAppearance } from '../hooks/useAppearance';
 
 interface AchievementToastProps {
   achievement: Achievement;
@@ -9,15 +8,14 @@ interface AchievementToastProps {
 
 export function AchievementToast({ achievement, level }: AchievementToastProps) {
   const AchievementIcon = achievement.icon;
-  const { shouldReduceMotion } = useAppearance();
   
   return (
     <div className="flex items-center gap-4 p-2">
       {/* Ícone animado */}
       <motion.div
-        initial={shouldReduceMotion ? undefined : { scale: 0, rotate: -180 }}
-        animate={shouldReduceMotion ? undefined : { scale: 1, rotate: 0 }}
-        transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', duration: 0.5 }}
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', duration: 0.5 }}
         className="w-16 h-16 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center shadow-lg relative flex-shrink-0"
       >
         <AchievementIcon className={achievement.color} size={32} />

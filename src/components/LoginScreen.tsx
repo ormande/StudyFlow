@@ -3,6 +3,7 @@ import { Lock, Mail, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import { motion } from 'framer-motion';
+import Button from './Button';
 
 interface LoginScreenProps {
   onBack?: () => void;
@@ -47,16 +48,22 @@ export default function LoginScreen({ onBack, initialMode = 'login' }: LoginScre
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300 relative">
       {/* Botão Voltar (se houver onBack) - Fixo no canto superior esquerdo no desktop */}
       {onBack && (
-        <motion.button
+        <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          onClick={onBack}
-          className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors z-10"
+          className="absolute top-6 left-6 md:top-8 md:left-8 z-10"
         >
-          <ArrowLeft size={18} />
-          <span className="text-sm font-semibold">Voltar</span>
-        </motion.button>
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            leftIcon={<ArrowLeft size={18} />}
+            className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+          >
+            Voltar
+          </Button>
+        </motion.div>
       )}
 
       <motion.div
@@ -134,28 +141,29 @@ export default function LoginScreen({ onBack, initialMode = 'login' }: LoginScre
             </motion.div>
           )}
 
-          <button 
+          <Button 
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all transform active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
+            variant="primary"
+            fullWidth
+            size="lg"
+            isLoading={loading}
+            leftIcon={!loading && (mode === 'login' ? <ArrowRight size={20} /> : <Mail size={20} />)}
+            className="py-4 shadow-lg shadow-emerald-600/20 font-bold"
           >
-            {loading ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              mode === 'login' ? <ArrowRight size={20} /> : <Mail size={20} />
-            )}
-            <span>
-              {mode === 'login' ? 'Entrar' : 'Enviar Link'}
-            </span>
-          </button>
+            {mode === 'login' ? 'Entrar' : 'Enviar Link'}
+          </Button>
 
-          <button
+          <Button
             type="button"
             onClick={() => setMode(mode === 'login' ? 'forgot' : 'login')}
-            className="text-sm text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline mt-6 block text-center transition-colors w-full"
+            variant="ghost"
+            size="sm"
+            fullWidth
+            className="text-sm text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline mt-6"
           >
             {mode === 'login' ? 'Esqueceu sua senha?' : 'Voltar para o Login'}
-          </button>
+          </Button>
         </motion.form>
       </motion.div>
     </div>

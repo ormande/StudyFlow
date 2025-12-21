@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { StudyLog } from '../types';
+import { StudyLog, UserStats } from '../types';
 import { ACHIEVEMENTS, UserAchievement, Achievement, AchievementLevel } from '../types/achievements';
 import { useToast } from '../contexts/ToastContext';
 import confetti from 'canvas-confetti';
@@ -9,6 +9,7 @@ import { useXPContext } from '../contexts/XPContext';
 
 interface UseAchievementsProps {
   logs: StudyLog[];
+  stats: UserStats | null;
   streak: number;
   dailyGoal: number;
   cycleStartDate: number;
@@ -20,7 +21,8 @@ interface UseAchievementsProps {
 const STORAGE_KEY = 'studyflow_user_achievements';
 
 export function useAchievements({ 
-  logs, 
+  logs,
+  stats,
   streak, 
   dailyGoal, 
   cycleStartDate,
@@ -170,6 +172,7 @@ export function useAchievements({
     achievement: Achievement,
     level: AchievementLevel,
     logs: StudyLog[],
+    stats: UserStats | null,
     streak: number,
     dailyGoal: number,
     cycleStartDate: number,
@@ -188,6 +191,11 @@ export function useAchievements({
       
       // VOLUME
       case 'marathon': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_minutes !== undefined) {
+          return Math.floor(stats.total_minutes / 60);
+        }
+        // Fallback para logs (limitado a 100 itens)
         const totalHours = logs.reduce((sum, log) => {
           const hours = log.hours + (log.minutes / 60) + ((log.seconds || 0) / 3600);
           return sum + hours;
@@ -196,6 +204,11 @@ export function useAchievements({
       }
       
       case 'workaholic': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_minutes !== undefined) {
+          return Math.floor(stats.total_minutes / 60);
+        }
+        // Fallback para logs (limitado a 100 itens)
         const totalHours = logs.reduce((sum, log) => {
           const hours = log.hours + (log.minutes / 60) + ((log.seconds || 0) / 3600);
           return sum + hours;
@@ -204,6 +217,11 @@ export function useAchievements({
       }
       
       case 'eternal-student': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_minutes !== undefined) {
+          return Math.floor(stats.total_minutes / 60);
+        }
+        // Fallback para logs (limitado a 100 itens)
         const totalHours = logs.reduce((sum, log) => {
           const hours = log.hours + (log.minutes / 60) + ((log.seconds || 0) / 3600);
           return sum + hours;
@@ -213,6 +231,11 @@ export function useAchievements({
       
       // QUESTÕES
       case 'shooter': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_correct !== undefined) {
+          return stats.total_correct;
+        }
+        // Fallback para logs (limitado a 100 itens)
         const totalCorrect = logs
           .filter(log => log.type === 'questoes')
           .reduce((sum, log) => sum + (log.correct || 0), 0);
@@ -229,6 +252,18 @@ export function useAchievements({
       }
       
       case 'sniper': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_questions !== undefined && stats?.total_correct !== undefined) {
+          if (stats.total_questions === 0) return 0;
+          const percentage = (stats.total_correct / stats.total_questions) * 100;
+          
+          // Verificar se tem quantidade mínima de questões
+          const minQuestions = level.level === 1 ? 100 : level.level === 2 ? 500 : 1000;
+          if (stats.total_questions < minQuestions) return 0;
+          
+          return Math.floor(percentage);
+        }
+        // Fallback para logs (limitado a 100 itens)
         const questionLogs = logs.filter(log => log.type === 'questoes');
         if (questionLogs.length === 0) return 0;
         
@@ -249,6 +284,11 @@ export function useAchievements({
       
       // PÁGINAS
       case 'reader': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_pages !== undefined) {
+          return stats.total_pages;
+        }
+        // Fallback para logs (limitado a 100 itens)
         const totalPages = logs
           .filter(log => log.type === 'teoria')
           .reduce((sum, log) => sum + (log.pages || 0), 0);
@@ -256,6 +296,11 @@ export function useAchievements({
       }
       
       case 'devourer': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_pages !== undefined) {
+          return stats.total_pages;
+        }
+        // Fallback para logs (limitado a 100 itens)
         const totalPages = logs
           .filter(log => log.type === 'teoria')
           .reduce((sum, log) => sum + (log.pages || 0), 0);
@@ -263,6 +308,11 @@ export function useAchievements({
       }
       
       case 'library': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_pages !== undefined) {
+          return stats.total_pages;
+        }
+        // Fallback para logs (limitado a 100 itens)
         const totalPages = logs
           .filter(log => log.type === 'teoria')
           .reduce((sum, log) => sum + (log.pages || 0), 0);
@@ -385,6 +435,11 @@ export function useAchievements({
       
       // MILESTONES
       case 'first-step': {
+        // Usar stats quando disponível (métricas cumulativas)
+        if (stats?.total_logs !== undefined) {
+          return stats.total_logs;
+        }
+        // Fallback para logs.length (limitado a 100 itens)
         return logs.length;
       }
       
@@ -514,6 +569,7 @@ export function useAchievements({
               achievement,
               level,
               logs,
+              stats,
               streak,
               dailyGoal,
               cycleStartDate,
@@ -588,7 +644,7 @@ export function useAchievements({
     };
 
     checkAchievements();
-  }, [logs, streak, dailyGoal, cycleStartDate, userCreatedAt, calculateProgress, showAchievementUnlockedToast, onNavigateToAchievements, isLoading]);
+  }, [logs, stats, streak, dailyGoal, cycleStartDate, userCreatedAt, calculateProgress, showAchievementUnlockedToast, onNavigateToAchievements, isLoading]);
 
   // Função para disparar confete
   const triggerConfetti = useCallback(() => {

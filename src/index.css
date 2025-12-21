@@ -158,15 +158,6 @@
   display: inline-block;
 }
 
-/* Estilos para traduzir o texto do progresso do react-joyride */
-.react-joyride__tooltip button[data-action="next"] {
-  position: relative;
-}
-
-/* Sobrescrever o texto do botão com tradução em português */
-.react-joyride__tooltip button[data-action="next"] span:first-of-type {
-  display: none;
-}
 
 /* ============================================
    SISTEMA DE ESCALA DE FONTE NÃO-LINEAR
@@ -327,27 +318,4 @@ html.high-contrast {
 /* Bordas mais visíveis */
 .high-contrast * {
   border-color: #ffffff !important;
-}
-
-/* ============================================
-   REDUZIR MOVIMENTO (ANIMAÇÕES)
-   ============================================ */
-html.reduce-motion *,
-html.reduce-motion *::before,
-html.reduce-motion *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
-}
-
-/* Manter algumas transições essenciais */
-html.reduce-motion button:active {
-  transition: transform 0.1s !important;
-}
-
-/* Desabilitar animações do Framer Motion quando reduce-motion está ativo */
-html.reduce-motion [data-framer-motion] {
-  animation: none !important;
-  transition: none !important;
 }

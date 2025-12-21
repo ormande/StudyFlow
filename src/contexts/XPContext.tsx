@@ -9,6 +9,7 @@ interface XPContextData {
   progress: any;
   isLoading: boolean;
   addXP: (amount: number, reason: string, icon: string, isBonus?: boolean) => void;
+  removeXP: (amount: number, reason: string) => void;
   refreshXP: () => void;
   showUpgradeModal: boolean;
   newLevelData: Elo | null;

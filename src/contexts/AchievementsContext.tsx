@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { StudyLog } from '../types';
+import { StudyLog, UserStats } from '../types';
 import { UserAchievement, Achievement } from '../types/achievements';
 import { useAchievements } from '../hooks/useAchievements';
 
@@ -19,6 +19,7 @@ const AchievementsContext = createContext<AchievementsContextData | undefined>(u
 interface AchievementsProviderProps {
   children: ReactNode;
   logs: StudyLog[];
+  stats: UserStats | null;
   streak: number;
   dailyGoal: number;
   cycleStartDate: number;
@@ -30,6 +31,7 @@ interface AchievementsProviderProps {
 export function AchievementsProvider({
   children,
   logs,
+  stats,
   streak,
   dailyGoal,
   cycleStartDate,
@@ -39,6 +41,7 @@ export function AchievementsProvider({
 }: AchievementsProviderProps) {
   const achievementsData = useAchievements({
     logs,
+    stats,
     streak,
     dailyGoal,
     cycleStartDate,

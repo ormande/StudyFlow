@@ -30,24 +30,24 @@ import { useNotification } from '../hooks/useNotification';
 import { useToast } from '../contexts/ToastContext';
 import { AchievementsProvider, useAchievementsContext } from '../contexts/AchievementsContext';
 import { XPProvider, useXPContext } from '../contexts/XPContext';
-import OnboardingTour from './OnboardingTour';
+import { calculateXPFromLog } from '../hooks/useXP';
 import FabTimer from './FabTimer';
 import EloUpgradeModal from './EloUpgradeModal';
 
 interface MainAppProps {
   session: any;
-  isDarkMode: boolean;
   onHardReset: () => void;
 }
 
 export default function MainApp({
   session,
-  isDarkMode,
   onHardReset,
 }: MainAppProps) {
   // DATA HOOK
   const {
-    subjects, logs, allLogDates, cycleStartDate, dailyGoal, showPerformance, tutorialCompleted, loadingData,
+    subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, loadingData,
+    hasMoreLogs, loadingMoreLogs, loadMoreLogs, searchLogs, searchTerm,
+    daysFilter, applyDaysFilter,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
     addLog, deleteLog, editLog, updateSettings, markTutorialCompleted
   } = useSupabaseData(session);
@@ -146,11 +146,12 @@ export default function MainApp({
             clearInterval(countdownIntervalRef.current!);
             countdownSecondsRef.current = 0;
             // Enviar notificação quando timer acaba
-            if (timerMode === 'temporizador') {
-              sendNotification('Tempo Esgotado!', { body: 'Sua sessão de estudos acabou.' });
-            } else if (timerMode === 'pomodoro') {
-              sendNotification('Pomodoro Finalizado!', { body: 'Tempo de foco concluído. Hora de descansar!' });
-            }
+            // (só chega aqui se estava rodando, pois o intervalo só existe quando isTimerRunning é true)
+            const modeLabel = timerMode === 'pomodoro' ? 'Pomodoro' : 'Ciclo';
+            sendNotification(`${modeLabel} Finalizado! 🎉`, {
+              body: 'Hora de descansar (ou voltar a estudar). Bom trabalho!',
+              icon: '/icon-192.png'
+            });
             return;
           }
           countdownSecondsRef.current -= 1;
@@ -270,19 +271,6 @@ export default function MainApp({
     setActiveTab('history');
   }, []);
 
-  const handleStartTour = useCallback(() => {
-    // Navegar para dashboard
-    setActiveTab('dashboard');
-    // Reiniciar o tutorial
-    localStorage.removeItem('studyflow_tour_completed');
-    if ((window as any).restartOnboardingTour) {
-      (window as any).restartOnboardingTour();
-      addToast('Tutorial reiniciado! O tour começará em breve.', 'success');
-    } else {
-      addToast('Tutorial reiniciado! Recarregue a página para ver o tour.', 'success');
-      setTimeout(() => window.location.reload(), 1000);
-    }
-  }, [addToast]);
 
   const handleNavigateToTutorial = useCallback(() => {
     setActiveTab('tutorial');
@@ -293,9 +281,6 @@ export default function MainApp({
   }, []);
 
   const handleNavigateToStats = useCallback(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MainApp.tsx:297',message:'handleNavigateToStats called',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     setActiveTab('stats');
   }, []);
 
@@ -330,6 +315,7 @@ export default function MainApp({
     >
       <AchievementsProvider
         logs={logs}
+        stats={stats}
         streak={streak}
         dailyGoal={dailyGoal}
         cycleStartDate={cycleStartDate}
@@ -339,14 +325,12 @@ export default function MainApp({
       >
         <MainAppContent
         session={session}
-        isDarkMode={isDarkMode}
         onHardReset={onHardReset}
         subjects={subjects}
         logs={logs}
         cycleStartDate={cycleStartDate}
         dailyGoal={dailyGoal}
         showPerformance={showPerformance}
-        tutorialCompleted={tutorialCompleted}
         loadingData={loadingData}
         streak={streak}
         activeTab={activeTab}
@@ -401,7 +385,6 @@ export default function MainApp({
         handleNavigateToElo={handleNavigateToElo}
         handleNavigateToMore={handleNavigateToMore}
         handleOpenHistory={handleOpenHistory}
-        handleStartTour={handleStartTour}
         handleNavigateToTutorial={handleNavigateToTutorial}
         handleOpenSecurity={handleOpenSecurity}
         handleNavigateToStats={handleNavigateToStats}
@@ -422,6 +405,13 @@ export default function MainApp({
         markTutorialCompleted={markTutorialCompleted}
         sendNotification={sendNotification}
         addToast={addToast}
+        hasMoreLogs={hasMoreLogs}
+        loadingMoreLogs={loadingMoreLogs}
+        loadMoreLogs={loadMoreLogs}
+        searchLogs={searchLogs}
+        searchTerm={searchTerm}
+        daysFilter={daysFilter}
+        onDaysFilterChange={applyDaysFilter}
       />
       </AchievementsProvider>
     </XPProvider>
@@ -431,14 +421,12 @@ export default function MainApp({
 // Componente interno que usa o contexto
 function MainAppContent({
   session,
-  isDarkMode,
   onHardReset: _onHardReset,
   subjects,
   logs,
   cycleStartDate,
   dailyGoal,
   showPerformance,
-  tutorialCompleted,
   loadingData,
   streak,
   activeTab,
@@ -493,7 +481,6 @@ function MainAppContent({
   handleNavigateToElo,
   handleNavigateToMore,
   handleOpenHistory,
-  handleStartTour,
   handleNavigateToTutorial,
   handleOpenSecurity,
         handleNavigateToStats,
@@ -513,10 +500,38 @@ function MainAppContent({
   updateSettings: _updateSettings,
   markTutorialCompleted: _markTutorialCompleted,
   sendNotification: _sendNotification,
-  addToast: _addToast
+  addToast: _addToast,
+  hasMoreLogs,
+  loadingMoreLogs,
+  loadMoreLogs,
+  searchLogs,
+  searchTerm,
+  daysFilter,
+  onDaysFilterChange
 }: any) {
   const { pendingCount } = useAchievementsContext();
   const xpContext = useXPContext();
+
+  // Função wrapper para deletar log com remoção de XP
+  const handleConfirmDeleteLog = useCallback(() => {
+    if (deleteLogId) {
+      // Buscar o log que está sendo deletado
+      const logToDelete = logs.find((log: import('../types').StudyLog) => log.id === deleteLogId);
+      
+      if (logToDelete) {
+        // Calcular XP a remover
+        const xpToRemove = calculateXPFromLog(logToDelete);
+        
+        // Remover XP se houver
+        if (xpToRemove > 0) {
+          xpContext.removeXP(xpToRemove, 'Registro excluído');
+        }
+      }
+      
+      // Deletar o log
+      confirmDeleteLog();
+    }
+  }, [deleteLogId, logs, xpContext, confirmDeleteLog]);
 
   // Função renderPage dentro do MainAppContent
   const renderPage = useCallback(() => {
@@ -557,9 +572,6 @@ function MainAppContent({
           </Suspense>
         );
       case 'more':
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MainApp.tsx:551',message:'Rendering MorePage',data:{hasHandleNavigateToStats:!!handleNavigateToStats,type:typeof handleNavigateToStats},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         return (
           <MorePage
             session={session}
@@ -608,6 +620,13 @@ function MainAppContent({
               onDeleteLog={handleDeleteLog} 
               onEditLog={handleEditLog}
               onNavigateBack={() => setActiveTab('more')}
+              hasMoreLogs={hasMoreLogs}
+              loadingMoreLogs={loadingMoreLogs}
+              onLoadMore={loadMoreLogs}
+              onSearch={searchLogs}
+              searchTerm={searchTerm}
+              daysFilter={daysFilter}
+              onDaysFilterChange={onDaysFilterChange}
             />
           </Suspense>
         );
@@ -631,7 +650,6 @@ function MainAppContent({
         return (
           <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
             <TutorialPage 
-              onStartTour={handleStartTour} 
               onNavigateBack={() => setActiveTab('more')}
             />
           </Suspense>
@@ -661,7 +679,7 @@ function MainAppContent({
       default:
         return null;
     }
-  }, [activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLog, dailyGoal, showPerformance, streak, loadingData, handleTimerStop, timerSeconds, setTimerSeconds, isTimerRunning, setIsTimerRunning, timerMode, setTimerMode, handleAddLog, prefilledTime, handleTimeClear, handleAddSubject, handleDeleteSubject, handleUpdateSubject, handleRestartCycle, handleReorderSubjects, session, handleNavigateToAchievements, handleNavigateToElo, handleNavigateToStats, handleNavigateToGoals, handleNavigateToAppearance, handleNavigateToAbout, handleOpenHistory, setShowFeedbackModal, handleStartTour, handleNavigateToTutorial, handleOpenSecurity, handleOpenSettings, handleLogout, _handleNavigateToProfile, setActiveTab, handleTogglePerformance]);
+  }, [activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLog, dailyGoal, showPerformance, streak, loadingData, handleTimerStop, timerSeconds, setTimerSeconds, isTimerRunning, setIsTimerRunning, timerMode, setTimerMode, handleAddLog, prefilledTime, handleTimeClear, handleAddSubject, handleDeleteSubject, handleUpdateSubject, handleRestartCycle, handleReorderSubjects, session, handleNavigateToAchievements, handleNavigateToElo, handleNavigateToStats, handleNavigateToGoals, handleNavigateToAppearance, handleNavigateToAbout, handleOpenHistory, setShowFeedbackModal, handleNavigateToTutorial, handleOpenSecurity, handleOpenSettings, handleLogout, _handleNavigateToProfile, setActiveTab, handleTogglePerformance]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative transition-colors duration-300">
@@ -673,7 +691,7 @@ function MainAppContent({
         confirmText="Excluir" 
         cancelText="Cancelar" 
         variant="danger" 
-        onConfirm={confirmDeleteLog} 
+        onConfirm={handleConfirmDeleteLog} 
         onCancel={handleCancelDeleteLog} 
       />
       <ConfirmModal 
@@ -707,12 +725,6 @@ function MainAppContent({
         onCancel={handleCancelLogout} 
       />
       
-      {/* Onboarding Tour */}
-      <OnboardingTour 
-        isDarkMode={isDarkMode}
-        tutorialCompleted={tutorialCompleted}
-        onMarkTutorialCompleted={_markTutorialCompleted}
-      />
 
       {/* Feedback Modal */}
       <FeedbackModal 

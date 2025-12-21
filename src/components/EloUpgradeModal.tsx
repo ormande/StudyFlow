@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Elo } from '../types/elo';
 import { ChevronsRight, ChevronsDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import Button from './Button';
 
 interface EloUpgradeModalProps {
   isOpen: boolean;
@@ -303,7 +304,7 @@ export default function EloUpgradeModal({ isOpen, onClose, oldElo, newElo, total
                   </motion.div>
 
                   {/* Botão Continuar */}
-                  <motion.button
+                  <motion.div
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{
@@ -313,11 +314,17 @@ export default function EloUpgradeModal({ isOpen, onClose, oldElo, newElo, total
                     }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={onClose}
-                    className="w-full px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/30 transition-colors"
                   >
-                    Continuar
-                  </motion.button>
+                    <Button
+                      onClick={onClose}
+                      variant="primary"
+                      fullWidth
+                      size="lg"
+                      className="px-8 py-4 font-bold text-lg shadow-lg shadow-emerald-500/30"
+                    >
+                      Continuar
+                    </Button>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>

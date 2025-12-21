@@ -45,6 +45,8 @@ export interface UserStats {
   total_minutes: number;
   total_questions: number;
   total_correct: number;
+  total_pages?: number;
+  total_logs?: number;
   total_xp: number;
 }
 

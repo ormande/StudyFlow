@@ -6,6 +6,7 @@ import HeatmapModal from '../components/HeatmapModal';
 import { Subject, StudyLog } from '../types';
 import ShareModal from '../components/ShareModal';
 import Skeleton from '../components/Skeleton';
+import Button from '../components/Button';
 import { getQuoteOfTheDay } from '../data/motivationalQuotes';
 import { useGoals } from '../hooks/useGoals';
 
@@ -226,13 +227,15 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             <div className="grid grid-cols-2 gap-6" data-tour="stats-cards-wrapper" data-tour-mobile="true">
               {/* Card Hoje */}
               <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
-                <button
+                <Button
                   onClick={() => setShowShareModal(true)}
-                  className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 active:scale-95"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 h-auto min-w-0"
                   title="Compartilhar Progresso do Dia"
                 >
                   <Share2 size={18} />
-                </button>
+                </Button>
                 <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-1 opacity-90">
@@ -456,9 +459,12 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             {subjects.length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 md:p-5 transition-colors duration-300 border border-gray-100 dark:border-gray-700">
                 {/* Nível 0 - Header e Resumo Geral */}
-                <button
+                <Button
                   onClick={() => setIsGeneralPerformanceExpanded(!isGeneralPerformanceExpanded)}
-                  className="w-full flex items-center justify-between mb-4 group outline-none"
+                  variant="ghost"
+                  fullWidth
+                  className="mb-4 h-auto justify-between"
+                  rightIcon={isGeneralPerformanceExpanded ? <ChevronUp size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200" /> : <ChevronDown size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200" />}
                   aria-expanded={isGeneralPerformanceExpanded}
                   aria-label={isGeneralPerformanceExpanded ? "Recolher detalhes" : "Expandir detalhes"}
                 >
@@ -466,12 +472,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                     <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     <h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho Geral</h2>
                   </div>
-                  {isGeneralPerformanceExpanded ? (
-                    <ChevronUp size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200" />
-                  ) : (
-                    <ChevronDown size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200" />
-                  )}
-                </button>
+                </Button>
 
                 {/* Resumo Geral - Sempre Visível */}
                 <div className="mb-4">
@@ -530,9 +531,18 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                                   }`}
                                 >
                                   {/* Header da Matéria */}
-                                  <button
+                                  <Button
                                     onClick={() => toggleSubjectExpansion(subject.id)}
-                                    className="w-full flex items-center justify-between mb-2 group outline-none"
+                                    variant="ghost"
+                                    fullWidth
+                                    size="sm"
+                                    className="mb-2 h-auto justify-between"
+                                    rightIcon={<ChevronDown 
+                                      size={14} 
+                                      className={`text-gray-400 group-hover:text-emerald-500 transition-all duration-300 flex-shrink-0 ${
+                                        isSubjectExpanded ? 'rotate-180' : 'rotate-0'
+                                      }`}
+                                    />}
                                     aria-expanded={isSubjectExpanded}
                                     aria-label={isSubjectExpanded ? `Recolher detalhes de ${subject.name}` : `Expandir detalhes de ${subject.name}`}
                                   >
@@ -541,19 +551,13 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate text-left">
                                         {subject.name}
                                       </span>
-                                      <ChevronDown 
-                                        size={14} 
-                                        className={`text-gray-400 group-hover:text-emerald-500 transition-all duration-300 flex-shrink-0 ${
-                                          isSubjectExpanded ? 'rotate-180' : 'rotate-0'
-                                        }`}
-                                      />
                                     </div>
                                     <div className="text-right ml-2 flex-shrink-0">
                                       <span className={`text-sm font-bold ${getAccuracyTextColor(performance.accuracy)}`}>
                                         {performance.accuracy}%
                                       </span>
                                     </div>
-                                  </button>
+                                  </Button>
 
                                   {/* Barra Simples (quando fechada) */}
                                   {!isSubjectExpanded && (
@@ -646,25 +650,31 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                           </div> 
                           <div className="flex items-center gap-2 flex-shrink-0"> 
                             <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span> 
-                            <button 
+                            <Button 
                               onClick={() => onDeleteLog(log.id)} 
-                              className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"
+                              variant="ghost"
+                              size="sm"
+                              className="p-1.5 h-auto min-w-0 text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
                               aria-label="Excluir registro"
                               title="Excluir registro"
                             > 
                               <Trash2 size={16} /> 
-                            </button> 
+                            </Button> 
                           </div> 
                         </div> 
                       ); 
                     })}
                   </div>
-                  <button 
+                  <Button 
                     onClick={() => setShowHistoryModal(true)} 
-                    className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
+                    variant="secondary"
+                    fullWidth
+                    size="md"
+                    leftIcon={<History size={18} />}
+                    className="mt-4"
                   > 
-                    <History size={18} /> Ver histórico completo
-                  </button>
+                    Ver histórico completo
+                  </Button>
                 </>
               ) : (
                 <div className="text-center py-6">
@@ -690,13 +700,15 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               <div className="col-span-2 grid grid-cols-2 gap-6" data-tour="stats-cards-wrapper" data-tour-desktop="true">
                 {/* Card Hoje */}
                 <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
-                  <button
+                  <Button
                     onClick={() => setShowShareModal(true)}
-                    className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 active:scale-95"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 h-auto min-w-0"
                     title="Compartilhar Progresso do Dia"
                   >
                     <Share2 size={18} />
-                  </button>
+                  </Button>
                   <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
                   <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
                     <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
@@ -871,13 +883,15 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                     ))}
                   </div>
                   {/* Botão Ver mais */}
-                  <button
+                  <Button
                     onClick={() => setShowHeatmapModal(true)}
-                    className="mt-4 text-white hover:text-white/80 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    variant="ghost"
+                    size="sm"
+                    leftIcon={<Calendar size={14} />}
+                    className="mt-4 text-white hover:text-white/80 text-xs font-semibold h-auto"
                   >
-                    <Calendar size={14} />
                     Ver calendário completo →
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -932,9 +946,12 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               {subjects.length > 0 && (
                 <div className="col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300 border border-gray-100 dark:border-gray-700">
                   {/* Nível 0 - Header e Resumo Geral */}
-                  <button
+                  <Button
                     onClick={() => setIsGeneralPerformanceExpanded(!isGeneralPerformanceExpanded)}
-                    className="w-full flex items-center justify-between mb-4 group outline-none"
+                    variant="ghost"
+                    fullWidth
+                    className="mb-4 h-auto justify-between"
+                    rightIcon={isGeneralPerformanceExpanded ? <ChevronUp size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200" /> : <ChevronDown size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200" />}
                     aria-expanded={isGeneralPerformanceExpanded}
                     aria-label={isGeneralPerformanceExpanded ? "Recolher detalhes" : "Expandir detalhes"}
                   >
@@ -942,12 +959,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                       <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       <h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho Geral</h2>
                     </div>
-                    {isGeneralPerformanceExpanded ? (
-                      <ChevronUp size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200" />
-                    ) : (
-                      <ChevronDown size={20} className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200" />
-                    )}
-                  </button>
+                  </Button>
 
                   {/* Resumo Geral - Sempre Visível */}
                   <div className="mb-4">
@@ -1006,9 +1018,18 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                                     }`}
                                   >
                                     {/* Header da Matéria */}
-                                    <button
+                                    <Button
                                       onClick={() => toggleSubjectExpansion(subject.id)}
-                                      className="w-full flex items-center justify-between mb-2 group outline-none"
+                                      variant="ghost"
+                                      fullWidth
+                                      size="sm"
+                                      className="mb-2 h-auto justify-between"
+                                      rightIcon={<ChevronDown 
+                                        size={14} 
+                                        className={`text-gray-400 group-hover:text-emerald-500 transition-all duration-300 flex-shrink-0 ${
+                                          isSubjectExpanded ? 'rotate-180' : 'rotate-0'
+                                        }`}
+                                      />}
                                       aria-expanded={isSubjectExpanded}
                                       aria-label={isSubjectExpanded ? `Recolher detalhes de ${subject.name}` : `Expandir detalhes de ${subject.name}`}
                                     >
@@ -1017,19 +1038,13 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                                         <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate text-left">
                                           {subject.name}
                                         </span>
-                                        <ChevronDown 
-                                          size={14} 
-                                          className={`text-gray-400 group-hover:text-emerald-500 transition-all duration-300 flex-shrink-0 ${
-                                            isSubjectExpanded ? 'rotate-180' : 'rotate-0'
-                                          }`}
-                                        />
                                       </div>
                                       <div className="text-right ml-2 flex-shrink-0">
                                         <span className={`text-sm font-bold ${getAccuracyTextColor(performance.accuracy)}`}>
                                           {performance.accuracy}%
                                         </span>
                                       </div>
-                                    </button>
+                                    </Button>
 
                                     {/* Barra Simples (quando fechada) */}
                                     {!isSubjectExpanded && (

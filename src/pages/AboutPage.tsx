@@ -3,6 +3,7 @@ import { Globe, Instagram, ArrowLeft, FileText, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 import TermsModal from '../components/TermsModal';
 import PrivacyModal from '../components/PrivacyModal';
+import Button from '../components/Button';
 
 interface AboutPageProps {
   onNavigateBack?: () => void;
@@ -33,13 +34,15 @@ export default function AboutPage({ onNavigateBack }: AboutPageProps) {
           <div className="mb-6">
             {/* Botão Voltar - Apenas Mobile */}
             {onNavigateBack && (
-              <button
+              <Button
                 onClick={onNavigateBack}
-                className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+                variant="ghost"
+                size="md"
+                leftIcon={<ArrowLeft size={20} />}
+                className="md:hidden mb-4"
               >
-                <ArrowLeft size={20} />
-                <span className="font-semibold">Voltar</span>
-              </button>
+                Voltar
+              </Button>
             )}
             <div className="flex items-center gap-3 mb-2">
               <img src="/icon-192.png" alt="Logo" className="w-10 h-10 mr-4 rounded-lg" />
@@ -66,9 +69,11 @@ export default function AboutPage({ onNavigateBack }: AboutPageProps) {
             </h2>
             <div className="space-y-3">
               {/* Website Oficial */}
-              <button
+              <Button
                 onClick={handleOpenWebsite}
-                className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+                variant="ghost"
+                fullWidth
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
@@ -76,12 +81,14 @@ export default function AboutPage({ onNavigateBack }: AboutPageProps) {
                   </div>
                   <span className="font-semibold text-gray-900 dark:text-white">Website Oficial</span>
                 </div>
-              </button>
+              </Button>
 
               {/* Instagram */}
-              <button
+              <Button
                 disabled
-                className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between opacity-60 cursor-not-allowed"
+                variant="ghost"
+                fullWidth
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between opacity-60 h-auto"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center">
@@ -93,7 +100,7 @@ export default function AboutPage({ onNavigateBack }: AboutPageProps) {
                   </div>
                 </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Em breve</span>
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -103,25 +110,29 @@ export default function AboutPage({ onNavigateBack }: AboutPageProps) {
               Legal
             </h2>
             <div className="space-y-2">
-              <button
+              <Button
                 onClick={() => setShowTermsModal(true)}
-                className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+                variant="ghost"
+                fullWidth
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
               >
                 <div className="flex items-center gap-3">
                   <FileText size={20} className="text-blue-600 dark:text-blue-400" />
                   <span className="font-semibold text-gray-900 dark:text-white">Termos de Uso</span>
                 </div>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 onClick={() => setShowPrivacyModal(true)}
-                className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+                variant="ghost"
+                fullWidth
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
               >
                 <div className="flex items-center gap-3">
                   <Shield size={20} className="text-emerald-600 dark:text-emerald-400" />
                   <span className="font-semibold text-gray-900 dark:text-white">Política de Privacidade</span>
                 </div>
-              </button>
+              </Button>
             </div>
           </div>
 

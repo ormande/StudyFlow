@@ -5,6 +5,32 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2025-12-20 (Edição "Polimento & Performance") - Atual
+
+Esta versão foca na robustez da experiência do usuário, introduzindo um sistema de design padronizado (UI Kit), resolvendo limitações críticas de performance no histórico e garantindo a integridade dos dados de gamificação.
+
+### Adicionado
+- **Notificações Locais (Web Notifications):**
+  - Alertas nativos do sistema quando o Timer ou Pomodoro finalizam (funciona em background).
+  - Controle de permissão e botão de "Testar Notificação" na página de Configurações.
+- **Paginação e Busca Avançada (Histórico):**
+  - Implementação de **Load More** (Paginação sob demanda) substituindo o limite fixo de 100 logs.
+  - **Busca Global no Servidor (Server-Side):** A pesquisa agora varre todo o banco de dados (Matérias, Observações e Subtópicos) ignorando a paginação local.
+  - **Filtros de Data (Chips):** Filtros rápidos no topo do histórico (1D, 7D, 30D, Todos, etc.) integrados à query do banco.
+- **Sincronização entre Abas (BroadcastChannel):** Atualização automática de dados em todas as janelas abertas do app (ex: finalizar timer em uma aba atualiza o dashboard na outra instantaneamente).
+- **UI Kit (Design System):**
+  - Novo componente `<Button />` reutilizável e tipado.
+  - Suporte nativo a variantes (Primary, Danger, Ghost, Outline), tamanhos, ícones e estado de `loading`.
+
+### Modificado
+- **Refatoração Global de UI:** Substituição massiva de botões nativos e classes repetitivas pelo novo componente `<Button />` em todo o projeto (Login, Register, Settings, etc.).
+- **Integridade de XP:** Implementação da lógica de **subtração de XP** (`removeXP`) ao deletar um registro de estudo, prevenindo inconsistências no ranking.
+- **Cálculo de Conquistas:** Migração da lógica de validação para usar `user_stats` (servidor) em vez do array local, corrigindo bugs em conquistas de longo prazo (ex: "Maratonista").
+
+### Removido
+- **Tour Interativo (Onboarding):** Remoção completa da biblioteca `react-joyride` e do componente `OnboardingTour` devido a problemas de performance e UX mobile, mantendo a `TutorialPage` estática como guia principal.
+- **Limites Artificiais:** Remoção da trava de "últimos 100 registros" no hook de dados.
+
 ## [1.7.0] - 2025-12-20 (Edição "Game Changer")
 
 Esta versão consolida a Gamificação, introduz a gestão completa de Perfil e finaliza a identidade visual da marca.

@@ -3,6 +3,7 @@ import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowD
 import { Reorder, useDragControls } from 'framer-motion';
 import ConfirmModal from '../components/ConfirmModal';
 import AlertModal from '../components/AlertModal';
+import Button from '../components/Button';
 import { Subject, StudyLog, Subtopic } from '../types';
 import { getRandomColor, subjectColors } from '../utils/colors';
 import Skeleton from '../components/Skeleton';
@@ -67,7 +68,7 @@ const SortableSubjectCard = ({
               />
               {/* CONTROLES DE ORDEM */}
               <div className="flex flex-col gap-0.5">
-                <button 
+                <Button 
                   onClick={() => {
                     const newSubjects = [...subjects];
                     if (index > 0) {
@@ -76,13 +77,15 @@ const SortableSubjectCard = ({
                     }
                   }}
                   disabled={index === 0}
-                  className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
+                  variant="ghost"
+                  size="sm"
+                  className="p-0.5 h-auto min-w-0"
                   aria-label="Mover matéria para cima"
                   title="Mover matéria para cima"
                 >
                   <ArrowUp size={14} strokeWidth={3} />
-                </button>
-                <button 
+                </Button>
+                <Button 
                   onClick={() => {
                     const newSubjects = [...subjects];
                     if (index < subjectsLength - 1) {
@@ -91,12 +94,14 @@ const SortableSubjectCard = ({
                     }
                   }}
                   disabled={index === subjectsLength - 1}
-                  className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 active:scale-90 transition-transform"
+                  variant="ghost"
+                  size="sm"
+                  className="p-0.5 h-auto min-w-0"
                   aria-label="Mover matéria para baixo"
                   title="Mover matéria para baixo"
                 >
                   <ArrowDown size={14} strokeWidth={3} />
-                </button>
+                </Button>
               </div>
               <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
               <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
@@ -108,22 +113,26 @@ const SortableSubjectCard = ({
           
           {/* Botões de Ação: Editar e Excluir */}
           <div className="flex items-center gap-1">
-            <button 
+            <Button 
               onClick={() => onEdit(subject)} 
-              className="text-gray-400 hover:text-emerald-500 p-2 active:scale-90 transition-transform"
+              variant="ghost"
+              size="sm"
+              className="p-2 h-auto min-w-0"
               aria-label="Editar Matéria"
               title="Editar Matéria"
             >
               <Pencil className="w-5 h-5" />
-            </button>
-            <button 
+            </Button>
+            <Button 
               onClick={() => onDelete(subject.id)} 
-              className="text-red-500 hover:text-red-600 p-2 active:scale-90 transition-transform"
+              variant="danger"
+              size="sm"
+              className="p-2 h-auto min-w-0"
               aria-label="Excluir Matéria"
               title="Excluir Matéria"
             >
               <Trash2 className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -137,13 +146,15 @@ const SortableSubjectCard = ({
           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 text-right">{percentage.toFixed(1)}%</p>
         </div>
 
-        <button 
+        <Button 
           onClick={() => onExpand(isExpanded ? null : subject.id)} 
-          className="w-full flex items-center justify-between py-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 group"
+          variant="ghost"
+          fullWidth
+          className="justify-between py-2 h-auto"
         >
           <span>Subtópicos ({subject.subtopics.filter((st) => st.completed).length}/{subject.subtopics.length})</span>
           <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-        </button>
+        </Button>
       </div>
 
       {/* EFEITO ACORDEÃO NOS SUBTÓPICOS */}
@@ -155,24 +166,28 @@ const SortableSubjectCard = ({
                 <div key={subtopic.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 group">
                   
                   <div className="flex flex-col gap-0.5 opacity-50 hover:opacity-100 transition-opacity">
-                     <button 
+                     <Button 
                        onClick={() => moveSubtopic(subject.id, subtopicIndex, 'up')}
                        disabled={subtopicIndex === 0}
-                       className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
+                       variant="ghost"
+                       size="sm"
+                       className="p-0.5 h-auto min-w-0"
                        aria-label={`Mover subtópico "${subtopic.name}" para cima`}
                        title="Mover subtópico para cima"
                      >
                        <ArrowUp size={10} strokeWidth={3} />
-                     </button>
-                     <button 
+                     </Button>
+                     <Button 
                        onClick={() => moveSubtopic(subject.id, subtopicIndex, 'down')}
                        disabled={subtopicIndex === subject.subtopics.length - 1}
-                       className="text-gray-400 hover:text-emerald-500 disabled:opacity-20 p-0.5 active:scale-90"
+                       variant="ghost"
+                       size="sm"
+                       className="p-0.5 h-auto min-w-0"
                        aria-label={`Mover subtópico "${subtopic.name}" para baixo`}
                        title="Mover subtópico para baixo"
                      >
                        <ArrowDown size={10} strokeWidth={3} />
-                     </button>
+                     </Button>
                   </div>
 
                   <button
@@ -188,14 +203,16 @@ const SortableSubjectCard = ({
                   <span className={`flex-1 text-sm ${subtopic.completed ? 'text-gray-500 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200 font-medium'}`}>
                     {subtopic.name}
                   </span>
-                  <button 
+                  <Button 
                     onClick={() => onDeleteSubtopic(subject.id, subtopic.id)} 
-                    className="text-red-500 hover:text-red-600 p-1 active:scale-90 transition-transform"
+                    variant="danger"
+                    size="sm"
+                    className="p-1 h-auto min-w-0"
                     aria-label={`Excluir subtópico "${subtopic.name}"`}
                     title="Excluir subtópico"
                   >
                     <X className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -210,14 +227,15 @@ const SortableSubjectCard = ({
                 className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base lg:text-base min-w-0"
                 onKeyDown={(e) => { if (e.key === 'Enter') onAddSubtopic(subject.id); }}
               />
-              <button 
+              <Button 
                 onClick={() => onAddSubtopic(subject.id)} 
-                className="px-4 py-2.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-95 flex-shrink-0"
+                variant="primary"
+                size="md"
+                leftIcon={<Plus className="w-5 h-5" />}
+                className="flex-shrink-0"
                 aria-label="Adicionar subtópico"
                 title="Adicionar subtópico"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
+              />
             </div>
           </div>
         </div>
@@ -436,9 +454,9 @@ export default function CyclePage({
                 style={{ width: `${totalCycleProgress}%` }}
               ></div>
             </div>
-            <button onClick={onRestartCycle} className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2">
-              <RefreshCw size={18} /> REINICIAR CICLO
-            </button>
+            <Button onClick={onRestartCycle} variant="danger" fullWidth leftIcon={<RefreshCw size={18} />} className="font-bold">
+              REINICIAR CICLO
+            </Button>
           </div>
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 lg:p-6 rounded-2xl border border-emerald-100 dark:border-emerald-800">
@@ -524,12 +542,16 @@ export default function CyclePage({
           </div>
 
           {!isAdding ? (
-            <button
+            <Button
               onClick={() => setIsAdding(true)}
-              className="w-full py-5 lg:py-6 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-semibold hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all active:scale-95 flex items-center justify-center gap-2"
+              variant="outline"
+              fullWidth
+              size="lg"
+              leftIcon={<Plus className="w-5 h-5" />}
+              className="border-dashed py-5 lg:py-6"
             >
-              <Plus className="w-5 h-5" /> Adicionar Matéria
-            </button>
+              Adicionar Matéria
+            </Button>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 lg:p-6 space-y-4 lg:space-y-5 transition-colors border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
               <div>
@@ -555,8 +577,8 @@ export default function CyclePage({
                 />
               </div>
               <div className="flex gap-3">
-                <button onClick={handleAddSubject} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all active:scale-95 shadow-md">Salvar</button>
-                <button onClick={() => { setIsAdding(false); setNewName(''); setNewGoal(''); }} className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95">Cancelar</button>
+                <Button onClick={handleAddSubject} variant="primary" fullWidth className="flex-1 shadow-md">Salvar</Button>
+                <Button onClick={() => { setIsAdding(false); setNewName(''); setNewGoal(''); }} variant="secondary" fullWidth className="flex-1">Cancelar</Button>
               </div>
             </div>
           )}
@@ -646,18 +668,23 @@ export default function CyclePage({
             </div>
 
             <div className="flex gap-3 pt-2">
-              <button 
+              <Button 
                 onClick={handleSaveEdit} 
-                className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
+                variant="primary"
+                fullWidth
+                className="flex-1 shadow-md"
+                leftIcon={<Save size={18} />}
               >
-                <Save size={18} /> Salvar
-              </button>
-              <button 
+                Salvar
+              </Button>
+              <Button 
                 onClick={() => setEditingSubject(null)} 
-                className="flex-1 py-3 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all active:scale-95"
+                variant="secondary"
+                fullWidth
+                className="flex-1"
               >
                 Cancelar
-              </button>
+              </Button>
             </div>
           </div>
         </div>

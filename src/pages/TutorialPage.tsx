@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion';
-import { Target, Clock, Trophy, Play, ArrowLeft } from 'lucide-react';
+import { Target, Clock, Trophy, ArrowLeft } from 'lucide-react';
+import Button from '../components/Button';
 
 interface TutorialPageProps {
-  onStartTour: () => void;
   onNavigateBack?: () => void;
 }
 
-export default function TutorialPage({ onStartTour, onNavigateBack }: TutorialPageProps) {
+export default function TutorialPage({ onNavigateBack }: TutorialPageProps) {
   const cards = [
     {
       icon: Target,
@@ -45,13 +45,15 @@ export default function TutorialPage({ onStartTour, onNavigateBack }: TutorialPa
       <div className="text-center mb-8">
         {/* Botão Voltar - Apenas Mobile */}
         {onNavigateBack && (
-          <button
+          <Button
             onClick={onNavigateBack}
-            className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+            variant="ghost"
+            size="md"
+            leftIcon={<ArrowLeft size={20} />}
+            className="md:hidden mb-4"
           >
-            <ArrowLeft size={20} />
-            <span className="font-semibold">Voltar</span>
-          </button>
+            Voltar
+          </Button>
         )}
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
           Como usar o StudyFlow
@@ -91,29 +93,6 @@ export default function TutorialPage({ onStartTour, onNavigateBack }: TutorialPa
         })}
       </div>
 
-      {/* Footer com Botão de Tour Interativo */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.4 }}
-        className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-8 border-2 border-emerald-200 dark:border-emerald-800 text-center"
-      >
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-          Pronto para começar?
-        </h2>
-        <p className="text-gray-700 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
-          Inicie o tour interativo para conhecer cada funcionalidade do StudyFlow de forma guiada e prática.
-        </p>
-        <motion.button
-          onClick={onStartTour}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="inline-flex items-center gap-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg px-8 py-4 rounded-xl shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
-        >
-          <Play size={24} className="fill-white" />
-          Iniciar Tour Interativo
-        </motion.button>
-      </motion.div>
     </motion.div>
   );
 }

@@ -1,9 +1,12 @@
+import { useState, useEffect } from 'react';
 import { 
   Home, Clock, Plus, Target, Trophy, Star, BarChart2, History, 
   Palette, Target as TargetIcon, MessageSquare, HelpCircle, Lock, LogOut, Settings, Info 
 } from 'lucide-react';
 import { TabType } from '../types';
 import { motion } from 'framer-motion';
+import { supabase } from '../lib/supabase';
+import Button from './Button';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -40,9 +43,61 @@ export default function Sidebar({
   onLogout,
   onNavigateToProfile,
 }: SidebarProps) {
-  const user = {
-    name: session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'Usuário',
-    email: session?.user?.email || '',
+  const [profileData, setProfileData] = useState<{ firstName: string; avatarUrl: string | null }>({
+    firstName: '',
+    avatarUrl: null,
+  });
+
+  // Buscar dados do perfil
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    async function fetchProfile() {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('first_name, avatar_url')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          // PGRST116 = nenhum resultado encontrado (ok para primeiro acesso)
+          console.error('Erro ao carregar perfil:', error);
+        }
+
+        if (data) {
+          let avatarUrl = null;
+          if (data.avatar_url) {
+            // Obter URL pública do avatar
+            const { data: urlData } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(data.avatar_url);
+            avatarUrl = urlData.publicUrl;
+          }
+
+          setProfileData({
+            firstName: data.first_name || '',
+            avatarUrl,
+          });
+        }
+      } catch (error: any) {
+        console.error('Erro ao carregar perfil:', error);
+      }
+    }
+
+    fetchProfile();
+  }, [session?.user?.id]);
+
+  // Determinar nome a exibir
+  const displayName = profileData.firstName || session?.user?.email?.split('@')[0] || 'Usuário';
+  const userEmail = session?.user?.email || '';
+  
+  // Obter inicial para fallback do avatar
+  const getInitial = () => {
+    if (profileData.firstName) {
+      return profileData.firstName.charAt(0).toUpperCase();
+    }
+    return displayName.charAt(0).toUpperCase();
   };
 
   // Itens organizados em grupos lógicos sem títulos
@@ -85,9 +140,18 @@ export default function Sidebar({
     const isActive = activeTab === id;
     const handleClick = onClick || (() => onTabChange(id as TabType));
 
+    // Mapear IDs do tour
+    const tourIdMap: Record<string, string> = {
+      dashboard: 'nav-dashboard',
+      cycle: 'nav-cycle',
+      history: 'nav-history',
+    };
+    const tourId = tourIdMap[id] || undefined;
+
     return (
       <motion.button
         key={id}
+        id={tourId}
         onClick={handleClick}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -160,35 +224,54 @@ export default function Sidebar({
         {onNavigateToProfile ? (
           <button
             onClick={onNavigateToProfile}
-            className="w-full flex items-center gap-3 mb-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left"
+            className="w-full mb-3 p-2 rounded-xl text-left h-auto flex items-center gap-3 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
           >
-            <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold flex-shrink-0">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+            {profileData.avatarUrl ? (
+              <img
+                src={profileData.avatarUrl}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold flex-shrink-0">
+                {getInitial()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{displayName}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{userEmail}</p>
             </div>
           </button>
         ) : (
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold flex-shrink-0">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
+            {profileData.avatarUrl ? (
+              <img
+                src={profileData.avatarUrl}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold flex-shrink-0">
+                {getInitial()}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
-              <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+              <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{displayName}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{userEmail}</p>
             </div>
           </div>
         )}
         {onLogout && (
-          <button
+          <Button
             onClick={onLogout}
-            className="w-full text-red-600 dark:text-red-400 text-sm font-semibold flex items-center justify-center gap-2 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+            variant="ghost"
+            size="sm"
+            fullWidth
+            leftIcon={<LogOut size={16} />}
+            className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
           >
-            <LogOut size={16} />
             Sair
-          </button>
+          </Button>
         )}
       </div>
     </aside>

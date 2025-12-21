@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { Subject, StudyLog } from '../types';
 import IOSSwitch from '../components/IOSSwitch';
+import Button from '../components/Button';
 
 interface StatsPageProps {
   logs: StudyLog[];
@@ -300,13 +301,15 @@ export default function StatsPage({
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
         {/* Header */}
         <div className="mb-6">
-          <button
+          <Button
             onClick={onNavigateBack}
-            className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+            variant="ghost"
+            size="md"
+            leftIcon={<ArrowLeft size={20} />}
+            className="md:hidden mb-4"
           >
-            <ArrowLeft size={20} />
-            <span className="font-semibold">Voltar</span>
-          </button>
+            Voltar
+          </Button>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Estatísticas</h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm">Gráficos e análises detalhadas</p>
         </div>
@@ -353,37 +356,40 @@ export default function StatsPage({
           <div className="hidden md:flex items-center gap-3">
             {/* Filtro Período */}
             <div className="relative">
-              <button
+              <Button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowPeriodDropdown(!showPeriodDropdown);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                variant="outline"
+                size="sm"
+                leftIcon={<Calendar size={16} />}
+                rightIcon={<ChevronDown size={16} />}
+                className="px-4 py-2"
               >
-                <Calendar size={16} />
                 {periodLabels[period]}
-                <ChevronDown size={16} />
-              </button>
+              </Button>
               {showPeriodDropdown && (
                 <div 
                   className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-10 min-w-[200px]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {Object.entries(periodLabels).map(([key, label]) => (
-                    <button
+                    <Button
                       key={key}
                       type="button"
                       onClick={() => {
                         setPeriod(key as PeriodOption);
                         setShowPeriodDropdown(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                        period === key ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'
-                      }`}
+                      variant={period === key ? 'primary' : 'ghost'}
+                      size="sm"
+                      fullWidth
+                      className="w-full text-left px-4 py-2 justify-start"
                     >
                       {label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
@@ -403,49 +409,53 @@ export default function StatsPage({
 
             {/* Filtro Matéria */}
             <div className="relative">
-              <button
+              <Button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowSubjectDropdown(!showSubjectDropdown);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                variant="outline"
+                size="sm"
+                leftIcon={<BookOpen size={16} />}
+                rightIcon={<ChevronDown size={16} />}
+                className="px-4 py-2"
               >
-                <BookOpen size={16} />
                 {selectedSubjectId === 'all' ? 'Todas as matérias' : subjects.find(s => s.id === selectedSubjectId)?.name || 'Todas'}
-                <ChevronDown size={16} />
-              </button>
+              </Button>
               {showSubjectDropdown && (
                 <div 
                   className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-10 min-w-[200px] max-h-[300px] overflow-y-auto"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
+                  <Button
                     type="button"
                     onClick={() => {
                       setSelectedSubjectId('all');
                       setShowSubjectDropdown(false);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                      selectedSubjectId === 'all' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'
-                    }`}
+                    variant={selectedSubjectId === 'all' ? 'primary' : 'ghost'}
+                    size="sm"
+                    fullWidth
+                    className="w-full text-left px-4 py-2 justify-start"
                   >
                     Todas as matérias
-                  </button>
+                  </Button>
                   {subjects.map(subject => (
-                    <button
+                    <Button
                       key={subject.id}
                       type="button"
                       onClick={() => {
                         setSelectedSubjectId(subject.id);
                         setShowSubjectDropdown(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                        selectedSubjectId === subject.id ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'
-                      }`}
+                      variant={selectedSubjectId === subject.id ? 'primary' : 'ghost'}
+                      size="sm"
+                      fullWidth
+                      className="w-full text-left px-4 py-2 justify-start"
                     >
                       {subject.name}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}

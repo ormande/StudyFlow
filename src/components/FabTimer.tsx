@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Timer } from 'lucide-react';
+import Button from './Button';
 
 interface FabTimerProps {
   onClick: () => void;
@@ -8,9 +9,9 @@ interface FabTimerProps {
 
 export default function FabTimer({ onClick, isRunning }: FabTimerProps) {
   return (
-    <motion.button
-      onClick={onClick}
-      className="hidden md:flex fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
+    <motion.div
+      id="fab-timer"
+      className="hidden md:flex fixed bottom-8 right-8 z-50"
       initial={{ scale: 0 }}
       animate={{ 
         scale: 1,
@@ -35,8 +36,15 @@ export default function FabTimer({ onClick, isRunning }: FabTimerProps) {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      <Timer className="w-6 h-6" />
-    </motion.button>
+      <Button
+        onClick={onClick}
+        variant="primary"
+        size="lg"
+        className="w-16 h-16 rounded-full shadow-xl"
+      >
+        <Timer className="w-6 h-6" />
+      </Button>
+    </motion.div>
   );
 }
 

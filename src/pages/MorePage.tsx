@@ -1,9 +1,12 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Trophy, Star, BarChart3, History, Palette, Target, MessageSquare, 
-  HelpCircle, Lock, LogOut, ChevronRight, Settings, User
+  HelpCircle, Lock, LogOut, ChevronRight, Settings
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
+import Button from '../components/Button';
 
 interface MorePageProps {
   session: any;
@@ -38,14 +41,62 @@ export default function MorePage({
   onLogout,
   onNavigateToProfile,
 }: MorePageProps) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:36',message:'MorePage props received',data:{hasOnNavigateToStats:!!onNavigateToStats,type:typeof onNavigateToStats,hasOnNavigateToGoals:!!onNavigateToGoals,hasOnNavigateToAchievements:!!onNavigateToAchievements},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   const { addToast } = useToast();
+  const [profileData, setProfileData] = useState<{ firstName: string; avatarUrl: string | null }>({
+    firstName: '',
+    avatarUrl: null,
+  });
 
-  const user = {
-    name: session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'Usuário',
-    email: session?.user?.email || '',
+  // Buscar dados do perfil
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    async function fetchProfile() {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('first_name, avatar_url')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          // PGRST116 = nenhum resultado encontrado (ok para primeiro acesso)
+          console.error('Erro ao carregar perfil:', error);
+        }
+
+        if (data) {
+          let avatarUrl = null;
+          if (data.avatar_url) {
+            // Obter URL pública do avatar
+            const { data: urlData } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(data.avatar_url);
+            avatarUrl = urlData.publicUrl;
+          }
+
+          setProfileData({
+            firstName: data.first_name || '',
+            avatarUrl,
+          });
+        }
+      } catch (error: any) {
+        console.error('Erro ao carregar perfil:', error);
+      }
+    }
+
+    fetchProfile();
+  }, [session?.user?.id]);
+
+  // Determinar nome a exibir
+  const displayName = profileData.firstName || session?.user?.email?.split('@')[0] || 'Usuário';
+  const userEmail = session?.user?.email || '';
+  
+  // Obter inicial para fallback do avatar
+  const getInitial = () => {
+    if (profileData.firstName) {
+      return profileData.firstName.charAt(0).toUpperCase();
+    }
+    return displayName.charAt(0).toUpperCase();
   };
 
   const handleNavigateToAchievements = () => {
@@ -69,18 +120,9 @@ export default function MorePage({
   };
 
   const handleStatistics = () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:64',message:'handleStatistics called',data:{onNavigateToStats:typeof onNavigateToStats,isFunction:typeof onNavigateToStats==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (onNavigateToStats) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:67',message:'Calling onNavigateToStats',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       onNavigateToStats();
     } else {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MorePage.tsx:71',message:'onNavigateToStats is undefined',data:{onNavigateToStats},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       addToast('Navegação para estatísticas não disponível', 'error');
     }
   };
@@ -107,44 +149,32 @@ export default function MorePage({
       {/* Header - Perfil do usuário */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white text-2xl font-bold">
-            {user.name.charAt(0).toUpperCase()}
-          </div>
+          {profileData.avatarUrl ? (
+            <img
+              src={profileData.avatarUrl}
+              alt="Avatar"
+              className="w-16 h-16 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white text-2xl font-bold">
+              {getInitial()}
+            </div>
+          )}
           <div className="flex-1">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{user.name}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{displayName}</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{userEmail}</p>
           </div>
         </div>
-        <button
+        <Button
           onClick={onNavigateToProfile ? onNavigateToProfile : handleEditProfile}
-          className="mt-4 w-full text-center text-emerald-600 dark:text-emerald-400 text-sm font-semibold hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+          variant="ghost"
+          fullWidth
+          size="sm"
+          className="mt-4 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
         >
           Editar Perfil →
-        </button>
+        </Button>
       </div>
-
-      {/* Seção: Perfil */}
-      {onNavigateToProfile && (
-        <div className="mb-6">
-          <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-2">
-            Conta
-          </h3>
-          <button
-            type="button"
-            onClick={onNavigateToProfile}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95 relative z-10"
-          >
-            <div className="flex items-center gap-3">
-              <User size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Meu Perfil</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Edite suas informações pessoais</span>
-              </div>
-            </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
-        </div>
-      )}
 
       {/* Seção: Gamificação */}
       <div className="mb-6">
@@ -152,10 +182,13 @@ export default function MorePage({
           Gamificação
         </h3>
         <div className="space-y-2">
-          <button
+          <Button
             type="button"
             onClick={handleNavigateToAchievements}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95 relative z-10"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md relative z-10 h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <Trophy size={20} className="text-emerald-600 dark:text-emerald-400" />
@@ -164,13 +197,15 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Badges e medalhas desbloqueadas</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
             onClick={onNavigateToElo}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95 relative z-10"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md relative z-10 h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <Star size={20} className="text-amber-500" />
@@ -179,8 +214,7 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Sistema de ranking e progressão</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -190,9 +224,12 @@ export default function MorePage({
           Dados
         </h3>
         <div className="space-y-2">
-          <button
+          <Button
             onClick={handleStatistics}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
@@ -201,12 +238,14 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Gráficos e análises detalhadas</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleOpenHistory}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <History size={20} className="text-gray-600 dark:text-gray-400" />
@@ -215,8 +254,7 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Todos os seus registros de estudo</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -226,9 +264,12 @@ export default function MorePage({
           Configurações
         </h3>
         <div className="space-y-2">
-          <button
+          <Button
             onClick={onOpenSettings}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <Settings size={20} className="text-emerald-600 dark:text-emerald-400" />
@@ -237,12 +278,14 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Preferências e opções do app</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleAppearance}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <Palette size={20} className="text-purple-600 dark:text-purple-400" />
@@ -251,12 +294,14 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Tema, fonte e animações</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleGoals}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <Target size={20} className="text-orange-600 dark:text-orange-400" />
@@ -265,12 +310,14 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Configure suas metas diárias e semanais</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleOpenFeedback}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <MessageSquare size={20} className="text-emerald-600 dark:text-emerald-400" />
@@ -279,12 +326,14 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Envie sugestões e reporte bugs</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleOpenTutorial}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <HelpCircle size={20} className="text-blue-600 dark:text-blue-400" />
@@ -293,12 +342,14 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Guia interativo do app</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleOpenSecurity}
-            className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-all active:scale-95"
+            variant="ghost"
+            fullWidth
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+            rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
             <div className="flex items-center gap-3">
               <Lock size={20} className="text-gray-600 dark:text-gray-400" />
@@ -307,19 +358,21 @@ export default function MorePage({
                 <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Alterar senha e segurança</span>
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-400" />
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Botão Sair */}
-      <button
+      <Button
         onClick={onLogout}
-        className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-xl p-4 flex items-center justify-center gap-2 font-semibold transition-all active:scale-95 shadow-sm"
+        variant="danger"
+        fullWidth
+        size="lg"
+        leftIcon={<LogOut size={20} />}
+        className="shadow-sm"
       >
-        <LogOut size={20} />
         Sair
-      </button>
+      </Button>
     </motion.div>
   );
 }

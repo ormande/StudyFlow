@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 
 export function useNotification() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
+  const STORAGE_KEY = 'settings_notifications_enabled';
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -9,13 +10,33 @@ export function useNotification() {
     }
   }, []);
 
-  const requestPermission = useCallback(async () => {
+  // Verificar se notificações estão habilitadas no app
+  const isEnabled = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved === 'true';
+  };
+
+  const requestPermission = useCallback(async (): Promise<NotificationPermission> => {
     if (!('Notification' in window)) {
       console.error("Este navegador não suporta notificações.");
-      return;
+      return 'denied';
     }
-    const result = await Notification.requestPermission();
-    setPermission(result);
+
+    try {
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      
+      // Se o usuário negar, desabilitar no app também
+      if (result === 'denied') {
+        localStorage.setItem(STORAGE_KEY, 'false');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Erro ao solicitar permissão:", error);
+      return 'denied';
+    }
   }, []);
 
   const playNotificationSound = useCallback(() => {
@@ -45,23 +66,54 @@ export function useNotification() {
     }
   }, []);
 
-  const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
-    if (permission === 'granted') {
-      playNotificationSound();
-      
-      // Tenta enviar notificação nativa
-      try {
-        new Notification(title, {
-          icon: '/vite.svg', // Tenta usar o logo do Vite/App se existir
-          ...options
-        });
-      } catch (e) {
-        console.error("Erro ao enviar notificação:", e);
-      }
-    } else {
+  const sendNotification = useCallback(async (title: string, options?: NotificationOptions) => {
+    // Verificar se a permissão foi concedida
+    if (permission !== 'granted') {
       console.warn("Permissão de notificação não concedida.");
+      return;
+    }
+
+    // Verificar se o usuário habilitou notificações no app
+    if (!isEnabled()) {
+      console.warn("Notificações desabilitadas pelo usuário no app.");
+      return;
+    }
+
+    playNotificationSound();
+
+    try {
+      // Tentar usar Service Worker para melhor suporte no mobile (Android)
+      // Só usar se houver service worker registrado
+      if ('serviceWorker' in navigator) {
+        try {
+          // Verificar se há service worker registrado (não apenas se a API existe)
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          
+          if (registrations.length > 0) {
+            const registration = await navigator.serviceWorker.ready;
+            await registration.showNotification(title, {
+              icon: '/icon-192.png',
+              badge: '/icon-192.png',
+              ...options
+            });
+            return;
+          }
+        } catch (swError) {
+          console.warn("Erro ao usar Service Worker, tentando Notification API:", swError);
+          // Fallback para Notification API
+        }
+      }
+
+      // Fallback: usar Notification API diretamente
+      new Notification(title, {
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        ...options
+      });
+    } catch (e) {
+      console.error("Erro ao enviar notificação:", e);
     }
   }, [permission, playNotificationSound]);
 
-  return { permission, requestPermission, sendNotification };
+  return { permission, requestPermission, sendNotification, isEnabled };
 }

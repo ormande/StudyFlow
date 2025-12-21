@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, Volume2, VolumeX, Database, FileSpreadsheet, FileText, AlertTriangle, Trash2, Play } from 'lucide-react';
+import { ArrowLeft, Eye, Volume2, VolumeX, Database, FileSpreadsheet, FileText, AlertTriangle, Trash2, Play, Bell, BellOff } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import { useAchievementsContext } from '../contexts/AchievementsContext';
+import { useNotification } from '../hooks/useNotification';
 import IOSSwitch from '../components/IOSSwitch';
 import ConfirmModal from '../components/ConfirmModal';
+import Button from '../components/Button';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { registerPoppinsFontSimple } from '../utils/pdfFonts';
@@ -30,18 +32,28 @@ export default function SettingsPage({
 }: SettingsPageProps) {
   const { addToast } = useToast();
   const { resetAchievements } = useAchievementsContext();
+  const { permission, requestPermission, sendNotification, isEnabled } = useNotification();
   const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [timerSoundEnabled, setTimerSoundEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-  // Carregar preferência de som do timer do localStorage
+  // Carregar preferências do localStorage
   useEffect(() => {
     const saved = localStorage.getItem('timer_sound_enabled');
     if (saved !== null) {
       setTimerSoundEnabled(saved === 'true');
     }
-  }, []);
+    
+    const notificationsSaved = localStorage.getItem('settings_notifications_enabled');
+    if (notificationsSaved !== null) {
+      setNotificationsEnabled(notificationsSaved === 'true');
+    } else {
+      // Se não existe, verificar se já tem permissão concedida
+      setNotificationsEnabled(permission === 'granted');
+    }
+  }, [permission]);
 
   // Salvar preferência de som do timer
   const handleToggleTimerSound = (enabled: boolean) => {
@@ -66,6 +78,51 @@ export default function SettingsPage({
 
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.3);
+  };
+
+  // Gerenciar notificações do sistema
+  const handleToggleNotifications = async (enabled: boolean) => {
+    if (enabled) {
+      // Se está ativando, pedir permissão
+      const result = await requestPermission();
+      if (result === 'granted') {
+        setNotificationsEnabled(true);
+        localStorage.setItem('settings_notifications_enabled', 'true');
+        addToast('Notificações habilitadas!', 'success');
+      } else if (result === 'denied') {
+        setNotificationsEnabled(false);
+        localStorage.setItem('settings_notifications_enabled', 'false');
+        addToast('Permissão negada no navegador', 'error');
+      }
+    } else {
+      // Se está desativando, apenas salvar preferência
+      setNotificationsEnabled(false);
+      localStorage.setItem('settings_notifications_enabled', 'false');
+    }
+  };
+
+  // Testar notificação
+  const handleTestNotification = async () => {
+    if (permission !== 'granted') {
+      addToast('Permissão de notificação não concedida. Ative as notificações primeiro.', 'error');
+      return;
+    }
+
+    if (!notificationsEnabled) {
+      addToast('Notificações estão desabilitadas. Ative-as primeiro.', 'error');
+      return;
+    }
+
+    try {
+      await sendNotification('StudyFlow: As notificações estão funcionando! 🚀', {
+        body: 'Teste de notificação realizado com sucesso.',
+        tag: 'test-notification',
+        requireInteraction: false
+      });
+    } catch (error) {
+      console.error('Erro ao testar notificação:', error);
+      addToast('Erro ao enviar notificação de teste', 'error');
+    }
   };
 
   // Função para Exportar CSV (Compatível com Excel Brasil)
@@ -847,13 +904,15 @@ export default function SettingsPage({
         <div className="mb-8">
           {/* Botão Voltar - Apenas Mobile */}
           {onNavigateBack && (
-            <button
+            <Button
               onClick={onNavigateBack}
-              className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+              variant="ghost"
+              size="md"
+              leftIcon={<ArrowLeft size={20} />}
+              className="md:hidden mb-4"
             >
-              <ArrowLeft size={20} />
-              <span className="font-semibold">Voltar</span>
-            </button>
+              Voltar
+            </Button>
           )}
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2">
             <Database className="text-emerald-500" size={28} />
@@ -899,7 +958,9 @@ export default function SettingsPage({
             )}
             Notificações
           </h2>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+          
+          {/* Sons do Timer */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 mb-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
@@ -915,13 +976,55 @@ export default function SettingsPage({
                 aria-label="Sons do Timer"
               />
             </div>
-            <button
+            <Button
               onClick={handleTestSound}
-              className="w-full px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+              variant="primary"
+              fullWidth
+              size="md"
+              leftIcon={<Play size={18} />}
             >
-              <Play size={18} />
               Testar Som
-            </button>
+            </Button>
+          </div>
+
+          {/* Notificações do Sistema */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                  {notificationsEnabled && permission === 'granted' ? (
+                    <Bell className="text-emerald-500" size={18} />
+                  ) : (
+                    <BellOff className="text-gray-400" size={18} />
+                  )}
+                  Habilitar Notificações
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Receba notificações do sistema quando o timer finalizar
+                </p>
+                {permission === 'denied' && (
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                    Permissão negada no navegador. Ative nas configurações do navegador.
+                  </p>
+                )}
+              </div>
+              <IOSSwitch
+                checked={notificationsEnabled && permission === 'granted'}
+                onChange={handleToggleNotifications}
+                disabled={permission === 'denied'}
+                aria-label="Habilitar Notificações"
+              />
+            </div>
+            <Button
+              onClick={handleTestNotification}
+              disabled={permission !== 'granted' || !notificationsEnabled}
+              variant="primary"
+              fullWidth
+              size="md"
+              leftIcon={<Bell size={18} />}
+            >
+              Testar Notificação
+            </Button>
           </div>
         </div>
 
@@ -932,9 +1035,10 @@ export default function SettingsPage({
             Dados
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
+            <Button
               onClick={handleExportCSV}
-              className="bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl p-6 flex flex-col items-center gap-3 transition-all active:scale-95 border border-blue-200 dark:border-blue-800"
+              variant="ghost"
+              className="bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl p-6 flex flex-col items-center gap-3 border border-blue-200 dark:border-blue-800 h-auto"
             >
               <div className="p-3 bg-blue-500 rounded-xl text-white">
                 <FileSpreadsheet size={24} />
@@ -945,12 +1049,14 @@ export default function SettingsPage({
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 Compatível Excel
               </p>
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={handleExportPDF}
               disabled={isExportingPDF}
-              className="bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl p-6 flex flex-col items-center gap-3 transition-all active:scale-95 border border-red-200 dark:border-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="ghost"
+              isLoading={isExportingPDF}
+              className="bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl p-6 flex flex-col items-center gap-3 border border-red-200 dark:border-red-800 h-auto"
             >
               <div className="p-3 bg-red-500 rounded-xl text-white">
                 {isExportingPDF ? (
@@ -970,7 +1076,7 @@ export default function SettingsPage({
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 Relatório profissional
               </p>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -989,14 +1095,18 @@ export default function SettingsPage({
                 Esta ação é IRREVERSÍVEL. Todo o seu histórico, conquistas, elos e matérias serão apagados permanentemente.
               </p>
             </div>
-            <button
+            <Button
               onClick={() => setShowFactoryResetConfirm(true)}
               disabled={isResetting}
-              className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
+              variant="danger"
+              fullWidth
+              size="lg"
+              leftIcon={<Trash2 size={18} />}
+              isLoading={isResetting}
+              className="font-bold"
             >
-              <Trash2 size={18} />
               {isResetting ? 'Apagando...' : 'Zerar Conta'}
-            </button>
+            </Button>
           </div>
         </div>
       </motion.div>

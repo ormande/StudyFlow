@@ -1,6 +1,6 @@
 import { CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppearance } from '../hooks/useAppearance';
+import Button from './Button';
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -19,7 +19,6 @@ export default function AlertModal({
   variant = 'info',
   onClose,
 }: AlertModalProps) {
-  const { shouldReduceMotion } = useAppearance();
   const variantStyles = {
     success: {
       icon: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
@@ -45,17 +44,17 @@ export default function AlertModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={shouldReduceMotion ? undefined : { opacity: 0 }}
-          animate={shouldReduceMotion ? undefined : { opacity: 1 }}
-          exit={shouldReduceMotion ? undefined : { opacity: 0 }}
-          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm"
         >
           <motion.div
-            initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.9, y: 20 }}
-            animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
-            exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.9, y: 20 }}
-            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ duration: 0.2 }}
             className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
           >
             {/* Header */}
@@ -69,12 +68,13 @@ export default function AlertModal({
 
             {/* Botão */}
             <div className="p-4 bg-gray-50 dark:bg-gray-900/50">
-              <button
+              <Button
                 onClick={onClose}
-                className={`w-full py-3 rounded-xl font-semibold text-white ${styles.button} transition-all active:scale-95`}
+                variant={variant === 'warning' ? 'danger' : 'primary'}
+                fullWidth
               >
                 {buttonText}
-              </button>
+              </Button>
             </div>
           </motion.div>
         </motion.div>

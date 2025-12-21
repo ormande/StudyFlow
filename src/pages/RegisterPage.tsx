@@ -3,6 +3,7 @@ import { Save, BookOpen, Check, X, HelpCircle, RefreshCw, Layers, Calendar, Cloc
 import { Subject, StudyLog } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import Button from '../components/Button';
 
 interface RegisterPageProps {
   subjects: Subject[];
@@ -340,39 +341,33 @@ export default function RegisterPage({
           
           {/* Seletor de Opções Rápidas */}
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <button
+            <Button
               type="button"
               onClick={() => handleDateOptionChange('today')}
-              className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 min-h-[44px] flex items-center justify-center ${
-                dateOption === 'today'
-                  ? 'bg-emerald-500 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              variant={dateOption === 'today' ? 'primary' : 'secondary'}
+              size="md"
+              className="min-h-[44px]"
             >
               Hoje
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => handleDateOptionChange('yesterday')}
-              className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 min-h-[44px] flex items-center justify-center ${
-                dateOption === 'yesterday'
-                  ? 'bg-emerald-500 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              variant={dateOption === 'yesterday' ? 'primary' : 'secondary'}
+              size="md"
+              className="min-h-[44px]"
             >
               Ontem
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => handleDateOptionChange('other')}
-              className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all active:scale-95 min-h-[44px] flex items-center justify-center ${
-                dateOption === 'other'
-                  ? 'bg-emerald-500 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              variant={dateOption === 'other' ? 'primary' : 'secondary'}
+              size="md"
+              className="min-h-[44px]"
             >
               Outro
-            </button>
+            </Button>
           </div>
 
           {/* Date Picker (apenas quando "Outro" está selecionado) */}
@@ -385,14 +380,14 @@ export default function RegisterPage({
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="relative">
+                <div className="relative min-w-0">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none z-10" size={20} />
                   <input 
                     type="date" 
                     value={date} 
                     max={new Date().toISOString().split('T')[0]} 
                     onChange={(e) => handleDateChange(e.target.value)} 
-                    className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark]" 
+                    className="w-full max-w-full px-3 md:px-4 py-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark] min-w-0" 
                   />
                 </div>
               </motion.div>
@@ -411,9 +406,17 @@ export default function RegisterPage({
             {typeButtons.map((btn) => {
               const Icon = btn.icon;
               return (
-                <button key={btn.id} type="button" onClick={() => setType(btn.id as any)} className={`py-3.5 rounded-xl font-semibold text-xs transition-all active:scale-95 flex flex-col items-center gap-1.5 min-h-[44px] ${type === btn.id ? 'bg-emerald-500 text-white shadow-lg scale-105' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
-                  <Icon className="w-4 h-4" /> {btn.label}
-                </button>
+                <Button 
+                  key={btn.id} 
+                  type="button" 
+                  onClick={() => setType(btn.id as any)} 
+                  variant={type === btn.id ? 'primary' : 'secondary'}
+                  size="sm"
+                  className="py-3.5 flex flex-col items-center justify-center gap-1.5 min-h-[44px] [&>span]:flex [&>span]:flex-col [&>span]:items-center [&>span]:justify-center [&>span]:gap-1.5"
+                >
+                  <Icon className="w-4 h-4" />
+                  {btn.label}
+                </Button>
               );
             })}
           </div>
@@ -616,12 +619,16 @@ export default function RegisterPage({
 
         {/* Botão Salvar - Destaque */}
         <div className="md:col-span-12">
-          <button 
+          <Button 
             onClick={handleSubmit} 
-            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2"
+            variant="primary"
+            fullWidth
+            size="lg"
+            leftIcon={<Save size={20} />}
+            className="font-bold shadow-lg"
           >
-            <Save size={20} /> <span>Salvar Registro</span>
-          </button>
+            Salvar Registro
+          </Button>
         </div>
       </div>
     </div>

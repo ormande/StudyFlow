@@ -4,6 +4,7 @@ import { useGoals, Goals } from '../hooks/useGoals';
 import { StudyLog } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import IOSSwitch from '../components/IOSSwitch';
+import Button from '../components/Button';
 
 interface GoalsPageProps {
   logs: StudyLog[];
@@ -116,13 +117,15 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       {/* Header */}
       <div className="mb-6">
-        <button
+        <Button
           onClick={onNavigateBack}
-          className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+          variant="ghost"
+          size="md"
+          leftIcon={<ArrowLeft size={20} />}
+          className="md:hidden mb-4"
         >
-          <ArrowLeft size={20} />
-          <span className="font-semibold">Voltar</span>
-        </button>
+          Voltar
+        </Button>
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2">
           <Target className="text-emerald-500" size={28} />
           Metas de Estudo
@@ -145,13 +148,15 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                 Meta Diária (Sugerida)
               </label>
               <div className="flex items-center gap-3">
-                <button
+                <Button
                   onClick={() => adjustValue('dailyTimeGoal', -1)}
-                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  variant="secondary"
+                  size="sm"
+                  className="w-12 h-12 md:w-14 md:h-14 p-0"
                   aria-label="Decrementar 30 minutos"
                 >
                   <Minus size={20} className="text-gray-700 dark:text-gray-300" />
-                </button>
+                </Button>
                 <div className="flex-1">
                   <input
                     type="number"
@@ -168,13 +173,15 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">horas/dia</p>
                 </div>
-                <button
+                <Button
                   onClick={() => adjustValue('dailyTimeGoal', 1)}
-                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  variant="secondary"
+                  size="sm"
+                  className="w-12 h-12 md:w-14 md:h-14 p-0"
                   aria-label="Incrementar 30 minutos"
                 >
                   <Plus size={20} className="text-gray-700 dark:text-gray-300" />
-                </button>
+                </Button>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Ajuda na consistência, mas é flexível</p>
               {validationErrors.dailyTime && (
@@ -415,13 +422,15 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
 
       {/* Botão Salvar */}
       <div className="mt-6">
-        <button
+        <Button
           onClick={handleSave}
-          className="w-full md:w-auto md:px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-base transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+          variant="primary"
+          size="lg"
+          leftIcon={<Save size={20} />}
+          className="w-full md:w-auto md:px-8 shadow-lg shadow-emerald-500/20"
         >
-          <Save size={20} />
           Salvar Alterações
-        </button>
+        </Button>
       </div>
     </div>
   );

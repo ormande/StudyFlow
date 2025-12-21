@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import React from 'react';
-import { Trash2, Pencil, Check, X, Calendar, Filter, History, ArrowLeft } from 'lucide-react';
+import { Trash2, Pencil, Check, X, Filter, History, ArrowLeft, Loader2, Search } from 'lucide-react';
 import { Subject, StudyLog, StudyType } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import Button from '../components/Button';
 
 interface HistoryPageProps {
   logs: StudyLog[];
@@ -10,6 +11,13 @@ interface HistoryPageProps {
   onDeleteLog: (id: string) => void;
   onEditLog: (id: string, updates: Partial<StudyLog>) => void;
   onNavigateBack?: () => void;
+  hasMoreLogs?: boolean;
+  loadingMoreLogs?: boolean;
+  onLoadMore?: () => void;
+  onSearch?: (term: string) => void;
+  searchTerm?: string;
+  daysFilter?: number | null;
+  onDaysFilterChange?: (days: number | null) => void;
 }
 
 export default function HistoryPage({
@@ -18,23 +26,54 @@ export default function HistoryPage({
   onDeleteLog,
   onEditLog,
   onNavigateBack,
+  hasMoreLogs = false,
+  loadingMoreLogs = false,
+  onLoadMore,
+  onSearch,
+  searchTerm = '',
+  daysFilter = 30,
+  onDaysFilterChange,
 }: HistoryPageProps) {
   const [filterSubject, setFilterSubject] = useState<string>('all');
-  const [filterDate, setFilterDate] = useState<string>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<StudyLog>>({});
+  const [localSearchTerm, setLocalSearchTerm] = useState<string>(searchTerm);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Obter datas únicas dos logs
-  const uniqueDates = Array.from(new Set(logs.map(log => log.date))).sort((a, b) => {
-    return new Date(b).getTime() - new Date(a).getTime();
-  });
+  // Debounce para busca (500ms após parar de digitar)
+  useEffect(() => {
+    // Não fazer nada se o termo local já está sincronizado com o externo
+    if (localSearchTerm === searchTerm) return;
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      if (onSearch && localSearchTerm !== searchTerm) {
+        onSearch(localSearchTerm);
+      }
+    }, 500);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [localSearchTerm, searchTerm, onSearch]);
+
+  // Sincronizar localSearchTerm com searchTerm externo (quando busca é limpa externamente)
+  useEffect(() => {
+    if (searchTerm === '' && localSearchTerm !== '') {
+      setLocalSearchTerm('');
+    }
+  }, [searchTerm]);
 
   const filteredLogs = [...logs]
     .sort((a, b) => b.timestamp - a.timestamp)
     .filter((log) => {
       const subjectMatch = filterSubject === 'all' || log.subjectId === filterSubject;
-      const dateMatch = filterDate === 'all' || log.date === filterDate;
-      return subjectMatch && dateMatch;
+      return subjectMatch;
     });
 
   const getSubjectName = (subjectId: string) => {
@@ -96,13 +135,15 @@ export default function HistoryPage({
         <div className="mb-6">
           {/* Botão Voltar - Apenas Mobile */}
           {onNavigateBack && (
-            <button
+            <Button
               onClick={onNavigateBack}
-              className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+              variant="ghost"
+              size="md"
+              leftIcon={<ArrowLeft size={20} />}
+              className="md:hidden mb-4"
             >
-              <ArrowLeft size={20} />
-              <span className="font-semibold">Voltar</span>
-            </button>
+              Voltar
+            </Button>
           )}
           <div className="flex items-center gap-3 mb-2">
             <History className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
@@ -115,8 +156,32 @@ export default function HistoryPage({
           </p>
         </div>
 
-        {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Campo de Busca */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
+            <input
+              type="text"
+              value={localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
+              placeholder="Buscar por matéria, subtópico ou observação..."
+              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-emerald-500 transition-colors"
+            />
+            {localSearchTerm && (
+              <Button
+                onClick={() => setLocalSearchTerm('')}
+                variant="ghost"
+                size="sm"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 h-auto min-w-0"
+              >
+                <X size={18} />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Filtros: Matéria e Data (Desktop: lado a lado, Mobile: empilhados) */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Filtro de Matéria */}
           <div className="relative">
             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
@@ -132,21 +197,37 @@ export default function HistoryPage({
             </select>
           </div>
 
-          {/* Filtro de Data */}
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
-            <select
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-colors"
-            >
-              <option value="all">Todas as datas</option>
-              {uniqueDates.map((date) => (
-                <option key={date} value={date}>
-                  {new Date(date).toLocaleDateString('pt-BR')}
-                </option>
-              ))}
-            </select>
+          {/* Filtros de Data (Chips) */}
+          <div className="flex flex-wrap gap-2 md:flex-nowrap md:justify-between md:gap-0 md:space-x-2">
+            {[
+              { label: 'Hoje', days: 1 },
+              { label: '7D', days: 7 },
+              { label: '15D', days: 15 },
+              { label: '30D', days: 30 },
+              { label: '90D', days: 90 },
+              { label: '365D', days: 365 },
+              { label: 'Todos', days: null },
+            ].map(({ label, days }) => {
+              const isActive = daysFilter === days;
+              return (
+                <Button
+                  key={`${label}-${days}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!loadingMoreLogs && onDaysFilterChange && daysFilter !== days) {
+                      onDaysFilterChange(days);
+                    }
+                  }}
+                  disabled={loadingMoreLogs}
+                  variant={isActive ? 'primary' : 'secondary'}
+                  size="sm"
+                  className="whitespace-nowrap flex-shrink-0 md:flex-1 md:max-w-none text-xs md:text-sm"
+                >
+                  {label}
+                </Button>
+              );
+            })}
           </div>
         </div>
 
@@ -261,20 +342,24 @@ export default function HistoryPage({
                           {/* Ações */}
                           <td className="px-4 py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button
+                              <Button
                                 onClick={() => startEditing(log)}
-                                className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+                                variant="primary"
+                                size="sm"
+                                className="p-2 h-auto min-w-0"
                                 title="Editar"
                               >
                                 <Pencil size={16} />
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 onClick={() => onDeleteLog(log.id)}
-                                className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                                variant="danger"
+                                size="sm"
+                                className="p-2 h-auto min-w-0"
                                 title="Excluir"
                               >
                                 <Trash2 size={16} />
-                              </button>
+                              </Button>
                             </div>
                           </td>
                         </motion.tr>
@@ -400,18 +485,22 @@ export default function HistoryPage({
                                     </div>
 
                                     <div className="flex gap-2 justify-end pt-2">
-                                      <button
+                                      <Button
                                         onClick={cancelEdit}
-                                        className="px-4 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-lg font-semibold transition-colors flex items-center gap-2"
+                                        variant="secondary"
+                                        size="md"
+                                        leftIcon={<X size={16} />}
                                       >
-                                        <X size={16} /> Cancelar
-                                      </button>
-                                      <button
+                                        Cancelar
+                                      </Button>
+                                      <Button
                                         onClick={() => saveEdit(log)}
-                                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                                        variant="primary"
+                                        size="md"
+                                        leftIcon={<Check size={16} />}
                                       >
-                                        <Check size={16} /> Salvar
-                                      </button>
+                                        Salvar
+                                      </Button>
                                     </div>
                                   </div>
                                 </motion.div>
@@ -427,6 +516,22 @@ export default function HistoryPage({
             </div>
           )}
         </div>
+
+        {/* Botão Carregar Mais - Só exibir se não houver busca ativa */}
+        {!localSearchTerm.trim() && hasMoreLogs && (
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={onLoadMore}
+              disabled={loadingMoreLogs}
+              variant="outline"
+              size="md"
+              isLoading={loadingMoreLogs}
+              leftIcon={!loadingMoreLogs ? undefined : <Loader2 className="w-5 h-5 animate-spin" />}
+            >
+              {loadingMoreLogs ? 'Carregando...' : 'Carregar mais histórico'}
+            </Button>
+          </div>
+        )}
       </div>
     </motion.div>
   );

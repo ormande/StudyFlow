@@ -25,9 +25,27 @@ export default function BottomNav({ activeTab, onTabChange, pendingAchievementsC
           const isActive = activeTab === tab.id;
           const showBadge = tab.id === 'more' && pendingAchievementsCount > 0;
 
+          // Mapear IDs do tour
+          const tourIdMap: Record<string, string> = {
+            dashboard: 'nav-dashboard',
+            cycle: 'nav-cycle',
+            timer: 'nav-timer',
+            register: 'nav-register',
+            more: 'nav-more',
+            history: 'nav-history',
+          };
+          const tourId = tourIdMap[tab.id] || undefined;
+          
+          // #region agent log
+          if (tourId) {
+            fetch('http://127.0.0.1:7242/ingest/9795e9e2-8e7e-49d6-a28d-cdbcb2b11e2f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BottomNav.tsx:37',message:'BottomNav button rendering',data:{tabId:tab.id,tourId,willHaveId:!!tourId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+          }
+          // #endregion
+
           return (
             <button
               key={tab.id}
+              id={tourId}
               onClick={() => {
                 if (tab.id === 'more' && pendingAchievementsCount > 0) {
                   onTabChange('achievements');

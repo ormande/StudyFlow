@@ -2,13 +2,31 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StudyLog } from '../types';
 import { Elo, XPHistoryEntry, calculateXPProgress, getEloByXP } from '../types/elo';
 import { supabase } from '../lib/supabase';
+import { useToast } from '../contexts/ToastContext';
 
 interface UseXPProps {
   logs: StudyLog[];
   userId?: string;
 }
 
+// Função helper exportada para calcular XP de um log
+export function calculateXPFromLog(log: StudyLog): number {
+  // XP por hora de estudo (10 XP por hora)
+  const hours = (log.hours || 0) + ((log.minutes || 0) / 60) + ((log.seconds || 0) / 3600);
+  const xpFromHours = Math.floor(hours * 10);
+  
+  // XP por páginas lidas (2 XP por página)
+  const xpFromPages = (log.pages || 0) * 2;
+  
+  // XP por questões corretas (5 XP por questão correta)
+  const xpFromQuestions = (log.correct || 0) * 5;
+  
+  // Somar todos os tipos de XP
+  return xpFromHours + xpFromPages + xpFromQuestions;
+}
+
 export function useXP({ logs, userId }: UseXPProps) {
+  const { addToast } = useToast();
   const [totalXP, setTotalXP] = useState<number>(0);
   const [xpHistory, setXpHistory] = useState<XPHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -238,6 +256,37 @@ export function useXP({ logs, userId }: UseXPProps) {
     });
   }, [saveXP]);
 
+  // Remover XP
+  const removeXP = useCallback((amount: number, reason: string) => {
+    setTotalXP(prev => {
+      // Não deixar XP ficar negativo
+      const newTotal = Math.max(0, prev - amount);
+      
+      // Adicionar ao histórico com valor negativo
+      const newEntry: XPHistoryEntry = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        date: Date.now(),
+        amount: -amount, // Valor negativo para indicar remoção
+        reason,
+        icon: '🗑️',
+        isBonus: false,
+      };
+
+      setXpHistory(prevHistory => {
+        const updated = [newEntry, ...prevHistory].slice(0, 50); // Manter últimos 50
+        saveXP(newTotal, updated);
+        return updated;
+      });
+
+      // Mostrar toast de aviso
+      if (amount > 0) {
+        addToast(`XP removido: -${amount}`, 'warning');
+      }
+
+      return newTotal;
+    });
+  }, [saveXP, addToast]);
+
   // Carregar XP inicial
   useEffect(() => {
     loadXP();
@@ -368,6 +417,7 @@ export function useXP({ logs, userId }: UseXPProps) {
     progress,
     isLoading,
     addXP,
+    removeXP,
     refreshXP: loadXP,
   };
 }

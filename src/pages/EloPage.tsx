@@ -5,6 +5,7 @@ import { useXPContext } from '../contexts/XPContext';
 import { ELOS } from '../types/elo';
 import { StudyLog } from '../types';
 import EloHistoryModal from '../components/EloHistoryModal';
+import Button from '../components/Button';
 
 interface EloPageProps {
   logs: StudyLog[];
@@ -33,13 +34,15 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
       {/* Header */}
       <div className="mb-6">
         {onNavigateToMore && (
-          <button
+          <Button
             onClick={onNavigateToMore}
-            className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+            variant="ghost"
+            size="md"
+            leftIcon={<ArrowLeft size={20} />}
+            className="md:hidden mb-4"
           >
-            <ArrowLeft size={20} />
-            <span className="font-semibold">Voltar</span>
-          </button>
+            Voltar
+          </Button>
         )}
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 transition-colors flex items-center gap-2">
           <Star className="text-emerald-500" size={28} />
@@ -131,13 +134,14 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
           </p>
 
           {/* Botão Ver Histórico */}
-          <button
+          <Button
             onClick={() => setShowHistoryModal(true)}
-            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors flex items-center gap-2"
+            variant="primary"
+            size="md"
+            leftIcon={<TrendingUp size={20} />}
           >
-            <TrendingUp size={20} />
             Ver histórico de XP
-          </button>
+          </Button>
         </div>
       </motion.div>
 

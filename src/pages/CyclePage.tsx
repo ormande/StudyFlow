@@ -317,7 +317,6 @@ export default function CyclePage({
       goalMinutes: parseInt(newGoal),
       subtopics: [],
       color: getRandomColor(),
-      position: cycleSubjects.length,
     };
     
     // Atualizar UI imediatamente
@@ -332,7 +331,7 @@ export default function CyclePage({
       goalMinutes: newSubject.goalMinutes,
       subtopics: [],
       color: newSubject.color,
-    })).catch((error) => {
+    })).catch(() => {
       // Reverter em caso de erro
       setCycleSubjects(prev => prev.filter(s => s.id !== tempId));
       addToast('Erro ao adicionar matéria. Tente novamente.', 'error');
@@ -369,7 +368,7 @@ export default function CyclePage({
     setEditingSubject(null);
     
     // Persistir em background
-    Promise.resolve(onUpdateSubject(editingSubject.id, updates)).catch((error) => {
+    Promise.resolve(onUpdateSubject(editingSubject.id, updates)).catch(() => {
       // Reverter em caso de erro
       setCycleSubjects(prev => prev.map(s => 
         s.id === editingSubject.id ? previousSubject : s
@@ -443,7 +442,7 @@ export default function CyclePage({
     setNewSubtopic('');
     
     // Persistir em background
-    Promise.resolve(onUpdateSubject(subjectId, { subtopics: newSubtopics })).catch((error) => {
+    Promise.resolve(onUpdateSubject(subjectId, { subtopics: newSubtopics })).catch(() => {
       // Reverter em caso de erro
       setCycleSubjects(prev => prev.map(s => 
         s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
@@ -466,7 +465,7 @@ export default function CyclePage({
     ));
     
     // Persistir em background
-    Promise.resolve(onUpdateSubject(subjectId, { subtopics: updatedSubtopics })).catch((error) => {
+    Promise.resolve(onUpdateSubject(subjectId, { subtopics: updatedSubtopics })).catch(() => {
       // Reverter em caso de erro
       setCycleSubjects(prev => prev.map(s => 
         s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
@@ -487,7 +486,7 @@ export default function CyclePage({
     ));
     
     // Persistir em background
-    Promise.resolve(onUpdateSubject(subjectId, { subtopics: updatedSubtopics })).catch((error) => {
+    Promise.resolve(onUpdateSubject(subjectId, { subtopics: updatedSubtopics })).catch(() => {
       // Reverter em caso de erro
       setCycleSubjects(prev => prev.map(s => 
         s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
@@ -514,7 +513,7 @@ export default function CyclePage({
     ));
     
     // Persistir em background
-    Promise.resolve(onUpdateSubject(subjectId, { subtopics: newSubtopics })).catch((error) => {
+    Promise.resolve(onUpdateSubject(subjectId, { subtopics: newSubtopics })).catch(() => {
       // Reverter em caso de erro
       setCycleSubjects(prev => prev.map(s => 
         s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
@@ -637,7 +636,7 @@ export default function CyclePage({
                 setCycleSubjects(newOrder);
                 
                 // Persistir em background
-                Promise.resolve(onReorderSubjects(newOrder)).catch((error) => {
+                Promise.resolve(onReorderSubjects(newOrder)).catch(() => {
                   // Reverter em caso de erro
                   setCycleSubjects(previousOrder);
                   addToast('Erro ao reordenar matérias. Tente novamente.', 'error');
@@ -676,7 +675,7 @@ export default function CyclePage({
                     setCycleSubjects(newOrder);
                     
                     // Persistir em background
-                    Promise.resolve(onReorderSubjects(newOrder)).catch((error) => {
+                    Promise.resolve(onReorderSubjects(newOrder)).catch(() => {
                       // Reverter em caso de erro
                       setCycleSubjects(previousOrder);
                       addToast('Erro ao reordenar matérias. Tente novamente.', 'error');
@@ -767,7 +766,7 @@ export default function CyclePage({
             setDeleteSubjectId(null);
             
             // Persistir em background
-            Promise.resolve(onDeleteSubject(deleteSubjectId)).catch((error) => {
+            Promise.resolve(onDeleteSubject(deleteSubjectId)).catch(() => {
               // Reverter em caso de erro - encontrar posição original
               const originalIndex = subjects.findIndex(s => s.id === deleteSubjectId);
               setCycleSubjects(prev => {

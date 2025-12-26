@@ -772,18 +772,22 @@ export default function StatsPage({
             <div>
               <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
                 <RechartsPieChart>
+                  <style>
+                    {`
+                      .recharts-pie-label-text {
+                        fill: ${chartTextColor} !important;
+                        font-size: 12px !important;
+                        font-family: 'Poppins', system-ui, sans-serif !important;
+                        font-weight: 600 !important;
+                      }
+                    `}
+                  </style>
                   <Pie
                     data={performanceData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
-                    labelStyle={{
-                      fill: chartTextColor,
-                      fontSize: 12,
-                      fontFamily: 'Poppins, system-ui, sans-serif',
-                      fontWeight: 600,
-                    }}
                     outerRadius={isMobile ? 80 : 100}
                     fill="#8884d8"
                     dataKey="value"

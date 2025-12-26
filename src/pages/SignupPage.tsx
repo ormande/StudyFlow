@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, CheckCircle, ArrowRight, User, Calendar, Camera, X } from 'lucide-react';
+import { Mail, Lock, CheckCircle, ArrowRight, User, Calendar, Camera } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import Button from '../components/Button';
@@ -82,7 +82,7 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
     if (onStartSignup) onStartSignup();
 
     try {
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });

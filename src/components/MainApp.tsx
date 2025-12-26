@@ -26,7 +26,7 @@ import PlanPage from '../pages/PlanPage';
 import FeedbackModal from './FeedbackModal';
 import HistoryModal from './HistoryModal';
 import ChangePasswordModal from './ChangePasswordModal';
-import { Loader2, Zap } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
 import { useNotification } from '../hooks/useNotification';
@@ -49,7 +49,7 @@ export default function MainApp({
   // DATA HOOK
   const {
     subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, loadingData,
-    subscriptionStatus, trialEndsAt, subscriptionType: subType, tutorialCompleted, welcomeSeen,
+    subscriptionStatus, trialEndsAt, subscriptionType: subType, welcomeSeen,
     hasMoreLogs, loadingMoreLogs, loadMoreLogs, searchLogs, searchTerm,
     daysFilter, applyDaysFilter,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
@@ -330,7 +330,7 @@ export default function MainApp({
       return endDate < today;
     })();
     const isSubscriptionCancelled = subscriptionStatus === 'cancelled';
-    const hasNoSubscription = !subscriptionStatus || subscriptionStatus === 'none';
+    const hasNoSubscription = !subscriptionStatus;
 
     // Redirecionar para pricing apenas se não tiver assinatura ativa/trial válido
     if (hasNoSubscription || isTrialExpired || isSubscriptionCancelled) {

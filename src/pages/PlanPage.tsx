@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Zap, Crown, ArrowLeft, MessageCircle, Star, Gift, CreditCard, Diamond, XCircle, AlertCircle, X } from 'lucide-react';
+import { Check, Zap, Crown, ArrowLeft, Star, Gift, CreditCard, Diamond, XCircle, AlertCircle, X } from 'lucide-react';
 import Button from '../components/Button';
 import CheckoutMensal from '../components/CheckoutMensal';
 import CheckoutVitalicio from '../components/CheckoutVitalicio';
@@ -94,7 +94,7 @@ export default function PlanPage({
   const handleCancelSubscription = async () => {
     setCancelling(true);
     try {
-      const { data, error } = await supabase.functions.invoke('efi-cancel-subscription');
+      const { error } = await supabase.functions.invoke('efi-cancel-subscription');
       
       if (error) throw error;
 

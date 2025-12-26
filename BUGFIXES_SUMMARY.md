@@ -229,3 +229,6 @@ Todos os bugs críticos foram corrigidos e testados. O sistema de gamificação 
 
 **Fim do Resumo de Correções**
 
+
+
+

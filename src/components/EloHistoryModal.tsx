@@ -136,6 +136,6 @@ export default function EloHistoryModal({ isOpen, onClose, xpHistory, totalXP }:
         </div>
       )}
     </AnimatePresence>,
-    document.body // 🔥 Renderiza fora da árvore DOM principal
+    document.body // Renderiza fora da árvore DOM principal
   );
 }

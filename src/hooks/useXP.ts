@@ -268,7 +268,7 @@ export function useXP({ logs, userId }: UseXPProps) {
         date: Date.now(),
         amount: -amount, // Valor negativo para indicar remoção
         reason,
-        icon: '🗑️',
+        icon: '',
         isBonus: false,
       };
 
@@ -355,17 +355,17 @@ export function useXP({ logs, userId }: UseXPProps) {
           reason = parts.length > 0 
             ? `Estudo de teoria - ${parts.join(', ')}`
             : 'Estudo de teoria';
-          icon = '📚';
+          icon = '';
         } else if (log.type === 'questoes') {
           reason = parts.length > 0 
             ? `Questões - ${parts.join(', ')}`
             : 'Questões';
-          icon = '✅';
+          icon = '';
         } else {
           reason = parts.length > 0 
             ? `Estudo - ${parts.join(', ')}`
             : 'Estudo';
-          icon = '📖';
+          icon = '';
         }
       }
 

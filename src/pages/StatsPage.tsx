@@ -8,6 +8,33 @@ import { Subject, StudyLog } from '../types';
 import IOSSwitch from '../components/IOSSwitch';
 import Button from '../components/Button';
 
+// Componente CustomTooltip para gráficos Recharts
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  
+  return (
+    <div 
+      className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 shadow-lg"
+      style={{
+        fontFamily: 'Poppins, system-ui, sans-serif',
+      }}
+    >
+      <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+        {label}
+      </p>
+      {payload.map((entry: any, index: number) => (
+        <p
+          key={index}
+          className="text-sm font-medium"
+          style={{ color: entry.color }}
+        >
+          {entry.name}: {entry.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+
 interface StatsPageProps {
   logs: StudyLog[];
   subjects: Subject[];
@@ -25,18 +52,38 @@ export default function StatsPage({
   streak,
   onNavigateBack
 }: StatsPageProps) {
-  const [period, setPeriod] = useState<PeriodOption>('30days');
-  const [cycleOnly, setCycleOnly] = useState(true);
+  const [period, setPeriod] = useState<PeriodOption>('all');
+  const [cycleOnly, setCycleOnly] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('all');
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Detectar dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setIsDarkMode(isDark);
+    };
+    
+    checkDarkMode();
+    
+    // Observar mudanças na classe do HTML
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
   }, []);
 
   // Fechar dropdowns ao clicar fora
@@ -295,8 +342,15 @@ export default function StatsPage({
     return 'text-red-600 dark:text-red-400';
   };
 
-  // Estado vazio
-  if (filteredLogs.length === 0) {
+  // Cores para os gráficos baseadas no tema
+  const chartTextColor = isDarkMode ? '#e5e7eb' : '#4b5563';
+  const chartGridColor = isDarkMode ? '#374151' : '#e5e7eb';
+
+  // Estado vazio - verificar se é por falta de dados ou por filtros
+  const hasAnyLogs = logs.length > 0;
+  const hasFilteredLogs = filteredLogs.length > 0;
+  
+  if (!hasFilteredLogs) {
     return (
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
         {/* Header */}
@@ -310,17 +364,50 @@ export default function StatsPage({
           >
             Voltar
           </Button>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Estatísticas</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Estatísticas</h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm">Gráficos e análises detalhadas</p>
         </div>
 
         {/* Estado Vazio */}
         <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
           <BarChart3 size={64} className="text-gray-400 dark:text-gray-500 mb-4" />
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Nenhuma estatística ainda</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-            Comece registrando seus estudos para ver gráficos e análises aqui!
-          </p>
+          {hasAnyLogs ? (
+            <>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Nenhum dado encontrado</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
+                Os filtros aplicados não retornaram nenhum resultado. Tente:
+              </p>
+              <div className="space-y-2 mb-6 text-left max-w-md">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  • Desativar o filtro "Ciclo Atual" para ver todos os registros
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  • Alterar o período para "Todos os tempos"
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  • Verificar se há registros no período selecionado
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setCycleOnly(false);
+                  setPeriod('all');
+                  setSelectedSubjectId('all');
+                }}
+                variant="primary"
+                size="md"
+              >
+                Limpar Filtros
+              </Button>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Nenhuma estatística ainda</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+                Comece registrando seus estudos para ver gráficos e análises aqui!
+              </p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -343,12 +430,12 @@ export default function StatsPage({
           <div className="flex-1">
             <button
               onClick={onNavigateBack}
-              className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors mb-4"
+              className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors mb-4"
             >
               <ArrowLeft size={20} />
               <span className="font-semibold">Voltar</span>
             </button>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Estatísticas</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Estatísticas</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm">Gráficos e análises detalhadas</p>
           </div>
 
@@ -511,7 +598,7 @@ export default function StatsPage({
             <Clock size={20} className="text-emerald-500" />
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Total de Horas</span>
           </div>
-          <p className="text-2xl font-black text-gray-800 dark:text-white">
+          <p className="text-2xl font-black text-gray-900 dark:text-white">
             {summaryData.totalHours}h {summaryData.totalMinutes}min
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Estudadas no período</p>
@@ -523,7 +610,7 @@ export default function StatsPage({
             <HelpCircle size={20} className="text-blue-500" />
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Questões Resolvidas</span>
           </div>
-          <p className="text-2xl font-black text-gray-800 dark:text-white">
+          <p className="text-2xl font-black text-gray-900 dark:text-white">
             {summaryData.totalQuestions.toLocaleString('pt-BR')}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">No período selecionado</p>
@@ -547,7 +634,7 @@ export default function StatsPage({
             <Flame size={20} className="text-orange-500" />
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Dias Estudados</span>
           </div>
-          <p className="text-2xl font-black text-gray-800 dark:text-white">
+          <p className="text-2xl font-black text-gray-900 dark:text-white">
             {summaryData.daysStudied} dias
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Streak atual: {streak} dias</p>
@@ -558,39 +645,52 @@ export default function StatsPage({
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp size={20} className="text-emerald-500" />
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white">Evolução nos Últimos 30 Dias</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Evolução nos Últimos 30 Dias</h2>
         </div>
         <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
           <LineChart data={evolutionData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
             <XAxis 
               dataKey="date" 
-              stroke="#6b7280" 
-              className="dark:stroke-gray-400"
-              tick={{ fill: '#6b7280' }}
+              stroke={chartTextColor}
+              tick={{ 
+                fill: chartTextColor,
+                fontSize: 11,
+                fontFamily: 'Poppins, system-ui, sans-serif',
+                fontWeight: 500,
+              }}
             />
             <YAxis 
               yAxisId="left"
-              stroke="#10b981" 
-              className="dark:stroke-emerald-400"
-              tick={{ fill: '#10b981' }}
+              stroke={isDarkMode ? '#34d399' : '#10b981'}
+              tick={{ 
+                fill: isDarkMode ? '#34d399' : '#10b981',
+                fontSize: 11,
+                fontFamily: 'Poppins, system-ui, sans-serif',
+                fontWeight: 500,
+              }}
             />
             <YAxis 
               yAxisId="right"
               orientation="right" 
-              stroke="#3b82f6"
-              className="dark:stroke-blue-400"
-              tick={{ fill: '#3b82f6' }}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                color: '#1f2937'
+              stroke={isDarkMode ? '#60a5fa' : '#3b82f6'}
+              tick={{ 
+                fill: isDarkMode ? '#60a5fa' : '#3b82f6',
+                fontSize: 11,
+                fontFamily: 'Poppins, system-ui, sans-serif',
+                fontWeight: 500,
               }}
             />
-            <Legend />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend 
+              wrapperStyle={{
+                fontFamily: 'Poppins, system-ui, sans-serif',
+                fontSize: '13px',
+                fontWeight: 500,
+                color: chartTextColor,
+              }}
+              iconType="line"
+            />
             <Line 
               yAxisId="left"
               type="monotone" 
@@ -618,28 +718,36 @@ export default function StatsPage({
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={20} className="text-emerald-500" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Tempo por Disciplina</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Tempo por Disciplina</h2>
           </div>
           <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
             <BarChart data={subjectTimeData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
-              <XAxis type="number" stroke="#6b7280" className="dark:stroke-gray-400" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+              <XAxis 
+                type="number" 
+                stroke={chartTextColor}
+                tick={{ 
+                  fill: chartTextColor,
+                  fontSize: 11,
+                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  fontWeight: 500,
+                }}
+              />
               <YAxis 
                 dataKey="subject" 
                 type="category" 
                 width={120} 
-                stroke="#6b7280"
-                className="dark:stroke-gray-400"
-                tick={{ fill: '#6b7280' }}
+                stroke={chartTextColor}
+                tick={{ 
+                  fill: chartTextColor,
+                  fontSize: 11,
+                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  fontWeight: 500,
+                }}
               />
               <Tooltip 
                 formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(1)}h` : ''}
-                contentStyle={{ 
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  color: '#1f2937'
-                }}
+                content={<CustomTooltip />}
               />
               <Bar 
                 dataKey="hours" 
@@ -657,7 +765,7 @@ export default function StatsPage({
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <PieChart size={20} className="text-emerald-500" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho em Questões</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Desempenho em Questões</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Gráfico de Pizza */}
@@ -670,6 +778,12 @@ export default function StatsPage({
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                    labelStyle={{
+                      fill: chartTextColor,
+                      fontSize: 12,
+                      fontFamily: 'Poppins, system-ui, sans-serif',
+                      fontWeight: 600,
+                    }}
                     outerRadius={isMobile ? 80 : 100}
                     fill="#8884d8"
                     dataKey="value"
@@ -680,12 +794,7 @@ export default function StatsPage({
                   </Pie>
                   <Tooltip 
                     formatter={(value: number | undefined) => value !== undefined ? value.toLocaleString('pt-BR') : ''}
-                    contentStyle={{ 
-                      backgroundColor: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      color: '#1f2937'
-                    }}
+                    content={<CustomTooltip />}
                   />
                 </RechartsPieChart>
               </ResponsiveContainer>
@@ -705,7 +814,7 @@ export default function StatsPage({
                   <tbody>
                     {subjectPerformanceData.map((item) => (
                       <tr key={item.subject} className="border-b border-gray-200 dark:border-gray-700">
-                        <td className="p-2 text-sm text-gray-800 dark:text-gray-200">{item.subject}</td>
+                        <td className="p-2 text-sm text-gray-900 dark:text-gray-200">{item.subject}</td>
                         <td className="text-center p-2 text-sm text-gray-600 dark:text-gray-400">{item.total}</td>
                         <td className={`text-center p-2 text-sm font-bold ${getAccuracyColor(item.accuracy)}`}>
                           {item.accuracy}%
@@ -725,33 +834,44 @@ export default function StatsPage({
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={20} className="text-emerald-500" />
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Evolução da Taxa de Acerto</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Evolução da Taxa de Acerto</h2>
           </div>
           <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
             <LineChart data={accuracyEvolutionData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
               <XAxis 
                 dataKey="date" 
-                stroke="#6b7280"
-                className="dark:stroke-gray-400"
-                tick={{ fill: '#6b7280' }}
+                stroke={chartTextColor}
+                tick={{ 
+                  fill: chartTextColor,
+                  fontSize: 11,
+                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  fontWeight: 500,
+                }}
               />
               <YAxis 
                 domain={[0, 100]} 
-                stroke="#6b7280"
-                className="dark:stroke-gray-400"
-                tick={{ fill: '#6b7280' }}
+                stroke={chartTextColor}
+                tick={{ 
+                  fill: chartTextColor,
+                  fontSize: 11,
+                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  fontWeight: 500,
+                }}
               />
               <Tooltip 
                 formatter={(value: number | undefined) => value !== undefined ? `${value}%` : ''}
-                contentStyle={{ 
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  color: '#1f2937'
-                }}
+                content={<CustomTooltip />}
               />
-              <Legend />
+              <Legend 
+                wrapperStyle={{
+                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: chartTextColor,
+                }}
+                iconType="line"
+              />
               <Line 
                 type="monotone" 
                 dataKey="accuracy" 
@@ -778,30 +898,32 @@ export default function StatsPage({
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center gap-2 mb-4">
           <Clock size={20} className="text-emerald-500" />
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white">Distribuição por Horário</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Distribuição por Horário</h2>
         </div>
         <ResponsiveContainer width="100%" height={isMobile ? 250 : 300}>
           <BarChart data={timeDistributionData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
             <XAxis 
               dataKey="period" 
-              stroke="#6b7280"
-              className="dark:stroke-gray-400"
-              tick={{ fill: '#6b7280' }}
+              stroke={chartTextColor}
+              tick={{ 
+                fill: chartTextColor,
+                fontSize: 11,
+                fontFamily: 'Poppins, system-ui, sans-serif',
+                fontWeight: 500,
+              }}
             />
             <YAxis 
-              stroke="#6b7280"
-              className="dark:stroke-gray-400"
-              tick={{ fill: '#6b7280' }}
+              stroke={chartTextColor}
+              tick={{ 
+                fill: chartTextColor,
+                fontSize: 11,
+                fontFamily: 'Poppins, system-ui, sans-serif',
+                fontWeight: 500,
+              }}
             />
             <Tooltip 
-              formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(1)}h` : ''}
-              contentStyle={{ 
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                color: '#1f2937'
-              }}
+              content={<CustomTooltip formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(1)}h` : ''} />}
             />
             <Bar dataKey="hours" radius={[8, 8, 0, 0]}>
               {timeDistributionData.map((entry, index) => (

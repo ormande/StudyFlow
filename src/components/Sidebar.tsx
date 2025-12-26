@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Home, Clock, Plus, Target, Trophy, Star, BarChart2, History, 
-  Palette, Target as TargetIcon, MessageSquare, HelpCircle, Lock, LogOut, Settings, Info 
+  Palette, Target as TargetIcon, MessageSquare, HelpCircle, Lock, LogOut, Settings, Info, CreditCard
 } from 'lucide-react';
 import { TabType } from '../types';
 import { motion } from 'framer-motion';
@@ -17,6 +17,7 @@ interface SidebarProps {
   onOpenHistory?: () => void;
   onOpenTutorial?: () => void;
   onOpenSecurity?: () => void;
+  isSecurityModalOpen?: boolean;
   onNavigateToStats?: () => void;
   onNavigateToAppearance?: () => void;
   onNavigateToGoals?: () => void;
@@ -35,6 +36,7 @@ export default function Sidebar({
   onOpenHistory,
   onOpenTutorial,
   onOpenSecurity,
+  isSecurityModalOpen = false,
   onNavigateToStats,
   onNavigateToAppearance,
   onNavigateToGoals,
@@ -119,8 +121,9 @@ export default function Sidebar({
     
     // GRUPO 4: SISTEMA (mt-6)
     { id: 'appearance' as TabType, icon: Palette, label: 'Aparência', onClick: onNavigateToAppearance, mt: true },
-    { id: 'security' as TabType, icon: Lock, label: 'Segurança', onClick: onOpenSecurity },
+    { id: 'security' as TabType, icon: Lock, label: 'Segurança', onClick: onOpenSecurity, forceActive: isSecurityModalOpen },
     { id: 'settings' as TabType, icon: Settings, label: 'Configurações', onClick: onOpenSettings },
+    { id: 'plans' as TabType, icon: CreditCard, label: 'Planos' },
     
     // GRUPO 5: RODAPÉ (mt-6)
     { id: 'tutorial' as TabType, icon: HelpCircle, label: 'Tutorial', onClick: onOpenTutorial, mt: true },
@@ -134,10 +137,11 @@ export default function Sidebar({
     label: string,
     onClick?: () => void,
     showBadge?: boolean,
-    badgeCount?: number
+    badgeCount?: number,
+    forceActive?: boolean
   ) => {
     const Icon = icon;
-    const isActive = activeTab === id;
+    const isActive = forceActive || activeTab === id;
     const handleClick = onClick || (() => onTabChange(id as TabType));
 
     // Mapear IDs do tour
@@ -207,7 +211,8 @@ export default function Sidebar({
             item.label,
             item.onClick,
             item.showBadge,
-            item.badgeCount
+            item.badgeCount,
+            (item as any).forceActive
           );
           
           // Adicionar espaçamento mt-6 para itens que marcam início de grupo

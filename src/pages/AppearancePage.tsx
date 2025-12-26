@@ -118,7 +118,7 @@ export default function AppearancePage({ onNavigateBack }: AppearancePageProps) 
 
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-6 pb-24 md:pb-8">
+    <div className="max-w-2xl lg:max-w-5xl mx-auto px-6 py-6 pb-24 md:pb-8">
       {/* Header */}
       <div className="mb-8">
         <Button
@@ -130,7 +130,7 @@ export default function AppearancePage({ onNavigateBack }: AppearancePageProps) 
         >
           Voltar
         </Button>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
           <Palette size={28} className="text-emerald-500" />
           Aparência
         </h1>
@@ -139,15 +139,17 @@ export default function AppearancePage({ onNavigateBack }: AppearancePageProps) 
         </p>
       </div>
 
-      <div className="space-y-8">
-        {/* SEÇÃO 1 - TEMA */}
-        <section className="space-y-4">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-            <Moon className="text-emerald-500" size={20} />
-            Tema
-          </h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-8">
+        {/* COLUNA ESQUERDA - CONTROLES */}
+        <div className="space-y-6">
+          {/* SEÇÃO 1 - TEMA */}
+          <section className="space-y-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Moon className="text-emerald-500" size={20} />
+              Tema
+            </h2>
+            
+            <div className="grid grid-cols-2 gap-3">
             {themeOptions.map((option) => {
               const isActive = previewTheme === option.value;
               return (
@@ -174,16 +176,42 @@ export default function AppearancePage({ onNavigateBack }: AppearancePageProps) 
             })}
           </div>
           
-          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-            <Info className="text-gray-400" size={14} />
-            Modo automático segue as configurações do seu sistema
-          </p>
-        </section>
+            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <Info className="text-gray-400" size={14} />
+              Modo automático segue as configurações do seu sistema
+            </p>
+          </section>
 
-        {/* SEÇÃO 2 - PREVIEW DO TEMA */}
-        <section className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-            <Eye size={20} />
+          {/* Botões de ação */}
+          <div className="flex gap-3">
+            {hasChanges && (
+              <Button
+                onClick={handleReset}
+                variant="secondary"
+                fullWidth
+                size="md"
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+            )}
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges}
+              variant={hasChanges ? 'primary' : 'secondary'}
+              fullWidth
+              size="md"
+              className={`flex-1 ${hasChanges ? 'shadow-lg shadow-emerald-500/30' : ''}`}
+            >
+              {hasChanges ? 'Salvar Alterações' : 'Nenhuma alteração'}
+            </Button>
+          </div>
+        </div>
+
+        {/* COLUNA DIREITA - PREVIEW */}
+        <section className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Eye className="text-emerald-500" size={20} />
             Visualização
           </h2>
           
@@ -279,32 +307,6 @@ export default function AppearancePage({ onNavigateBack }: AppearancePageProps) 
             </motion.button>
           </motion.div>
         </section>
-
-      </div>
-
-      {/* Botões de ação - Parte do fluxo da página */}
-      <div className="mt-8 flex gap-3">
-        {hasChanges && (
-          <Button
-            onClick={handleReset}
-            variant="secondary"
-            fullWidth
-            size="md"
-            className="flex-1"
-          >
-            Cancelar
-          </Button>
-        )}
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges}
-          variant={hasChanges ? 'primary' : 'secondary'}
-          fullWidth
-          size="md"
-          className={`flex-1 ${hasChanges ? 'shadow-lg shadow-emerald-500/30' : ''}`}
-        >
-          {hasChanges ? 'Salvar Alterações' : 'Nenhuma alteração'}
-        </Button>
       </div>
     </div>
   );

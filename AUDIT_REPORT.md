@@ -466,3 +466,6 @@ O sistema de gamificação está **parcialmente implementado**. A estrutura est�
 
 **Fim do Relatório**
 
+
+
+

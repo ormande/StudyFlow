@@ -5,6 +5,8 @@ import MainApp from './components/MainApp';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import LandingPage from './pages/LandingPage';
 import LoginScreen from './components/LoginScreen';
+import PricingPage from './pages/PricingPage';
+import SignupPage from './pages/SignupPage';
 import { useAppearance } from './hooks/useAppearance';
 
 // --- APP PRINCIPAL ---
@@ -12,8 +14,9 @@ function App() {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
-  const [authView, setAuthView] = useState<'landing' | 'login' | 'forgot'>('landing');
+  const [authView, setAuthView] = useState<'landing' | 'login' | 'forgot' | 'pricing' | 'signup'>('landing');
   const [forceLanding, setForceLanding] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // Usar hook de aparência para gerenciar tema
   const { settings } = useAppearance();
@@ -127,18 +130,38 @@ function App() {
       <ResetPasswordModal 
         isOpen={isRecoveryMode} 
         onClose={handleCloseRecoveryModal} 
-      />
+        />
 
       {/* Renderização condicional do conteúdo principal */}
-      {!session || shouldShowLanding() ? (
+      {(!session || shouldShowLanding() || isRegistering) ? (
         <>
           {authView === 'landing' && (
             <LandingPage 
               onNavigate={(screen) => {
-                setAuthView(screen === 'signup' ? 'login' : screen);
-                // Quando usuário navega para login/signup, desativar forceLanding
-                setForceLanding(false);
+                if (screen === 'pricing' && session) {
+                  setForceLanding(false);
+                } else {
+                  setAuthView(screen);
+                  setForceLanding(false);
+                }
               }} 
+            />
+          )}
+          {authView === 'pricing' && (
+            <PricingPage 
+              onBack={() => setAuthView('landing')}
+              onNavigateToLogin={() => setAuthView('login')}
+              onNavigateToSignup={() => setAuthView('signup')}
+            />
+          )}
+          {authView === 'signup' && (
+            <SignupPage
+              onBack={() => setAuthView('landing')}
+              onNavigateToLogin={() => setAuthView('login')}
+              onSuccess={() => {
+                setIsRegistering(false); // Libera o app após o cadastro completo
+              }} 
+              onStartSignup={() => setIsRegistering(true)}
             />
           )}
           {(authView === 'login' || authView === 'forgot') && (
@@ -148,6 +171,7 @@ function App() {
                 setForceLanding(false);
               }}
               initialMode={authView}
+              onNavigateToSignup={() => setAuthView('signup')}
             />
           )}
         </>

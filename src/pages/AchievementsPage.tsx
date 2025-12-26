@@ -13,6 +13,7 @@ import {
 import { Sparkles, Trophy, Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
 import Button from '../components/Button';
+import { FADE_UP_ANIMATION, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/animations';
 
 interface AchievementsPageProps {
   isLoading: boolean;
@@ -28,7 +29,7 @@ interface AchievementCardProps {
 
 function AchievementCard({ achievement, userProgress, onClaim }: AchievementCardProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100 dark:border-gray-700 h-full">
       {/* Header com ícone e nome */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -129,7 +130,7 @@ export default function AchievementsPage({
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-6 pb-24">
+      <div className="max-w-4xl xl:max-w-7xl mx-auto px-6 py-6 pb-24">
         <Skeleton className="h-8 w-48 mb-6" />
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
@@ -148,7 +149,10 @@ export default function AchievementsPage({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <motion.div 
+      className="max-w-4xl xl:max-w-7xl mx-auto px-6 py-6 pb-24"
+      {...FADE_UP_ANIMATION}
+    >
       {/* Header */}
       <div className="mb-6">
         {onNavigateToMore && (
@@ -162,7 +166,7 @@ export default function AchievementsPage({
             Voltar
           </Button>
         )}
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
           <Trophy className="text-emerald-500" size={28} />
           Conquistas
         </h1>
@@ -179,11 +183,16 @@ export default function AchievementsPage({
             Conquistas Pendentes ({pendingAchievements.length})
           </h2>
           
-          <div className="space-y-3">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"
+            variants={STAGGER_CONTAINER}
+            initial="hidden"
+            animate="show"
+          >
             {pendingAchievements.map((achievement) => (
               <motion.div
                 key={`${achievement.id}-${achievement.level}`}
-                initial={{ scale: 1 }}
+                variants={STAGGER_ITEM}
                 animate={{ scale: [1, 1.02, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
                 className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg"
@@ -226,7 +235,7 @@ export default function AchievementsPage({
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -237,7 +246,7 @@ export default function AchievementsPage({
 
         return (
           <div key={category} className="mb-8">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               {(() => {
                 const CategoryIcon = getCategoryIcon(category);
                 return <CategoryIcon className="text-emerald-500" size={20} />;
@@ -245,20 +254,26 @@ export default function AchievementsPage({
               {getCategoryName(category)}
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              variants={STAGGER_CONTAINER}
+              initial="hidden"
+              animate="show"
+            >
               {categoryAchievements.map((achievement) => (
-                <AchievementCard
-                  key={achievement.id}
-                  achievement={achievement}
-                  userProgress={getUserProgress(achievement.id)}
-                  onClaim={claimAchievement}
-                />
+                <motion.div key={achievement.id} variants={STAGGER_ITEM}>
+                  <AchievementCard
+                    achievement={achievement}
+                    userProgress={getUserProgress(achievement.id)}
+                    onClaim={claimAchievement}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         );
       })}
-    </div>
+    </motion.div>
   );
 }
 

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown, BookOpen, Clock, Calendar, Pencil, Save, GripVertical } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, Check, X, ChevronDown, RefreshCw, Target, ArrowUp, ArrowDown, BookOpen, Clock, Calendar, Pencil, Save, GripVertical, BarChart2 } from 'lucide-react';
 import { Reorder, useDragControls } from 'framer-motion';
 import ConfirmModal from '../components/ConfirmModal';
 import AlertModal from '../components/AlertModal';
@@ -7,6 +7,7 @@ import Button from '../components/Button';
 import { Subject, StudyLog, Subtopic } from '../types';
 import { getRandomColor, subjectColors } from '../utils/colors';
 import Skeleton from '../components/Skeleton';
+import { useToast } from '../contexts/ToastContext';
 
 // Componente para cada card de matéria com drag & drop
 interface SortableSubjectCardProps {
@@ -104,7 +105,7 @@ const SortableSubjectCard = ({
                 </Button>
               </div>
               <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white">{subject.name}</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">{subject.name}</h3>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 pl-8">
               Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
@@ -200,7 +201,7 @@ const SortableSubjectCard = ({
                   >
                     {subtopic.completed && <Check className="w-4 h-4 text-white" />}
                   </button>
-                  <span className={`flex-1 text-sm ${subtopic.completed ? 'text-gray-500 dark:text-gray-500 line-through' : 'text-gray-800 dark:text-gray-200 font-medium'}`}>
+                  <span className={`flex-1 text-sm ${subtopic.completed ? 'text-gray-500 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-gray-200 font-medium'}`}>
                     {subtopic.name}
                   </span>
                   <Button 
@@ -231,11 +232,12 @@ const SortableSubjectCard = ({
                 onClick={() => onAddSubtopic(subject.id)} 
                 variant="primary"
                 size="md"
-                leftIcon={<Plus className="w-5 h-5" />}
-                className="flex-shrink-0"
+                className="flex-shrink-0 p-0 w-10 h-10"
                 aria-label="Adicionar subtópico"
                 title="Adicionar subtópico"
-              />
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </div>
@@ -267,6 +269,26 @@ export default function CyclePage({
   onReorderSubjects,
   isLoading
 }: CyclePageProps) {
+  const { addToast } = useToast();
+  
+  // ✅ ESTADO LOCAL OTIMISTA - Atualiza imediatamente antes de persistir
+  const [cycleSubjects, setCycleSubjects] = useState<Subject[]>(subjects);
+  const previousSubjectsRef = useRef<Subject[]>(subjects);
+  
+  // Sincronizar estado local quando subjects mudarem externamente (ex: após fetch do servidor)
+  useEffect(() => {
+    // Só atualizar se subjects mudou externamente (não por nossa ação otimista)
+    // Compara por referência e IDs para evitar loops
+    const subjectsChanged = 
+      subjects.length !== previousSubjectsRef.current.length ||
+      subjects.some((s, i) => s.id !== previousSubjectsRef.current[i]?.id);
+    
+    if (subjectsChanged) {
+      setCycleSubjects(subjects);
+      previousSubjectsRef.current = subjects;
+    }
+  }, [subjects]);
+  
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [newGoal, setNewGoal] = useState('');
@@ -286,15 +308,36 @@ export default function CyclePage({
       setShowValidationAlert(true);
       return;
     }
-    onAddSubject({
+    
+    // ✅ OPTIMISTIC UI: Criar matéria temporária com ID temporário
+    const tempId = `temp-${Date.now()}`;
+    const newSubject: Subject = {
+      id: tempId,
       name: newName.trim(),
       goalMinutes: parseInt(newGoal),
       subtopics: [],
       color: getRandomColor(),
-    });
+      position: cycleSubjects.length,
+    };
+    
+    // Atualizar UI imediatamente
+    setCycleSubjects(prev => [...prev, newSubject]);
     setNewName('');
     setNewGoal('');
     setIsAdding(false);
+    
+    // Persistir em background
+    Promise.resolve(onAddSubject({
+      name: newSubject.name,
+      goalMinutes: newSubject.goalMinutes,
+      subtopics: [],
+      color: newSubject.color,
+    })).catch((error) => {
+      // Reverter em caso de erro
+      setCycleSubjects(prev => prev.filter(s => s.id !== tempId));
+      addToast('Erro ao adicionar matéria. Tente novamente.', 'error');
+    });
+    // O estado será sincronizado pelo useEffect quando o servidor responder
   };
 
   // Função para abrir o modal de edição
@@ -309,13 +352,31 @@ export default function CyclePage({
   const handleSaveEdit = () => {
     if (!editingSubject || !editName.trim() || !editGoal) return;
     
-    onUpdateSubject(editingSubject.id, {
+    // ✅ OPTIMISTIC UI: Salvar estado anterior para possível reversão
+    const previousSubject = cycleSubjects.find(s => s.id === editingSubject.id);
+    if (!previousSubject) return;
+    
+    const updates = {
       name: editName.trim(),
       goalMinutes: parseInt(editGoal),
       color: editColor
-    });
+    };
     
+    // Atualizar UI imediatamente
+    setCycleSubjects(prev => prev.map(s => 
+      s.id === editingSubject.id ? { ...s, ...updates } : s
+    ));
     setEditingSubject(null);
+    
+    // Persistir em background
+    Promise.resolve(onUpdateSubject(editingSubject.id, updates)).catch((error) => {
+      // Reverter em caso de erro
+      setCycleSubjects(prev => prev.map(s => 
+        s.id === editingSubject.id ? previousSubject : s
+      ));
+      addToast('Erro ao atualizar matéria. Tente novamente.', 'error');
+    });
+    // O estado será sincronizado pelo useEffect quando o servidor responder
   };
 
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
@@ -327,12 +388,12 @@ export default function CyclePage({
   };
 
   const getTotalCycleProgress = () => {
-    if (subjects.length === 0) return 0;
-    const totalPercentage = subjects.reduce((acc, sub) => {
+    if (cycleSubjects.length === 0) return 0;
+    const totalPercentage = cycleSubjects.reduce((acc, sub) => {
       const { percentage } = getSubjectProgress(sub.id, sub.goalMinutes);
       return acc + percentage;
     }, 0);
-    return Math.round(totalPercentage / subjects.length);
+    return Math.round(totalPercentage / cycleSubjects.length);
   };
 
   const getCycleStats = () => {
@@ -356,8 +417,9 @@ export default function CyclePage({
 
   const handleAddSubtopic = (subjectId: string) => {
     if (!newSubtopic.trim()) return;
-    const subject = subjects.find((s) => s.id === subjectId);
+    const subject = cycleSubjects.find((s) => s.id === subjectId);
     if (!subject) return;
+    
     // Gerar UUID válido usando crypto.randomUUID() ou fallback
     const generateUUID = () => {
       if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -370,30 +432,73 @@ export default function CyclePage({
         return v.toString(16);
       });
     };
+    
     const subtopic: Subtopic = { id: generateUUID(), name: newSubtopic.trim(), completed: false };
-    onUpdateSubject(subjectId, { subtopics: [...subject.subtopics, subtopic] });
+    const newSubtopics = [...subject.subtopics, subtopic];
+    
+    // ✅ OPTIMISTIC UI: Atualizar imediatamente
+    setCycleSubjects(prev => prev.map(s => 
+      s.id === subjectId ? { ...s, subtopics: newSubtopics } : s
+    ));
     setNewSubtopic('');
+    
+    // Persistir em background
+    Promise.resolve(onUpdateSubject(subjectId, { subtopics: newSubtopics })).catch((error) => {
+      // Reverter em caso de erro
+      setCycleSubjects(prev => prev.map(s => 
+        s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
+      ));
+      addToast('Erro ao adicionar subtópico. Tente novamente.', 'error');
+    });
   };
 
   const handleToggleSubtopic = (subjectId: string, subtopicId: string) => {
-    const subject = subjects.find((s) => s.id === subjectId);
+    const subject = cycleSubjects.find((s) => s.id === subjectId);
     if (!subject) return;
+    
     const updatedSubtopics = subject.subtopics.map((st) =>
       st.id === subtopicId ? { ...st, completed: !st.completed } : st
     );
-    onUpdateSubject(subjectId, { subtopics: updatedSubtopics });
+    
+    // ✅ OPTIMISTIC UI: Atualizar imediatamente
+    setCycleSubjects(prev => prev.map(s => 
+      s.id === subjectId ? { ...s, subtopics: updatedSubtopics } : s
+    ));
+    
+    // Persistir em background
+    Promise.resolve(onUpdateSubject(subjectId, { subtopics: updatedSubtopics })).catch((error) => {
+      // Reverter em caso de erro
+      setCycleSubjects(prev => prev.map(s => 
+        s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
+      ));
+      addToast('Erro ao atualizar subtópico. Tente novamente.', 'error');
+    });
   };
 
   const handleDeleteSubtopic = (subjectId: string, subtopicId: string) => {
-    const subject = subjects.find((s) => s.id === subjectId);
+    const subject = cycleSubjects.find((s) => s.id === subjectId);
     if (!subject) return;
+    
     const updatedSubtopics = subject.subtopics.filter((st) => st.id !== subtopicId);
-    onUpdateSubject(subjectId, { subtopics: updatedSubtopics });
+    
+    // ✅ OPTIMISTIC UI: Atualizar imediatamente
+    setCycleSubjects(prev => prev.map(s => 
+      s.id === subjectId ? { ...s, subtopics: updatedSubtopics } : s
+    ));
+    
+    // Persistir em background
+    Promise.resolve(onUpdateSubject(subjectId, { subtopics: updatedSubtopics })).catch((error) => {
+      // Reverter em caso de erro
+      setCycleSubjects(prev => prev.map(s => 
+        s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
+      ));
+      addToast('Erro ao excluir subtópico. Tente novamente.', 'error');
+    });
   };
 
   // Função para mover subtópicos
   const moveSubtopic = (subjectId: string, subtopicIndex: number, direction: 'up' | 'down') => {
-    const subject = subjects.find((s) => s.id === subjectId);
+    const subject = cycleSubjects.find((s) => s.id === subjectId);
     if (!subject) return;
     
     const newSubtopics = [...subject.subtopics];
@@ -402,7 +507,20 @@ export default function CyclePage({
     } else if (direction === 'down' && subtopicIndex < newSubtopics.length - 1) {
       [newSubtopics[subtopicIndex], newSubtopics[subtopicIndex + 1]] = [newSubtopics[subtopicIndex + 1], newSubtopics[subtopicIndex]];
     }
-    onUpdateSubject(subjectId, { subtopics: newSubtopics });
+    
+    // ✅ OPTIMISTIC UI: Atualizar imediatamente
+    setCycleSubjects(prev => prev.map(s => 
+      s.id === subjectId ? { ...s, subtopics: newSubtopics } : s
+    ));
+    
+    // Persistir em background
+    Promise.resolve(onUpdateSubject(subjectId, { subtopics: newSubtopics })).catch((error) => {
+      // Reverter em caso de erro
+      setCycleSubjects(prev => prev.map(s => 
+        s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
+      ));
+      addToast('Erro ao reordenar subtópico. Tente novamente.', 'error');
+    });
   };
 
   const totalCycleProgress = getTotalCycleProgress();
@@ -412,7 +530,7 @@ export default function CyclePage({
       
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 transition-colors">Ciclo de Estudos</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">Ciclo de Estudos</h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Gerencie suas matérias e acompanhe o progresso</p>
       </div>
 
@@ -438,7 +556,7 @@ export default function CyclePage({
           <div className="bg-white dark:bg-gray-800 p-6 lg:p-8 rounded-3xl shadow-lg transition-colors duration-300 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Status Geral</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Status Geral</h2>
                 <p className="text-xs text-gray-400">Média do ciclo</p>
               </div>
               <Target className="text-emerald-500" size={28} />
@@ -460,7 +578,10 @@ export default function CyclePage({
           </div>
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 lg:p-6 rounded-2xl border border-emerald-100 dark:border-emerald-800">
-            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-3">📊 Este Ciclo</p>
+            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-3 flex items-center gap-1">
+              <BarChart2 size={12} />
+              Este Ciclo
+            </p>
             <div className="space-y-3 lg:space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
@@ -486,7 +607,7 @@ export default function CyclePage({
                   <span className="text-xs font-medium">Matérias</span>
                 </div>
                 <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                  {subjects.length}
+                  {cycleSubjects.length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -507,11 +628,24 @@ export default function CyclePage({
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <Reorder.Group
               axis="y"
-              values={subjects}
-              onReorder={onReorderSubjects}
+              values={cycleSubjects}
+              onReorder={(newOrder) => {
+                // ✅ OPTIMISTIC UI: Salvar estado anterior para possível reversão
+                const previousOrder = [...cycleSubjects];
+                
+                // Atualizar UI imediatamente
+                setCycleSubjects(newOrder);
+                
+                // Persistir em background
+                Promise.resolve(onReorderSubjects(newOrder)).catch((error) => {
+                  // Reverter em caso de erro
+                  setCycleSubjects(previousOrder);
+                  addToast('Erro ao reordenar matérias. Tente novamente.', 'error');
+                });
+              }}
               className="space-y-4 xl:col-span-2"
             >
-            {subjects.map((subject, index) => {
+            {cycleSubjects.map((subject, index) => {
               const { totalMinutes, percentage } = getSubjectProgress(subject.id, subject.goalMinutes);
               const isExpanded = expandedSubject === subject.id;
 
@@ -532,9 +666,22 @@ export default function CyclePage({
                   moveSubtopic={moveSubtopic}
                   newSubtopic={newSubtopic}
                   setNewSubtopic={setNewSubtopic}
-                  subjectsLength={subjects.length}
-                  subjects={subjects}
-                  onReorderSubjects={onReorderSubjects}
+                  subjectsLength={cycleSubjects.length}
+                  subjects={cycleSubjects}
+                  onReorderSubjects={(newOrder) => {
+                    // ✅ OPTIMISTIC UI: Salvar estado anterior para possível reversão
+                    const previousOrder = [...cycleSubjects];
+                    
+                    // Atualizar UI imediatamente
+                    setCycleSubjects(newOrder);
+                    
+                    // Persistir em background
+                    Promise.resolve(onReorderSubjects(newOrder)).catch((error) => {
+                      // Reverter em caso de erro
+                      setCycleSubjects(previousOrder);
+                      addToast('Erro ao reordenar matérias. Tente novamente.', 'error');
+                    });
+                  }}
                 />
               );
             })}
@@ -569,6 +716,8 @@ export default function CyclePage({
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-2">Meta do Ciclo (minutos)</label>
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min="1"
                   value={newGoal}
                   onChange={(e) => setNewGoal(e.target.value)}
@@ -600,14 +749,35 @@ export default function CyclePage({
       <ConfirmModal
         isOpen={deleteSubjectId !== null}
         title="Excluir Matéria"
-        message={`Tem certeza que deseja excluir "${subjects.find(s => s.id === deleteSubjectId)?.name}"?`}
+        message={`Tem certeza que deseja excluir "${cycleSubjects.find(s => s.id === deleteSubjectId)?.name}"?`}
         confirmText="Excluir"
         cancelText="Cancelar"
         variant="danger"
         onConfirm={() => {
           if (deleteSubjectId) {
-            onDeleteSubject(deleteSubjectId);
+            // ✅ OPTIMISTIC UI: Salvar estado anterior para possível reversão
+            const subjectToDelete = cycleSubjects.find(s => s.id === deleteSubjectId);
+            if (!subjectToDelete) {
+              setDeleteSubjectId(null);
+              return;
+            }
+            
+            // Atualizar UI imediatamente
+            setCycleSubjects(prev => prev.filter(s => s.id !== deleteSubjectId));
             setDeleteSubjectId(null);
+            
+            // Persistir em background
+            Promise.resolve(onDeleteSubject(deleteSubjectId)).catch((error) => {
+              // Reverter em caso de erro - encontrar posição original
+              const originalIndex = subjects.findIndex(s => s.id === deleteSubjectId);
+              setCycleSubjects(prev => {
+                const newSubjects = [...prev];
+                newSubjects.splice(originalIndex >= 0 ? originalIndex : prev.length, 0, subjectToDelete);
+                return newSubjects;
+              });
+              addToast('Erro ao excluir matéria. Tente novamente.', 'error');
+            });
+            // O estado será sincronizado pelo useEffect quando o servidor responder
           }
         }}
         onCancel={() => setDeleteSubjectId(null)}
@@ -617,7 +787,7 @@ export default function CyclePage({
       {editingSubject && (
         <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm lg:max-w-md shadow-2xl p-5 lg:p-6 space-y-4 animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Editar Matéria</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Editar Matéria</h3>
             
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nome</label>
@@ -634,6 +804,8 @@ export default function CyclePage({
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-2">Meta (min)</label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min="1"
                 value={editGoal}
                 onChange={(e) => setEditGoal(e.target.value)}

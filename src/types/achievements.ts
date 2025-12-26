@@ -270,7 +270,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Guerreiro FDS',
     description: 'Estude nos fins de semana',
     icon: Skull,
-    color: 'text-gray-800',
+    color: 'text-gray-900',
     levels: [
       { level: 1, requirement: 1, label: '1 fim de semana', xpReward: 150 },
       { level: 2, requirement: 10, label: '10 fins de semana', xpReward: 300 },

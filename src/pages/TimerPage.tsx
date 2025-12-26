@@ -3,6 +3,7 @@ import { Play, Pause, RotateCcw, Timer, Hourglass, Zap, Info } from 'lucide-reac
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmModal from '../components/ConfirmModal';
 import Button from '../components/Button';
+import { FADE_UP_ANIMATION, SCALE_ANIMATION, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/animations';
 
 interface TimerPageProps {
   onTimerStop: (hours: number, minutes: number, seconds: number) => void;
@@ -136,7 +137,7 @@ export default function TimerPage({
         setTimerSeconds(0);
         setPomodoroInitialSeconds(0);
         setPomodoroStarted(false);
-        setSelectedPreset(null);
+        // Não resetar selectedPreset para manter a seleção visual
         onTimerStop(hours, minutes, seconds);
       }
     }
@@ -236,95 +237,77 @@ export default function TimerPage({
     }
   };
 
-  // 🎬 PARTE 1: ENTRADA DA PÁGINA - Container Principal com animação suave
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.5, 
-        ease: [0.25, 0.1, 0.25, 1] // Custom bezier (suave)
-      }}
+      {...FADE_UP_ANIMATION}
       className="flex flex-col min-h-screen overflow-y-auto pb-24 md:pb-8 px-4 md:px-6"
     >
       {/* Seletor de Modos (Abas) */}
       <div className="mb-6 mt-2 md:mt-4 pt-20 md:pt-4 relative z-10">
-        {/* 🔧 CORREÇÃO 1: Mobile - Botões de Modo com Stagger Animation */}
+        {/* Mobile - Botões de Modo com Stagger Animation */}
         <div className="md:hidden flex flex-col gap-3 items-center">
           <motion.div 
             className="flex gap-3 justify-center w-full px-4"
-            variants={{
-              hidden: { opacity: 0 },
-              show: {
-                opacity: 1,
-                transition: { staggerChildren: 0.1 }
-              }
-            }}
+            variants={STAGGER_CONTAINER}
             initial="hidden"
             animate="show"
           >
             {(['cronometro', 'temporizador', 'pomodoro'] as const).map((modeOption) => {
               const Icon = modeOption === 'cronometro' ? Timer : modeOption === 'temporizador' ? Hourglass : Zap;
               return (
-                <Button
-                  key={modeOption}
-                  onClick={() => handleModeChangeRequest(modeOption)}
-                  variant={mode === modeOption ? 'primary' : 'secondary'}
-                  size="sm"
-                  className="flex flex-col items-center gap-1.5 px-3 py-2.5 flex-1"
-                >
-                  <Icon size={18} />
-                  <span>{getModeLabel(modeOption)}</span>
-                </Button>
+                <motion.div key={modeOption} variants={STAGGER_ITEM}>
+                  <Button
+                    onClick={() => handleModeChangeRequest(modeOption)}
+                    variant={mode === modeOption ? 'primary' : 'secondary'}
+                    size="sm"
+                    className="flex flex-col items-center gap-1.5 px-3 py-2.5 flex-1"
+                  >
+                    <Icon size={18} />
+                    <span>{getModeLabel(modeOption)}</span>
+                  </Button>
+                </motion.div>
               );
             })}
           </motion.div>
         </div>
 
-        {/* 🎬 PARTE 2: Botões de Modo Desktop - Stagger Animation */}
+        {/* Botões de Modo Desktop - Stagger Animation */}
         <motion.div 
           className="hidden md:flex gap-4 justify-center mb-8"
-          variants={{
-            hidden: { opacity: 0 },
-            show: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.1 // Cada botão aparece 0.1s depois do anterior
-              }
-            }
-          }}
+          variants={STAGGER_CONTAINER}
           initial="hidden"
           animate="show"
         >
           {(['cronometro', 'temporizador', 'pomodoro'] as const).map((modeOption) => {
             const Icon = modeOption === 'cronometro' ? Timer : modeOption === 'temporizador' ? Hourglass : Zap;
             return (
-              <Button
-                key={modeOption}
-                onClick={() => handleModeChangeRequest(modeOption)}
-                variant={mode === modeOption ? 'primary' : 'secondary'}
-                size="md"
-                leftIcon={<Icon size={22} />}
-                className="px-6 py-3"
-              >
-                {getModeLabel(modeOption)}
-              </Button>
+              <motion.div key={modeOption} variants={STAGGER_ITEM}>
+                <Button
+                  onClick={() => handleModeChangeRequest(modeOption)}
+                  variant={mode === modeOption ? 'primary' : 'secondary'}
+                  size="md"
+                  leftIcon={<Icon size={22} />}
+                  className="px-6 py-3"
+                >
+                  {getModeLabel(modeOption)}
+                </Button>
+              </motion.div>
             );
           })}
         </motion.div>
       </div>
 
-      {/* 🎬 Título e Descrição - Transição entre Modos */}
+      {/* Título e Descrição - Transição entre Modos */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mode}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           className="text-center mb-4 md:mb-8"
         >
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2 transition-colors">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">
             {getModeTitle()}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base transition-colors">
@@ -340,10 +323,7 @@ export default function TimerPage({
           {mode === 'temporizador' && !isTimerRunning && timerSeconds === 0 && (
             <motion.div
               key="timer-config-mobile"
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
+              {...SCALE_ANIMATION}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 mb-6 max-w-md mx-auto w-full"
             >
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-center">
@@ -354,6 +334,8 @@ export default function TimerPage({
                   <label className="text-xs text-gray-500 dark:text-gray-400 mb-2">Horas</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     max="23"
                     maxLength={2}
@@ -366,7 +348,7 @@ export default function TimerPage({
                       }
                     }}
                     placeholder="0"
-                    className="w-20 text-3xl font-bold text-center bg-gray-100 dark:bg-gray-700 rounded-xl p-2 text-gray-800 dark:text-white border-2 border-transparent focus:border-emerald-500 transition-colors placeholder:text-gray-400"
+                    className="w-20 text-3xl font-bold text-center bg-gray-100 dark:bg-gray-700 rounded-xl p-2 text-gray-900 dark:text-white border-2 border-transparent focus:border-emerald-500 transition-colors placeholder:text-gray-400"
                   />
                 </div>
                 <span className="text-3xl font-bold text-gray-400 mt-6">:</span>
@@ -374,6 +356,8 @@ export default function TimerPage({
                   <label className="text-xs text-gray-500 dark:text-gray-400 mb-2">Minutos</label>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     min="0"
                     max="59"
                     maxLength={2}
@@ -386,7 +370,7 @@ export default function TimerPage({
                       }
                     }}
                     placeholder="0"
-                    className="w-20 text-3xl font-bold text-center bg-gray-100 dark:bg-gray-700 rounded-xl p-2 text-gray-800 dark:text-white border-2 border-transparent focus:border-emerald-500 transition-colors placeholder:text-gray-400"
+                    className="w-20 text-3xl font-bold text-center bg-gray-100 dark:bg-gray-700 rounded-xl p-2 text-gray-900 dark:text-white border-2 border-transparent focus:border-emerald-500 transition-colors placeholder:text-gray-400"
                   />
                 </div>
               </div>
@@ -394,22 +378,19 @@ export default function TimerPage({
           )}
         </AnimatePresence>
 
-        {/* 🔧 CORREÇÃO 1: Presets de Pomodoro Mobile - Stagger Animation */}
+        {/* Presets de Pomodoro Mobile */}
         <AnimatePresence mode="wait">
           {mode === 'pomodoro' && !isTimerRunning && (
             <motion.div
               key="pomodoro-presets-mobile"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
+              {...FADE_UP_ANIMATION}
               className="flex gap-2 mb-4 justify-center flex-wrap max-w-md mx-auto w-full"
             >
               {POMODORO_PRESETS.map((preset) => (
                 <Button
                   key={preset.label}
                   onClick={() => handlePresetSelect(preset)}
-                  variant={selectedPreset?.label === preset.label ? 'primary' : 'secondary'}
+                  variant="secondary"
                   size="sm"
                   className="px-2 py-1.5 flex flex-col items-center"
                   aria-label={`Selecionar preset Pomodoro: ${preset.label} (${preset.minutes} minutos)`}
@@ -471,24 +452,21 @@ export default function TimerPage({
               </motion.div>
             )}
             
-            {/* 🔧 CORREÇÃO 2: Display Digital Mobile - Texto estático + pulso sutil */}
+            {/* Display Digital Mobile */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`display-mobile-${mode}`}
-                initial={{ opacity: 0, scale: 0.9 }}
+                {...SCALE_ANIMATION}
                 animate={{ 
-                  opacity: 1, 
-                  scale: 1,
+                  ...SCALE_ANIMATION.animate,
                   boxShadow: isTimerRunning ? [
                     "0 10px 40px rgba(16, 185, 129, 0.1)",
                     "0 10px 40px rgba(16, 185, 129, 0.25)",
                     "0 10px 40px rgba(16, 185, 129, 0.1)"
                   ] : "0 10px 40px rgba(0, 0, 0, 0.1)"
                 }}
-                exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ 
-                  duration: 0.4, 
-                  ease: "easeInOut",
+                  ...SCALE_ANIMATION.transition,
                   boxShadow: { duration: 2, repeat: isTimerRunning ? Infinity : 0, ease: "easeInOut" }
                 }}
                 className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-4 w-full max-w-xs mx-auto relative overflow-hidden"
@@ -505,7 +483,7 @@ export default function TimerPage({
                   />
                 )}
                 {/* Display estático (sem animação individual) */}
-                <div className="text-4xl font-bold text-gray-800 dark:text-white tracking-tight text-center font-mono relative z-10 timer-display">
+                <div className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight text-center font-mono relative z-10 timer-display">
                   {display}
                 </div>
               </motion.div>
@@ -607,10 +585,10 @@ export default function TimerPage({
         </AnimatePresence>
       </div>
 
-      {/* DESKTOP: Layout Grid 2 Colunas (50/50) */}
-      <div className="hidden md:grid md:grid-cols-2 md:gap-8 lg:gap-12 max-w-7xl mx-auto">
+      {/* DESKTOP: Layout Grid 5 Colunas (60/40) */}
+      <div className="hidden md:grid md:grid-cols-5 md:gap-6 lg:gap-8 max-w-6xl mx-auto">
         {/* COLUNA ESQUERDA: Timer + Controles */}
-        <div className="flex flex-col items-center justify-center space-y-6">
+        <div className="col-span-3 flex flex-col items-center justify-center space-y-6">
           {/* 🎬 PARTE 3: Barra de Progresso Desktop - Spring + Shimmer */}
           {(mode === 'temporizador' || mode === 'pomodoro') && (
             <motion.div 
@@ -655,27 +633,24 @@ export default function TimerPage({
             </motion.div>
           )}
 
-          {/* 🎬 PARTE 4: Display do Tempo Desktop - Pulso quando rodando */}
+          {/* Display do Tempo Desktop */}
           <AnimatePresence mode="wait">
             <motion.div
               key={`display-desktop-${mode}`}
-              initial={{ opacity: 0, scale: 0.9 }}
+              {...SCALE_ANIMATION}
               animate={{ 
-                opacity: 1, 
-                scale: 1,
+                ...SCALE_ANIMATION.animate,
                 boxShadow: isTimerRunning ? [
                   "0 10px 40px rgba(16, 185, 129, 0.1)",
                   "0 10px 40px rgba(16, 185, 129, 0.25)",
                   "0 10px 40px rgba(16, 185, 129, 0.1)"
                 ] : "0 10px 40px rgba(0, 0, 0, 0.1)"
               }}
-              exit={{ opacity: 0, scale: 0.9 }}
               transition={{ 
-                duration: 0.4, 
-                ease: "easeInOut",
+                ...SCALE_ANIMATION.transition,
                 boxShadow: { duration: 2, repeat: isTimerRunning ? Infinity : 0, ease: "easeInOut" }
               }}
-              className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-16 w-full max-w-xl relative overflow-hidden"
+              className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-10 lg:p-12 w-full max-w-lg relative overflow-hidden"
             >
               {/* 🔧 CORREÇÃO 2: Glow ring sutil quando ativo (reduzido de border-4 para border-2) */}
               {isTimerRunning && (
@@ -690,7 +665,7 @@ export default function TimerPage({
               )}
               
               {/* 🔧 CORREÇÃO 2: Display estático (sem animação individual - remove pisca-pisca) */}
-              <div className="text-8xl font-bold text-gray-800 dark:text-white tracking-tight text-center font-mono relative z-10">
+              <div className="text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white tracking-tight text-center font-mono relative z-10">
                 {display}
               </div>
             </motion.div>
@@ -735,7 +710,7 @@ export default function TimerPage({
                 variant="primary"
                 size="lg"
                 leftIcon={<Play size={28} />}
-                className="px-12 py-6 shadow-lg text-xl"
+                className="px-10 py-5 shadow-lg text-lg"
                 aria-label="Iniciar timer"
               >
                 Iniciar
@@ -752,7 +727,7 @@ export default function TimerPage({
                 variant="danger"
                 fullWidth
                 size="lg"
-                className="w-full max-w-md py-6 shadow-lg text-lg"
+                className="w-full max-w-sm py-5 shadow-lg text-base"
               >
                 Parar e Registrar
               </Button>
@@ -765,7 +740,7 @@ export default function TimerPage({
                 variant="danger"
                 fullWidth
                 size="lg"
-                className="w-full max-w-md py-6 shadow-lg text-lg"
+                className="w-full max-w-sm py-5 shadow-lg text-base"
               >
                 Parar e Registrar
               </Button>
@@ -778,7 +753,7 @@ export default function TimerPage({
                 variant="danger"
                 fullWidth
                 size="lg"
-                className="w-full max-w-md py-6 shadow-lg text-lg"
+                className="w-full max-w-sm py-5 shadow-lg text-base"
               >
                 Parar e Registrar
               </Button>
@@ -787,31 +762,29 @@ export default function TimerPage({
         </div>
 
         {/* COLUNA DIREITA: Info + Presets + Stats */}
-        <div className="flex flex-col space-y-6">
-          {/* 🎬 PARTE 8: Card de Informação do Modo - Hover Lift */}
+        <div className="col-span-2 flex flex-col space-y-4">
+          {/* Card de Informação do Modo */}
           <AnimatePresence mode="wait">
             <motion.div
               key={`info-desktop-${mode}`}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ delay: 0.1, duration: 0.4, ease: "easeInOut" }}
+              {...FADE_UP_ANIMATION}
+              transition={{ ...FADE_UP_ANIMATION.transition, delay: 0.1 }}
               whileHover={{ 
                 y: -5,
                 boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)"
               }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5"
             >
               <div className="flex items-center gap-3 mb-3">
                 <motion.div
                   whileHover={{ rotate: 360, scale: 1.2 }}
                   transition={{ duration: 0.6 }}
                 >
-                  {mode === 'cronometro' && <Timer className="text-emerald-500" size={28} />}
-                  {mode === 'temporizador' && <Hourglass className="text-emerald-500" size={28} />}
-                  {mode === 'pomodoro' && <Zap className="text-emerald-500" size={28} />}
+                  {mode === 'cronometro' && <Timer className="text-emerald-500" size={24} />}
+                  {mode === 'temporizador' && <Hourglass className="text-emerald-500" size={24} />}
+                  {mode === 'pomodoro' && <Zap className="text-emerald-500" size={24} />}
                 </motion.div>
-                <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                   {getModeTitle()}
                 </h3>
               </div>
@@ -837,40 +810,29 @@ export default function TimerPage({
             </motion.div>
           </AnimatePresence>
 
-          {/* 🎬 PARTE 6: Presets do Pomodoro Desktop - Stagger + Hover */}
+          {/* Presets do Pomodoro Desktop */}
           <AnimatePresence mode="wait">
             {mode === 'pomodoro' && !isTimerRunning && (
               <motion.div
                 key="pomodoro-presets-desktop"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: 0.2, duration: 0.4, ease: "easeInOut" }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+                {...FADE_UP_ANIMATION}
+                transition={{ ...FADE_UP_ANIMATION.transition, delay: 0.2 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4"
               >
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
                   Presets Rápidos
                 </h4>
                 
                 <motion.div 
                   className="grid grid-cols-3 gap-3"
-                  variants={{
-                    hidden: { opacity: 0 },
-                    show: {
-                      opacity: 1,
-                      transition: { staggerChildren: 0.1 }
-                    }
-                  }}
+                  variants={STAGGER_CONTAINER}
                   initial="hidden"
                   animate="show"
                 >
                   {POMODORO_PRESETS.map((preset) => (
                     <motion.button
                       key={preset.minutes}
-                      variants={{
-                        hidden: { opacity: 0, scale: 0.8, y: 20 },
-                        show: { opacity: 1, scale: 1, y: 0 }
-                      }}
+                      variants={STAGGER_ITEM}
                       whileHover={{ 
                         scale: 1.05,
                         backgroundColor: "rgb(16, 185, 129)", // emerald-500
@@ -879,11 +841,7 @@ export default function TimerPage({
                       }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handlePresetSelect(preset)}
-                      className={`px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
-                        selectedPreset?.label === preset.label
-                          ? 'bg-emerald-500 text-white shadow-lg'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                      }`}
+                      className="px-4 py-3 rounded-xl text-sm font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                     >
                       {preset.label}
                       <br />
@@ -895,18 +853,16 @@ export default function TimerPage({
             )}
           </AnimatePresence>
 
-          {/* 🎬 PARTE 7: Input de Tempo Desktop - Focus Effect */}
+          {/* Input de Tempo Desktop */}
           <AnimatePresence mode="wait">
             {mode === 'temporizador' && !isTimerRunning && timerSeconds === 0 && (
               <motion.div
                 key="timer-config-desktop"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: 0.2, duration: 0.4, ease: "easeInOut" }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6"
+                {...FADE_UP_ANIMATION}
+                transition={{ ...FADE_UP_ANIMATION.transition, delay: 0.2 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4"
               >
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
                   Defina o tempo inicial
                 </h4>
                 
@@ -921,6 +877,10 @@ export default function TimerPage({
                       </label>
                       <motion.input
                         type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        min="0"
+                        max={field.max}
                         value={field.value}
                         onChange={(e) => {
                           const val = e.target.value;
@@ -934,9 +894,7 @@ export default function TimerPage({
                           boxShadow: "0 0 0 4px rgba(16, 185, 129, 0.1)"
                         }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        className="w-full bg-gray-100 dark:bg-gray-700 text-center text-4xl font-bold p-4 rounded-xl text-gray-800 dark:text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 timer-display"
-                        min="0"
-                        max={field.max}
+                        className="w-full bg-gray-100 dark:bg-gray-700 text-center text-3xl font-bold p-3 rounded-xl text-gray-900 dark:text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 timer-display"
                         placeholder="0"
                       />
                     </motion.div>
@@ -948,11 +906,9 @@ export default function TimerPage({
 
           {/* Card de Dica/Info Adicional */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
+            {...FADE_UP_ANIMATION}
             whileHover={{ y: -2 }}
-            className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-2xl p-6 border border-emerald-500/20"
+            className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-2xl p-4 border border-emerald-500/20"
           >
             <div className="flex items-start gap-3">
               <motion.div
@@ -962,8 +918,9 @@ export default function TimerPage({
                 <Info className="text-emerald-500 flex-shrink-0 mt-1" size={20} />
               </motion.div>
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 dark:text-white mb-1">
-                  💡 Dica
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                  <Info size={16} className="text-emerald-500" />
+                  Dica
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {mode === 'cronometro' && 'Use o cronômetro para sessões de estudo sem limite de tempo.'}

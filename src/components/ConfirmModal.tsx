@@ -62,7 +62,7 @@ export default function ConfirmModal({
               <div className={`w-14 h-14 rounded-full ${styles.icon} flex items-center justify-center mx-auto mb-4`}>
                 <AlertTriangle size={28} />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">{title}</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{title}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">{message}</p>
             </div>
 

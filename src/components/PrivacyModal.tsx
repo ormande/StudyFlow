@@ -28,7 +28,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           >
             {/* Header */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 flex-shrink-0">
-              <h3 className="font-bold text-gray-800 dark:text-white text-lg">Política de Privacidade</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Política de Privacidade</h3>
               <button 
                 onClick={onClose} 
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"

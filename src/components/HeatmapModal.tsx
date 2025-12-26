@@ -339,7 +339,7 @@ export default function HeatmapModal({ isOpen, onClose, logs, dailyGoal }: Heatm
             {logs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <Calendar size={64} className="text-gray-300 dark:text-gray-600 mb-4" />
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Comece a estudar para preencher seu mapa de calor!
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">

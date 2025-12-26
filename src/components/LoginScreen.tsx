@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ArrowLeft, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import { motion } from 'framer-motion';
@@ -8,9 +8,10 @@ import Button from './Button';
 interface LoginScreenProps {
   onBack?: () => void;
   initialMode?: 'login' | 'forgot';
+  onNavigateToSignup?: () => void;
 }
 
-export default function LoginScreen({ onBack, initialMode = 'login' }: LoginScreenProps) {
+export default function LoginScreen({ onBack, initialMode = 'login', onNavigateToSignup }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,7 @@ export default function LoginScreen({ onBack, initialMode = 'login' }: LoginScre
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300 relative">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-6 text-gray-900 dark:text-gray-100 transition-colors duration-300 relative">
       {/* Botão Voltar (se houver onBack) - Fixo no canto superior esquerdo no desktop */}
       {onBack && (
         <motion.div
@@ -83,7 +84,7 @@ export default function LoginScreen({ onBack, initialMode = 'login' }: LoginScre
             <img 
               src="/icon-512.png" 
               alt="StudyFlow Logo" 
-              className="w-20 h-20 rounded-full mx-auto animate-pulse"
+              className="w-20 h-20 rounded-lg mx-auto object-contain"
             />
           </div>
           <h1 className="text-3xl font-black tracking-tight mb-2 text-gray-900 dark:text-white">STUDYFLOW</h1>
@@ -164,7 +165,43 @@ export default function LoginScreen({ onBack, initialMode = 'login' }: LoginScre
           >
             {mode === 'login' ? 'Esqueceu sua senha?' : 'Voltar para o Login'}
           </Button>
+
+          {mode === 'login' && onNavigateToSignup && (
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={onNavigateToSignup}
+                className="text-sm text-gray-500 hover:text-emerald-600 transition-colors"
+              >
+                Não tem conta? <span className="font-bold underline text-emerald-500">Criar conta grátis</span>
+              </button>
+            </div>
+          )}
         </motion.form>
+
+        {/* Rodapé com Suporte */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="mt-8 text-center"
+        >
+          <a
+            href="https://t.me/studyflow_suporte_bot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<MessageCircle size={16} />}
+              className="text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+            >
+              Problemas? Fale com o Suporte
+            </Button>
+          </a>
+        </motion.div>
       </motion.div>
     </div>
   );

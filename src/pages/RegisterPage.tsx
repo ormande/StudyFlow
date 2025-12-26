@@ -4,6 +4,7 @@ import { Subject, StudyLog } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/Button';
+import { ACCORDION_ANIMATION } from '../utils/animations';
 
 interface RegisterPageProps {
   subjects: Subject[];
@@ -237,12 +238,12 @@ export default function RegisterPage({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       {/* OTIMIZAÇÃO MOBILE: Padding lateral reduzido de px-6 para px-4 no mobile para dar mais espaço */}
       
       {/* Header Fixo */}
       <div className="mb-6 flex-shrink-0">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 transition-colors">Registrar</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 transition-colors">Registrar</h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Salve sua missão cumprida</p>
       </div>
 
@@ -251,96 +252,36 @@ export default function RegisterPage({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6">
         
         {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop. Gap entre campos aumentado de space-y-4 para space-y-5 */}
-        {/* Card 1 - Setup: Matéria e Subtópico */}
-        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 space-y-5 transition-colors duration-300">
+        {/* Card 1 - Matéria */}
+        <motion.div 
+          layout
+          className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
               <BookOpen size={14} className="text-emerald-500" /> Matéria
             </label>
-            {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3 (mínimo adequado), font-size text-sm para legibilidade */}
             <select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors">
               <option value="">Selecione a matéria...</option>
               {subjects.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
             </select>
           </div>
-
-          {selectedSubject && selectedSubject.subtopics.length > 0 && (
-             <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
-                  <Layers size={14} className="text-emerald-500" /> Subtópico <span className="text-[10px] font-normal opacity-70 normal-case">(Opcional)</span>
-                </label>
-                {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, font-size text-sm para legibilidade */}
-                <select value={subtopicId} onChange={(e) => setSubtopicId(e.target.value)} className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors">
-                  <option value="">Geral (Sem subtópico específico)</option>
-                  {selectedSubject.subtopics.map((st) => (
-                    <option key={st.id} value={st.id}>
-                      {st.name} {st.completed ? '(Concluído)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Opção para marcar subtópico como concluído */}
-              {subtopicId && selectedSubtopic && !selectedSubtopic.completed && (
-                <button
-                  type="button"
-                  onClick={() => setMarkSubtopicCompleted(!markSubtopicCompleted)}
-                  className={`w-full flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition-all active:scale-95 ${
-                    markSubtopicCompleted
-                      ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 dark:border-emerald-700'
-                      : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-emerald-300 dark:hover:border-emerald-700'
-                  }`}
-                >
-                  {/* Círculo customizado */}
-                  <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                    markSubtopicCompleted
-                      ? 'bg-emerald-500 border-emerald-500'
-                      : 'bg-transparent border-gray-300 dark:border-gray-500'
-                  }`}>
-                    {markSubtopicCompleted && (
-                      <Check size={14} className="text-white" strokeWidth={3} />
-                    )}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <span className={`text-sm font-semibold flex items-center gap-2 ${
-                      markSubtopicCompleted
-                        ? 'text-emerald-700 dark:text-emerald-300'
-                        : 'text-gray-800 dark:text-white'
-                    }`}>
-                      Marcar subtópico como concluído
-                    </span>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                      "{selectedSubtopic.name}" será marcado como concluído após salvar
-                    </p>
-                  </div>
-                </button>
-              )}
-              
-              {/* Indicador se subtópico já está concluído */}
-              {subtopicId && selectedSubtopic && selectedSubtopic.completed && (
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                  <div className="flex items-center gap-2">
-                    <Check size={16} className="text-emerald-500" />
-                    <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                      Este subtópico já está concluído
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        </motion.div>
 
         {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 2 - Data */}
-        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
+        <motion.div 
+          layout
+          className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300 flex flex-col justify-center h-fit self-center"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
             <Calendar size={14} className="text-emerald-500" /> Data do Estudo
           </label>
           
           {/* Seletor de Opções Rápidas */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="grid grid-cols-3 gap-2 mb-3 flex-shrink-0">
             <Button
               type="button"
               onClick={() => handleDateOptionChange('today')}
@@ -374,35 +315,63 @@ export default function RegisterPage({
           <AnimatePresence>
             {dateOption === 'other' && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
+                {...ACCORDION_ANIMATION}
                 className="overflow-hidden"
               >
                 <div className="relative min-w-0">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none z-10" size={20} />
+                  {/* Ícone decorativo da esquerda (apenas visual, não clicável) - apenas desktop */}
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none z-10 hidden md:block" size={20} />
+                  
+                  {/* Input de data customizado (desktop) */}
+                  <div className="hidden md:block flex-shrink-0 relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none z-10" size={20} />
+                    <input 
+                      type="date" 
+                      value={date} 
+                      max={new Date().toISOString().split('T')[0]} 
+                      onChange={(e) => handleDateChange(e.target.value)} 
+                      className="w-full px-3 py-3 pl-10 pr-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-emerald-500 focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors h-12 text-center cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:opacity-0 [color-scheme:light] dark:[color-scheme:dark]"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 12px center',
+                        backgroundSize: '20px 20px'
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Input de data padrão (mobile) */}
                   <input 
                     type="date" 
                     value={date} 
                     max={new Date().toISOString().split('T')[0]} 
                     onChange={(e) => handleDateChange(e.target.value)} 
-                    className="w-full max-w-full px-3 md:px-4 py-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark] min-w-0" 
+                    className="w-full md:hidden px-3 py-3 pr-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark] min-w-0 text-center cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:opacity-0" 
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      backgroundSize: '20px 20px'
+                    }}
                   />
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+          
+        </motion.div>
 
-        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
         {/* Card 3 - Tipo de Estudo */}
-        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
+        <motion.div 
+          layout
+          className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300 flex flex-col justify-center h-fit self-center"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1 flex-shrink-0">
             <RefreshCw size={14} className="text-emerald-500" /> Tipo de Estudo
           </label>
           {/* OTIMIZAÇÃO MOBILE: Gap aumentado de gap-2 para gap-3 para melhor espaçamento. Altura mínima garantida (py-3.5 = ~44px) para toque fácil */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3 flex-shrink-0">
             {typeButtons.map((btn) => {
               const Icon = btn.icon;
               return (
@@ -420,11 +389,85 @@ export default function RegisterPage({
               );
             })}
           </div>
-        </div>
+          
+        </motion.div>
 
-        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
-        {/* Card 4 - Tempo Estudado */}
-        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
+        {/* Card 4 - Subtópico */}
+        <motion.div 
+          layout
+          className="md:col-span-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
+            <Layers size={14} className="text-emerald-500" /> Subtópico <span className="text-[10px] font-normal opacity-70 normal-case">(Opcional)</span>
+          </label>
+          <select 
+            value={subtopicId} 
+            onChange={(e) => setSubtopicId(e.target.value)} 
+            disabled={!selectedSubject || selectedSubject.subtopics.length === 0}
+            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {!selectedSubject 
+                ? 'Selecione uma matéria primeiro' 
+                : selectedSubject.subtopics.length === 0 
+                  ? 'Esta matéria não possui subtópicos'
+                  : 'Geral (Sem subtópico específico)'
+              }
+            </option>
+            {selectedSubject?.subtopics.map((st) => (
+              <option key={st.id} value={st.id}>
+                {st.name} {st.completed ? '(Concluído)' : ''}
+              </option>
+            ))}
+          </select>
+        </motion.div>
+
+        {/* Card 5 - Marcar Concluído */}
+        <motion.div 
+          layout
+          className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300 flex flex-col justify-center"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
+            <Check size={14} className="text-emerald-500" /> Status
+          </label>
+          <button
+            type="button"
+            onClick={() => subtopicId && selectedSubtopic && !selectedSubtopic.completed && setMarkSubtopicCompleted(!markSubtopicCompleted)}
+            disabled={!subtopicId || !selectedSubtopic || selectedSubtopic?.completed}
+            className={`w-full flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+              markSubtopicCompleted
+                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 dark:border-emerald-700'
+                : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-emerald-300 dark:hover:border-emerald-700'
+            }`}
+          >
+            <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+              markSubtopicCompleted
+                ? 'bg-emerald-500 border-emerald-500'
+                : 'bg-transparent border-gray-300 dark:border-gray-500'
+            }`}>
+              {markSubtopicCompleted && (
+                <Check size={12} className="text-white" strokeWidth={3} />
+              )}
+            </div>
+            <span className={`text-sm font-medium ${
+              markSubtopicCompleted
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : 'text-gray-700 dark:text-gray-300'
+            }`}>
+              {selectedSubtopic?.completed 
+                ? 'Já concluído ✓'
+                : !subtopicId 
+                  ? 'Selecione um subtópico'
+                  : 'Marcar como concluído'
+              }
+            </span>
+          </button>
+        </motion.div>
+
+        {/* Card 6 - Tempo Estudado */}
+        <div className="md:col-span-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-1">
             <Clock size={14} className="text-emerald-500" /> Tempo Estudado
           </label>
@@ -434,7 +477,9 @@ export default function RegisterPage({
               <input 
                 type="number" 
                 inputMode="numeric" 
+                pattern="[0-9]*"
                 min="0" 
+                max="23"
                 value={hours} 
                 onChange={(e) => handleHoursChange(e.target.value)} 
                 onKeyDown={(e) => {
@@ -453,6 +498,7 @@ export default function RegisterPage({
               <input 
                 type="number" 
                 inputMode="numeric" 
+                pattern="[0-9]*"
                 min="0" 
                 max="59" 
                 value={minutes} 
@@ -473,6 +519,7 @@ export default function RegisterPage({
               <input 
                 type="number" 
                 inputMode="numeric" 
+                pattern="[0-9]*"
                 min="0" 
                 max="59" 
                 value={seconds} 
@@ -492,36 +539,8 @@ export default function RegisterPage({
           </div>
         </div>
 
-        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
-        {/* Card 5 - Páginas Lidas */}
-        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
-          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
-            <BookOpen size={14} className="text-emerald-500" /> Páginas Lidas
-          </label>
-          <div className="relative">
-            <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, font-size text-sm no mobile para legibilidade */}
-            <input 
-              type="number" 
-              inputMode="numeric" 
-              min="0" 
-              value={pages} 
-              onChange={(e) => handlePagesChange(e.target.value)} 
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-sm md:text-base text-gray-900 dark:text-white transition-colors h-12" 
-              placeholder="Quantidade" 
-            />
-          </div>
-        </div>
-
-        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
-        {/* Card 6 - Desempenho */}
-        <div className="md:col-span-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
+        {/* Card 7 - Desempenho */}
+        <div className="md:col-span-7 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
             <FileText size={14} className="text-emerald-500" /> Desempenho
           </label>
@@ -537,6 +556,7 @@ export default function RegisterPage({
                 <input 
                   type="number" 
                   inputMode="numeric" 
+                  pattern="[0-9]*"
                   min="0" 
                   placeholder="0" 
                   className="w-full pl-10 p-2.5 border border-emerald-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-sm md:text-base transition-all" 
@@ -561,6 +581,7 @@ export default function RegisterPage({
                 <input 
                   type="number" 
                   inputMode="numeric" 
+                  pattern="[0-9]*"
                   min="0" 
                   placeholder="0" 
                   className="w-full pl-10 p-2.5 border border-red-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-red-700 dark:text-red-300 font-bold outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 text-sm md:text-base transition-all" 
@@ -585,6 +606,7 @@ export default function RegisterPage({
                 <input 
                   type="number" 
                   inputMode="numeric" 
+                  pattern="[0-9]*"
                   min="0" 
                   placeholder="0" 
                   className="w-full pl-10 p-2.5 border border-blue-500 bg-gray-50 dark:bg-gray-700 rounded-lg text-blue-600 dark:text-blue-300 font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm md:text-base transition-all" 
@@ -602,13 +624,37 @@ export default function RegisterPage({
           </div>
         </div>
 
-        {/* OTIMIZAÇÃO MOBILE: Padding interno mantido p-4 no mobile, md:p-6 no desktop */}
-        {/* Card 7 - Observações */}
-        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
+        {/* Card 8 - Páginas Lidas */}
+        <div className="md:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 flex items-center gap-1">
+            <BookOpen size={14} className="text-emerald-500" /> Páginas Lidas
+          </label>
+          <div className="relative">
+            <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input 
+              type="number" 
+              inputMode="numeric" 
+              pattern="[0-9]*"
+              min="0" 
+              value={pages} 
+              onChange={(e) => handlePagesChange(e.target.value)} 
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              className="w-full p-3 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-emerald-500 text-sm md:text-base text-gray-900 dark:text-white transition-colors h-12" 
+              placeholder="Quantidade" 
+            />
+          </div>
+        </div>
+
+        {/* Card 9 - Observações */}
+        <div className="md:col-span-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 transition-colors duration-300">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 flex items-center gap-1">
             <FileText size={14} className="text-emerald-500" /> Observações
           </label>
-          {/* OTIMIZAÇÃO MOBILE: Padding garantido p-3, altura mínima mantida min-h-[100px] para legibilidade */}
           <textarea 
             value={notes} 
             onChange={(e) => setNotes(e.target.value)} 
@@ -618,17 +664,19 @@ export default function RegisterPage({
         </div>
 
         {/* Botão Salvar - Destaque */}
-        <div className="md:col-span-12">
-          <Button 
-            onClick={handleSubmit} 
-            variant="primary"
-            fullWidth
-            size="lg"
-            leftIcon={<Save size={20} />}
-            className="font-bold shadow-lg"
-          >
-            Salvar Registro
-          </Button>
+        <div className="md:col-span-12 flex justify-center">
+          <div className="w-full max-w-lg">
+            <Button 
+              onClick={handleSubmit} 
+              variant="primary"
+              fullWidth
+              size="lg"
+              leftIcon={<Save size={20} />}
+              className="font-bold shadow-lg"
+            >
+              Salvar Registro
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
-import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History, Target, ChevronDown, ChevronUp, Calendar, Sparkles, CheckCircle, XCircle, Circle, HelpCircle } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Flame, Clock, BookOpen, Share2, TrendingUp, BarChart2, Zap, Trash2, History, Target, ChevronDown, ChevronUp, Calendar, Sparkles, CheckCircle, XCircle, Circle, HelpCircle, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import HistoryModal from '../components/HistoryModal';
 import HeatmapModal from '../components/HeatmapModal';
+import WelcomeModal from '../components/WelcomeModal';
 import { Subject, StudyLog } from '../types';
 import ShareModal from '../components/ShareModal';
 import Skeleton from '../components/Skeleton';
@@ -21,12 +22,43 @@ interface DashboardPageProps {
   streak: number;
   isLoading: boolean;
   onNavigateToCycle?: () => void;
+  subscriptionStatus?: string | null;
+  trialEndsAt?: string | null;
+  onNavigateToPlans?: () => void;
+  welcomeSeen?: boolean;
+  onWelcomeSeen?: () => void;
+  onNavigateToTutorial?: () => void;
+  userName?: string;
 }
 
-export default function DashboardPage({ subjects, logs, cycleStartDate, onDeleteLog, onEditLog, dailyGoal, showPerformance, streak, isLoading, onNavigateToCycle }: DashboardPageProps) {
+export default function DashboardPage({ 
+  subjects, logs, cycleStartDate, onDeleteLog, onEditLog, 
+  dailyGoal, showPerformance, streak, isLoading, onNavigateToCycle,
+  subscriptionStatus, trialEndsAt, onNavigateToPlans,
+  welcomeSeen, onWelcomeSeen, onNavigateToTutorial, userName
+}: DashboardPageProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showHeatmapModal, setShowHeatmapModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // useEffect para mostrar modal na primeira vez
+  useEffect(() => {
+    if (welcomeSeen === false && !isLoading) {
+      setShowWelcomeModal(true);
+    }
+  }, [welcomeSeen, isLoading]);
+
+  const handleWelcomeClose = () => {
+    setShowWelcomeModal(false);
+    onWelcomeSeen?.();
+  };
+
+  const handleGoToTutorial = () => {
+    setShowWelcomeModal(false);
+    onWelcomeSeen?.();
+    onNavigateToTutorial?.();
+  };
   
   const [isGeneralPerformanceExpanded, setIsGeneralPerformanceExpanded] = useState(false);
   const [expandedPerformanceSubjects, setExpandedPerformanceSubjects] = useState<Set<string>>(new Set());
@@ -159,11 +191,41 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 
   const weeklyStats = getLast7DaysStats();
   
+  const getTodaySessionCount = () => {
+    const today = new Date();
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return logs.filter((log) => log.date === todayString).length;
+  };
+
+  const getFirstLogDate = () => {
+    if (logs.length === 0) return null;
+    const sortedLogs = [...logs].sort((a, b) => a.timestamp - b.timestamp);
+    const firstDate = new Date(sortedLogs[0].timestamp);
+    return firstDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+  };
+
   const { totalMinutes, totalPages, todayQuestions, totalCorrect } = getTodayStats();
   const { hours: totalHours } = getTotalHours();
   const recentActivities = getRecentActivities();
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
+  const todaySessions = getTodaySessionCount();
+  const firstLogDate = getFirstLogDate();
+
+  const daysLeft = useMemo(() => {
+    if (subscriptionStatus === 'trial' && trialEndsAt) {
+      // Comparar apenas datas (sem horário) para contagem intuitiva
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const endDate = new Date(trialEndsAt);
+      endDate.setHours(0, 0, 0, 0);
+      
+      const diffMs = endDate.getTime() - today.getTime();
+      return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    }
+    return null;
+  }, [subscriptionStatus, trialEndsAt]);
 
   const getTypeLabel = (type: string) => { const labels = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão' }; return labels[type as keyof typeof labels] || type; };
   const getAccuracyColor = (acc: number) => { if (acc >= 80) return 'bg-emerald-500'; if (acc >= 60) return 'bg-amber-500'; return 'bg-red-500'; };
@@ -172,10 +234,43 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onClose={handleWelcomeClose}
+        onGoToTutorial={handleGoToTutorial}
+        userName={userName}
+      />
       
+      {/* Trial Banner */}
+      {daysLeft !== null && (
+        <div className={`border-l-4 p-4 mb-6 rounded-r-xl flex items-center gap-3 ${
+          daysLeft <= 0 
+            ? 'bg-red-50 dark:bg-red-900/20 border-red-400 text-red-800 dark:text-red-200' 
+            : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 text-yellow-800 dark:text-yellow-200'
+        }`}>
+          {daysLeft <= 0 ? <AlertTriangle className="flex-shrink-0" size={18} /> : <Clock className="flex-shrink-0" size={18} />}
+          <p className="text-sm">
+            {daysLeft <= 0 ? (
+              <strong>Seu trial expirou.</strong>
+            ) : (
+              <>
+                <strong>{daysLeft} {daysLeft === 1 ? 'dia restante' : 'dias restantes'}</strong> de trial.
+              </>
+            )}
+            {' '}
+            <button 
+              onClick={onNavigateToPlans}
+              className="underline font-semibold hover:opacity-80 transition-opacity"
+            >
+              Assine agora para não perder o acesso!
+            </button>
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Dashboard</h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm">Acompanhe seu progresso</p>
       </div>
 
@@ -302,13 +397,17 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                   ))}
                 </div>
                 {/* Botão Ver mais */}
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   onClick={() => setShowHeatmapModal(true)}
-                  className="mt-3 text-white hover:text-white/80 text-xs font-semibold flex items-center gap-1 transition-colors"
+                  className="mt-3 mx-auto w-fit px-3 py-1.5 border border-transparent hover:border-white/20 text-white text-xs font-semibold flex items-center gap-1 transition-all rounded-xl bg-transparent"
                 >
                   <Calendar size={14} />
                   Ver calendário completo →
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -321,7 +420,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             >
               <Sparkles className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-500 dark:text-emerald-400 opacity-10 rotate-12" />
               <div className="relative z-10 flex flex-col items-center text-center">
-                <blockquote className="text-base md:text-lg font-medium text-gray-800 dark:text-white leading-relaxed">
+                <blockquote className="text-base md:text-lg font-medium text-gray-900 dark:text-white leading-relaxed">
                   "{getQuoteOfTheDay().text}"
                 </blockquote>
               </div>
@@ -332,7 +431,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               {/* Card Progresso Hoje */}
               {(dailyProgress.time.goal > 0 || dailyProgress.questions.goal > 0) && (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
-                  <h2 className="text-sm font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <Target size={16} className="text-emerald-500" />
                     Progresso Hoje
                   </h2>
@@ -431,7 +530,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
                 <div className="flex items-center gap-2 mb-4">
                   <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  <h2 className="text-lg font-bold text-gray-800 dark:text-white">Progresso</h2>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Progresso</h2>
                 </div>
                 <div className="space-y-4 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
                   {subjects.map((subject) => { 
@@ -441,7 +540,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                         <div className="flex items-center justify-between mb-2"> 
                           <div className="flex items-center gap-2"> 
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: subject.color }} /> 
-                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">{subject.name}</span> 
+                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 truncate max-w-[120px]">{subject.name}</span> 
                           </div> 
                           <span className="text-xs text-gray-600 dark:text-gray-400">{totalMinutes}/{subject.goalMinutes} min</span> 
                         </div> 
@@ -470,7 +569,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                 >
                   <div className="flex items-center gap-2">
                     <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    <h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho Geral</h2>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Desempenho Geral</h2>
                   </div>
                 </Button>
 
@@ -536,10 +635,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                                     variant="ghost"
                                     fullWidth
                                     size="sm"
-                                    className="mb-2 h-auto justify-between"
+                                    className="mb-2 h-auto justify-between hover:bg-transparent active:bg-transparent"
                                     rightIcon={<ChevronDown 
                                       size={14} 
-                                      className={`text-gray-400 group-hover:text-emerald-500 transition-all duration-300 flex-shrink-0 ${
+                                      className={`text-gray-400 transition-all duration-300 flex-shrink-0 ${
                                         isSubjectExpanded ? 'rotate-180' : 'rotate-0'
                                       }`}
                                     />}
@@ -548,7 +647,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                                   >
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
-                                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate text-left">
+                                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 truncate text-left">
                                         {subject.name}
                                       </span>
                                     </div>
@@ -632,7 +731,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
               <div className="flex items-center gap-2 mb-4">
                 <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Hoje</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Hoje</h2>
               </div>
               {recentActivities.length > 0 ? (
                 <>
@@ -644,7 +743,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                         <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"> 
                           <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: subject?.color || '#6b7280' }} /> 
                           <div className="flex-1 min-w-0"> 
-                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{subject?.name || 'Matéria Excluída'}</p> 
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-200 truncate">{subject?.name || 'Matéria Excluída'}</p> 
                             <p className="text-xs text-gray-600 dark:text-gray-400">{getTypeLabel(log.type)} • {logMinutes} min</p> 
                             {log.notes && (<p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{log.notes}</p>)} 
                           </div> 
@@ -694,148 +793,163 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
 
           {/* DESKTOP LAYOUT */}
           <div className="hidden lg:block space-y-6">
-            {/* LINHA 1 - Desktop: Hoje, Total, Meta Diária */}
-            <div className="grid grid-cols-3 gap-6" data-tour="dashboard-stats" data-tour-desktop="true">
-              {/* Wrapper para os cards de estatísticas (apenas para o tour) */}
-              <div className="col-span-2 grid grid-cols-2 gap-6" data-tour="stats-cards-wrapper" data-tour-desktop="true">
-                {/* Card Hoje */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
-                  <Button
-                    onClick={() => setShowShareModal(true)}
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 h-auto min-w-0"
-                    title="Compartilhar Progresso do Dia"
-                  >
-                    <Share2 size={18} />
-                  </Button>
-                  <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-                  <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
-                    <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
-                      <Clock className="w-4 h-4 md:w-5 md:h-5" />
-                      <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Hoje</span>
-                    </div>
-                    <div className="flex-1 flex flex-col justify-center">
-                      <p className="text-3xl md:text-6xl font-black tracking-tight leading-none mb-1 md:mb-2">{hours > 0 ? `${hours}h` : `${minutes}m`}</p>
-                      <p className="text-xs md:text-xs font-medium opacity-80">{hours > 0 && minutes > 0 ? `${minutes}m adicionais` : 'Foco total!'}</p>
-                    </div>
+            {/* LINHA 1 - Desktop: Hoje, Total, Streak, Progresso Hoje */}
+            <div className="grid grid-cols-4 gap-4" data-tour="dashboard-stats" data-tour-desktop="true">
+              {/* Card Hoje */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
+                <Button
+                  onClick={() => setShowShareModal(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 h-auto min-w-0"
+                  title="Compartilhar Progresso do Dia"
+                >
+                  <Share2 size={18} />
+                </Button>
+                <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
+                <div className="relative z-10 flex flex-col justify-between h-full min-h-[100px]">
+                  <div className="flex items-center gap-2 mb-2 opacity-90">
+                    <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Hoje</span>
                   </div>
-                </div>
-
-                {/* Card Total */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 md:p-6 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
-                  <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-                  <div className="relative z-10 flex flex-col justify-between h-full min-h-[120px] md:min-h-[140px]">
-                    <div className="flex items-center gap-2 mb-2 md:mb-3 opacity-90">
-                      <Zap className="w-4 h-4 md:w-5 md:h-5" />
-                      <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Total</span>
-                    </div>
-                    <div className="flex-1 flex flex-col justify-center">
-                      <p className="text-3xl md:text-6xl font-black tracking-tight leading-none mb-1 md:mb-2">{totalHours > 0 ? `${totalHours}h` : '0h'}</p>
-                      <p className="text-xs md:text-xs font-medium opacity-80">{totalHours > 0 ? 'acumuladas no app' : 'Vamos começar?'}</p>
-                    </div>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <p className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-1">{hours > 0 ? `${hours}h` : `${minutes}m`}</p>
+                    <p className="text-xs font-medium opacity-80">
+                      {todaySessions > 0 ? `${todaySessions} ${todaySessions === 1 ? 'sessão' : 'sessões'} hoje` : 'Nenhuma sessão ainda'}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Coluna Esquerda: Progresso Hoje */}
-              <div className="col-span-1 space-y-4">
-                {/* Card Progresso Hoje */}
-                {(dailyProgress.time.goal > 0 || dailyProgress.questions.goal > 0) && (
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
-                    <h2 className="text-sm font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                      <Target size={16} className="text-emerald-500" />
-                      Progresso Hoje
-                    </h2>
-
-                    {/* Tempo de Estudo */}
-                    {dailyProgress.time.goal > 0 && (
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                            <Clock size={14} className="text-emerald-500" />
-                            Tempo de Estudo
-                          </span>
-                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                            {dailyProgress.time.current.toFixed(1)}h / {dailyProgress.time.goal}h ({Math.floor(dailyProgress.time.percentage)}%)
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
-                          <div 
-                            className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${getProgressColor(dailyProgress.time.percentage)}`}
-                            style={{ width: `${Math.min(dailyProgress.time.percentage, 100)}%` }}
-                          >
-                            {dailyProgress.time.percentage > 0 && dailyProgress.time.percentage < 100 && (
-                              <div className="w-1 h-1 bg-white/60 rounded-full" />
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-gray-400">0h</span>
-                          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                            {getProgressBadge(dailyProgress.time.percentage)}
-                          </span>
-                          <span className="text-xs text-gray-400">{dailyProgress.time.goal}h</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Questões Resolvidas */}
-                    {dailyProgress.questions.goal > 0 && (
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                            <HelpCircle size={14} className="text-emerald-500" />
-                            Questões Resolvidas
-                          </span>
-                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                            {dailyProgress.questions.current} / {dailyProgress.questions.goal} ({Math.floor(dailyProgress.questions.percentage)}%)
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
-                          <div 
-                            className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${getProgressColor(dailyProgress.questions.percentage)}`}
-                            style={{ width: `${Math.min(dailyProgress.questions.percentage, 100)}%` }}
-                          >
-                            {dailyProgress.questions.percentage > 0 && dailyProgress.questions.percentage < 100 && (
-                              <div className="w-1 h-1 bg-white/60 rounded-full" />
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-gray-400">0</span>
-                          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                            {getProgressBadge(dailyProgress.questions.percentage)}
-                          </span>
-                          <span className="text-xs text-gray-400">{dailyProgress.questions.goal}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Resumo Semanal */}
-                    {(weeklyProgress.time.goal > 0 || weeklyProgress.questions.goal > 0) && (
-                      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                            <BarChart2 size={14} className="text-emerald-500" />
-                            Progresso Semanal
-                          </span>
-                        </div>
-                        {weeklyProgress.time.goal > 0 && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                            {weeklyProgress.time.current.toFixed(1)}h / {weeklyProgress.time.goal}h ({Math.floor(weeklyProgress.time.percentage)}%)
-                          </p>
-                        )}
-                        {weeklyProgress.questions.goal > 0 && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {weeklyProgress.questions.current} / {weeklyProgress.questions.goal} questões ({Math.floor(weeklyProgress.questions.percentage)}%)
-                          </p>
-                        )}
-                      </div>
-                    )}
+              {/* Card Total */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
+                <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
+                <div className="relative z-10 flex flex-col justify-between h-full min-h-[100px]">
+                  <div className="flex items-center gap-2 mb-2 opacity-90">
+                    <Zap className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Total</span>
                   </div>
-                )}
+                  <div className="flex-1 flex flex-col justify-center">
+                    <p className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-1">{totalHours > 0 ? `${totalHours}h` : '0h'}</p>
+                    <p className="text-xs font-medium opacity-80">
+                      {firstLogDate ? `desde ${firstLogDate}` : 'Vamos começar?'}
+                    </p>
+                  </div>
+                </div>
               </div>
+
+              {/* Card Streak */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
+                <Flame className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
+                <div className="relative z-10 flex flex-col justify-between h-full min-h-[100px]">
+                  <div className="flex items-center gap-2 mb-2 opacity-90">
+                    <Flame className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-xs md:text-sm font-bold uppercase tracking-wide">Ofensiva</span>
+                  </div>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <p className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-1">{streak}</p>
+                    <p className="text-xs font-medium opacity-80">
+                      {streak > 0 ? 'dias seguidos 🔥' : 'Comece sua ofensiva!'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Progresso Hoje */}
+              {(dailyProgress.time.goal > 0 || dailyProgress.questions.goal > 0) && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
+                  <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Target size={16} className="text-emerald-500" />
+                    Progresso Hoje
+                  </h2>
+
+                  {/* Tempo de Estudo */}
+                  {dailyProgress.time.goal > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                          <Clock size={14} className="text-emerald-500" />
+                          Tempo de Estudo
+                        </span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          {dailyProgress.time.current.toFixed(1)}h / {dailyProgress.time.goal}h ({Math.floor(dailyProgress.time.percentage)}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+                        <div 
+                          className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${getProgressColor(dailyProgress.time.percentage)}`}
+                          style={{ width: `${Math.min(dailyProgress.time.percentage, 100)}%` }}
+                        >
+                          {dailyProgress.time.percentage > 0 && dailyProgress.time.percentage < 100 && (
+                            <div className="w-1 h-1 bg-white/60 rounded-full" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-gray-400">0h</span>
+                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                          {getProgressBadge(dailyProgress.time.percentage)}
+                        </span>
+                        <span className="text-xs text-gray-400">{dailyProgress.time.goal}h</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Questões Resolvidas */}
+                  {dailyProgress.questions.goal > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                          <HelpCircle size={14} className="text-emerald-500" />
+                          Questões Resolvidas
+                        </span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          {dailyProgress.questions.current} / {dailyProgress.questions.goal} ({Math.floor(dailyProgress.questions.percentage)}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+                        <div 
+                          className={`h-full transition-all duration-1000 ease-out rounded-full flex items-center justify-end pr-2 ${getProgressColor(dailyProgress.questions.percentage)}`}
+                          style={{ width: `${Math.min(dailyProgress.questions.percentage, 100)}%` }}
+                        >
+                          {dailyProgress.questions.percentage > 0 && dailyProgress.questions.percentage < 100 && (
+                            <div className="w-1 h-1 bg-white/60 rounded-full" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-gray-400">0</span>
+                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                          {getProgressBadge(dailyProgress.questions.percentage)}
+                        </span>
+                        <span className="text-xs text-gray-400">{dailyProgress.questions.goal}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Resumo Semanal */}
+                  {(weeklyProgress.time.goal > 0 || weeklyProgress.questions.goal > 0) && (
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                          <BarChart2 size={14} className="text-emerald-500" />
+                          Progresso Semanal
+                        </span>
+                      </div>
+                      {weeklyProgress.time.goal > 0 && (
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                          {weeklyProgress.time.current.toFixed(1)}h / {weeklyProgress.time.goal}h ({Math.floor(weeklyProgress.time.percentage)}%)
+                        </p>
+                      )}
+                      {weeklyProgress.questions.goal > 0 && (
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {weeklyProgress.questions.current} / {weeklyProgress.questions.goal} questões ({Math.floor(weeklyProgress.questions.percentage)}%)
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* LINHA 2 - Desktop: Ritmo da Semana e Progresso */}
@@ -844,20 +958,9 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               <div className="col-span-2 relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg p-6 text-white transition-transform hover:scale-[1.005] duration-300">
                 <Flame className="absolute -right-8 -bottom-8 w-40 h-40 text-white opacity-10 rotate-12" />
                 <div className="relative z-10 flex flex-col h-full justify-between">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                      <BarChart2 className="w-5 h-5 text-white" />
-                      <h2 className="text-lg font-bold text-white">Ritmo da Semana</h2>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl">
-                        <Flame className="w-5 h-5 text-white" />
-                        <div className="flex flex-col">
-                          <span className="text-2xl font-black leading-none">{streak}</span>
-                          <span className="text-xs font-medium opacity-90 uppercase tracking-wide">dias seguidos</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="flex items-center mb-6">
+                    <BarChart2 className="w-5 h-5 text-white" />
+                    <h2 className="text-lg font-bold text-white ml-2">Ritmo da Semana</h2>
                   </div>
                   <div className="flex items-end justify-between h-40 gap-2">
                     {weeklyStats.map((day, index) => (
@@ -883,15 +986,21 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                     ))}
                   </div>
                   {/* Botão Ver mais */}
-                  <Button
-                    onClick={() => setShowHeatmapModal(true)}
-                    variant="ghost"
-                    size="sm"
-                    leftIcon={<Calendar size={14} />}
-                    className="mt-4 text-white hover:text-white/80 text-xs font-semibold h-auto"
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mx-auto w-fit"
                   >
-                    Ver calendário completo →
-                  </Button>
+                    <button
+                      onClick={() => setShowHeatmapModal(true)}
+                      className="mt-4 px-3 py-1.5 border border-transparent hover:border-white/20 text-white hover:bg-white/10 text-xs font-semibold flex items-center gap-1 transition-all rounded-xl bg-transparent"
+                    >
+                      <Calendar size={14} />
+                      Ver calendário completo →
+                    </button>
+                  </motion.div>
                 </div>
               </div>
 
@@ -900,7 +1009,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                 <div className="col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    <h2 className="text-lg font-bold text-gray-800 dark:text-white">Progresso</h2>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Progresso</h2>
                   </div>
                   <div className="space-y-4 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
                     {subjects.map((subject) => { 
@@ -910,7 +1019,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                           <div className="flex items-center justify-between mb-2"> 
                             <div className="flex items-center gap-2"> 
                               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: subject.color }} /> 
-                              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[120px]">{subject.name}</span> 
+                              <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 truncate max-w-[120px]">{subject.name}</span> 
                             </div> 
                             <span className="text-xs text-gray-600 dark:text-gray-400">{totalMinutes}/{subject.goalMinutes} min</span> 
                           </div> 
@@ -934,7 +1043,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
             >
               <Sparkles className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-500 dark:text-emerald-400 opacity-10 rotate-12" />
               <div className="relative z-10 flex flex-col items-center text-center">
-                <blockquote className="text-base md:text-lg font-medium text-gray-800 dark:text-white leading-relaxed max-w-3xl">
+                <blockquote className="text-base md:text-lg font-medium text-gray-900 dark:text-white leading-relaxed max-w-3xl">
                   "{getQuoteOfTheDay().text}"
                 </blockquote>
               </div>
@@ -957,7 +1066,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                   >
                     <div className="flex items-center gap-2">
                       <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                      <h2 className="text-lg font-bold text-gray-800 dark:text-white">Desempenho Geral</h2>
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">Desempenho Geral</h2>
                     </div>
                   </Button>
 
@@ -1023,10 +1132,10 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                                       variant="ghost"
                                       fullWidth
                                       size="sm"
-                                      className="mb-2 h-auto justify-between"
+                                      className="mb-2 h-auto justify-between hover:bg-transparent active:bg-transparent"
                                       rightIcon={<ChevronDown 
                                         size={14} 
-                                        className={`text-gray-400 group-hover:text-emerald-500 transition-all duration-300 flex-shrink-0 ${
+                                        className={`text-gray-400 transition-all duration-300 flex-shrink-0 ${
                                           isSubjectExpanded ? 'rotate-180' : 'rotate-0'
                                         }`}
                                       />}
@@ -1035,7 +1144,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                                     >
                                       <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: subject.color }} />
-                                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate text-left">
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 truncate text-left">
                                           {subject.name}
                                         </span>
                                       </div>
@@ -1119,7 +1228,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
               <div className="col-span-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
                 <div className="flex items-center gap-2 mb-4">
                   <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  <h2 className="text-lg font-bold text-gray-800 dark:text-white">Hoje</h2>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Hoje</h2>
                 </div>
                 {recentActivities.length > 0 ? (
                   <>
@@ -1131,7 +1240,7 @@ export default function DashboardPage({ subjects, logs, cycleStartDate, onDelete
                           <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"> 
                             <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: subject?.color || '#6b7280' }} /> 
                             <div className="flex-1 min-w-0"> 
-                              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{subject?.name || 'Matéria Excluída'}</p> 
+                              <p className="text-sm font-semibold text-gray-900 dark:text-gray-200 truncate">{subject?.name || 'Matéria Excluída'}</p> 
                               <p className="text-xs text-gray-600 dark:text-gray-400">{getTypeLabel(log.type)} • {logMinutes} min</p> 
                               {log.notes && (<p className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">{log.notes}</p>)} 
                             </div> 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Subject, StudyLog, UserStats } from '../types';
 import { useToast } from '../contexts/ToastContext';
@@ -22,16 +22,29 @@ export function useSupabaseData(session: any) {
   const [dailyGoal, setDailyGoal] = useState<number>(0);
   const [showPerformance, setShowPerformance] = useState<boolean>(true);
   const [tutorialCompleted, setTutorialCompleted] = useState<boolean>(false);
+  const [welcomeSeen, setWelcomeSeen] = useState<boolean>(true); // Padrão true para não mostrar modal enquanto carrega
+  const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'lifetime' | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'cancelled' | 'trial' | null>(null);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [hasMoreLogs, setHasMoreLogs] = useState<boolean>(true);
   const [loadingMoreLogs, setLoadingMoreLogs] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [daysFilter, setDaysFilter] = useState<number | null>(30); // Padrão: 30 dias
+  
+  // Ref para evitar múltiplas chamadas simultâneas de fetchData
+  const isFetchingRef = useRef<boolean>(false);
+  
+  // Ref para rastrear se uma atualização foi feita pela própria aba (evitar loop de broadcast)
+  const lastUpdateSourceRef = useRef<string | null>(null);
 
   // Função auxiliar para enviar mensagem de sincronização
   const broadcastDataUpdate = () => {
+    // Marcar que esta aba fez a atualização (usar timestamp único para evitar conflitos)
+    const updateId = `update-${Date.now()}-${Math.random()}`;
+    lastUpdateSourceRef.current = updateId;
     const channel = new BroadcastChannel('studyflow_sync');
-    channel.postMessage('DATA_UPDATED');
+    channel.postMessage({ type: 'DATA_UPDATED', sourceId: updateId });
     channel.close();
   };
 
@@ -39,6 +52,12 @@ export function useSupabaseData(session: any) {
   const fetchData = useCallback(async () => {
     if (!session?.user?.id) return;
     
+    // Evitar múltiplas chamadas simultâneas
+    if (isFetchingRef.current) {
+      return;
+    }
+    
+    isFetchingRef.current = true;
     setLoadingData(true);
     try {
       // --- CARREGAR MATÉRIAS ---
@@ -114,30 +133,69 @@ export function useSupabaseData(session: any) {
         setDailyGoal(sanitizeNumber(settingsData.daily_goal));
         setShowPerformance(settingsData.show_performance ?? true);
         setTutorialCompleted(settingsData.tutorial_completed ?? false);
+        setWelcomeSeen(settingsData.welcome_seen ?? false);
+        setSubscriptionType(settingsData.subscription_type || null);
+        setSubscriptionStatus(settingsData.subscription_status || null);
+        setTrialEndsAt(settingsData.trial_ends_at || null);
+
+        // ✅ CORREÇÃO PARA USUÁRIOS ANTIGOS: Se não tem status, inicia trial de 7 dias
+        if (!settingsData.subscription_status || settingsData.subscription_status === 'none') {
+          const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          
+          // Atualiza no banco silenciosamente
+          supabase
+            .from('user_settings')
+            .update({
+              subscription_status: 'trial',
+              trial_ends_at: trialEndDate
+            })
+            .eq('user_id', session.user.id)
+            .then(({ error }) => {
+              if (!error) {
+                setSubscriptionStatus('trial');
+                setTrialEndsAt(trialEndDate);
+              }
+            });
+        }
       } else {
         // Se não existir, cria agora usando upsert para evitar erro 409
+        const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
         const { error: insertError } = await supabase.from('user_settings').upsert([{ 
           user_id: session.user.id,
           cycle_start_date: Date.now(),
           daily_goal: 0,
           show_performance: true,
-          tutorial_completed: false
+          tutorial_completed: false,
+          subscription_status: 'trial',
+          trial_ends_at: trialEndDate
         }], {
           onConflict: 'user_id'
         });
+        
         if (insertError) {
           console.error('Erro ao criar configurações:', insertError);
           addToast('Erro ao criar configurações. Detalhe: ' + insertError.message, 'error');
+        } else {
+          setSubscriptionStatus('trial');
+          setTrialEndsAt(trialEndDate);
         }
       }
 
     } catch (error: any) {
       console.error('Erro geral ao carregar dados:', error);
-      addToast('Erro ao carregar dados. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+      // Só mostrar toast se não for erro de rede temporário ou se for erro crítico
+      const errorMessage = error?.message || 'Erro desconhecido';
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        // Erro de rede - não mostrar toast para não incomodar o usuário
+        console.warn('Erro de rede ao carregar dados. Tentando novamente silenciosamente...');
+      } else {
+        addToast('Erro ao carregar dados. Detalhe: ' + errorMessage, 'error');
+      }
     } finally {
       setLoadingData(false);
+      isFetchingRef.current = false;
     }
-  }, [session?.user?.id, daysFilter, addToast]);
+  }, [session?.user?.id, daysFilter]);
 
   // 2. CARREGAR DADOS INICIAIS
   useEffect(() => {
@@ -150,8 +208,20 @@ export function useSupabaseData(session: any) {
     const channel = new BroadcastChannel('studyflow_sync');
     
     channel.onmessage = (event) => {
-      if (event.data === 'DATA_UPDATED') {
-        fetchData(); // Recarrega dados silenciosamente
+      // Suportar formato antigo (string) e novo (objeto)
+      const messageData = typeof event.data === 'string' ? { type: event.data } : event.data;
+      
+      if (messageData.type === 'DATA_UPDATED') {
+        // ✅ CORREÇÃO: Ignorar mensagens enviadas pela própria aba
+        if (messageData.sourceId && messageData.sourceId === lastUpdateSourceRef.current) {
+          // Limpar a referência após um pequeno delay para permitir que outras abas processem
+          setTimeout(() => {
+            lastUpdateSourceRef.current = null;
+          }, 1000);
+          return;
+        }
+        
+        fetchData(); // Recarrega dados silenciosamente (apenas de outras abas)
       }
     };
 
@@ -175,11 +245,12 @@ export function useSupabaseData(session: any) {
       if (error) throw error;
 
       // Adiciona localmente já traduzido
-      setSubjects([...subjects, { 
+      const mappedSubject = { 
         ...data, 
         goalMinutes: sanitizeNumber(data.goal_minutes), 
         subtopics: [] 
-      }]);
+      };
+      setSubjects([...subjects, mappedSubject]);
       
       // Sincronizar com outras abas
       broadcastDataUpdate();
@@ -409,6 +480,7 @@ export function useSupabaseData(session: any) {
       if (updates.dailyGoal !== undefined) dbUpdates.daily_goal = sanitizeNumber(updates.dailyGoal);
       if (updates.showPerformance !== undefined) dbUpdates.show_performance = updates.showPerformance;
       if (updates.tutorialCompleted !== undefined) dbUpdates.tutorial_completed = updates.tutorialCompleted;
+      if (updates.welcomeSeen !== undefined) dbUpdates.welcome_seen = updates.welcomeSeen;
 
       const { error } = await supabase.from('user_settings').update(dbUpdates).eq('user_id', session.user.id);
       if (error) throw error;
@@ -417,6 +489,7 @@ export function useSupabaseData(session: any) {
       if (updates.dailyGoal !== undefined) setDailyGoal(sanitizeNumber(updates.dailyGoal));
       if (updates.showPerformance !== undefined) setShowPerformance(updates.showPerformance);
       if (updates.tutorialCompleted !== undefined) setTutorialCompleted(updates.tutorialCompleted);
+      if (updates.welcomeSeen !== undefined) setWelcomeSeen(updates.welcomeSeen);
       
       // Sincronizar com outras abas
       broadcastDataUpdate();
@@ -653,7 +726,8 @@ export function useSupabaseData(session: any) {
   }, [daysFilter, searchTerm]);
 
   return {
-    subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, tutorialCompleted, loadingData,
+    subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, tutorialCompleted, welcomeSeen,
+    subscriptionType, subscriptionStatus, trialEndsAt, loadingData,
     hasMoreLogs, loadingMoreLogs, loadMoreLogs, searchLogs, searchTerm,
     daysFilter, applyDaysFilter,
     addSubject, deleteSubject, updateSubject, reorderSubjects,

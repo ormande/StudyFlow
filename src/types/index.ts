@@ -50,7 +50,7 @@ export interface UserStats {
   total_xp: number;
 }
 
-export type TabType = 'dashboard' | 'timer' | 'register' | 'cycle' | 'achievements' | 'elo' | 'more' | 'goals' | 'appearance' | 'stats' | 'history' | 'about' | 'tutorial' | 'settings' | 'profile';
+export type TabType = 'dashboard' | 'timer' | 'register' | 'cycle' | 'achievements' | 'elo' | 'more' | 'goals' | 'appearance' | 'stats' | 'history' | 'about' | 'tutorial' | 'settings' | 'profile' | 'pricing' | 'plans';
 
 export type FeedbackType = 'bug' | 'suggestion' | 'compliment';
 

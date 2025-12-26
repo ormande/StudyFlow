@@ -44,7 +44,7 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
             Voltar
           </Button>
         )}
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 transition-colors flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 transition-colors flex items-center gap-2">
           <Star className="text-emerald-500" size={28} />
           Elo
         </h1>

@@ -509,7 +509,7 @@ export function useAchievements({
         const alreadyAwarded = localStorage.getItem(bonusKey);
         
         if (!alreadyAwarded) {
-          addXP(50, `🔥 Ofensiva - ${weeks * 7} dias`, '🔥', true);
+          addXP(50, `Ofensiva - ${weeks * 7} dias`, '', true);
           localStorage.setItem(bonusKey, Date.now().toString());
           
           // Limpar flags antigas (manter apenas últimos 30 dias)
@@ -690,7 +690,7 @@ export function useAchievements({
     
     // Adicionar XP ANTES de atualizar o estado (garante que só acontece uma vez)
     if (addXP && xpReward && rewardReason) {
-      addXP(xpReward, rewardReason, '🏆', true);
+      addXP(xpReward, rewardReason, '', true);
     }
     
     setUserAchievements(prev => {
@@ -730,7 +730,7 @@ export function useAchievements({
     // Disparar confete
     triggerConfetti();
     
-    addToast('🎉 Conquista resgatada com sucesso!', 'success');
+    addToast('Conquista resgatada com sucesso!', 'success');
   }, [addToast, triggerConfetti, saveAchievements, addXP, userAchievements]);
 
   // Obter progresso do usuário para uma conquista

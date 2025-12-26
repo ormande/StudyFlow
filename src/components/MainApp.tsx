@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TabType } from '../types';
+import { FADE_UP_ANIMATION } from '../utils/animations';
 import { useSupabaseData } from '../hooks/useSupabaseData';
 import BottomNav from './BottomNav';
 import Sidebar from './Sidebar';
@@ -20,10 +21,12 @@ const AboutPage = lazy(() => import('../pages/AboutPage'));
 const TutorialPage = lazy(() => import('../pages/TutorialPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+import PricingPage from '../pages/PricingPage';
+import PlanPage from '../pages/PlanPage';
 import FeedbackModal from './FeedbackModal';
 import HistoryModal from './HistoryModal';
 import ChangePasswordModal from './ChangePasswordModal';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Zap } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 import AlertModal from './AlertModal';
 import { useNotification } from '../hooks/useNotification';
@@ -46,6 +49,7 @@ export default function MainApp({
   // DATA HOOK
   const {
     subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, loadingData,
+    subscriptionStatus, trialEndsAt, subscriptionType: subType, tutorialCompleted, welcomeSeen,
     hasMoreLogs, loadingMoreLogs, loadMoreLogs, searchLogs, searchTerm,
     daysFilter, applyDaysFilter,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
@@ -148,7 +152,7 @@ export default function MainApp({
             // Enviar notificação quando timer acaba
             // (só chega aqui se estava rodando, pois o intervalo só existe quando isTimerRunning é true)
             const modeLabel = timerMode === 'pomodoro' ? 'Pomodoro' : 'Ciclo';
-            sendNotification(`${modeLabel} Finalizado! 🎉`, {
+            sendNotification(`${modeLabel} Finalizado!`, {
               body: 'Hora de descansar (ou voltar a estudar). Bom trabalho!',
               icon: '/icon-192.png'
             });
@@ -308,6 +312,32 @@ export default function MainApp({
     setActiveTab('profile');
   }, []);
 
+  if (loadingData) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-300">
+        <Loader2 className="animate-spin text-emerald-500 w-12 h-12" />
+      </div>
+    );
+  }
+
+  if (!loadingData) {
+    // Verificar expiração do trial comparando apenas datas (sem horário)
+    const isTrialExpired = subscriptionStatus === 'trial' && trialEndsAt && (() => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endDate = new Date(trialEndsAt);
+      endDate.setHours(0, 0, 0, 0);
+      return endDate < today;
+    })();
+    const isSubscriptionCancelled = subscriptionStatus === 'cancelled';
+    const hasNoSubscription = !subscriptionStatus || subscriptionStatus === 'none';
+
+    // Redirecionar para pricing apenas se não tiver assinatura ativa/trial válido
+    if (hasNoSubscription || isTrialExpired || isSubscriptionCancelled) {
+      return <PricingPage onBack={onHardReset} onNavigateToLogin={() => {}} onNavigateToSignup={() => {}} />;
+    }
+  }
+
   return (
     <XPProvider
       logs={logs}
@@ -332,6 +362,10 @@ export default function MainApp({
         dailyGoal={dailyGoal}
         showPerformance={showPerformance}
         loadingData={loadingData}
+        subscriptionStatus={subscriptionStatus}
+        subscriptionType={subType}
+        trialEndsAt={trialEndsAt}
+        welcomeSeen={welcomeSeen}
         streak={streak}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -422,13 +456,17 @@ export default function MainApp({
 function MainAppContent({
   session,
   onHardReset: _onHardReset,
-  subjects,
-  logs,
-  cycleStartDate,
-  dailyGoal,
-  showPerformance,
-  loadingData,
-  streak,
+  subjects = [],
+  logs = [],
+  cycleStartDate = Date.now(),
+  dailyGoal = 0,
+  showPerformance = true,
+  loadingData = false,
+  subscriptionStatus = null,
+  subscriptionType: subType = null,
+  trialEndsAt = null,
+  welcomeSeen = true,
+  streak = 0,
   activeTab,
   setActiveTab,
   showFeedbackModal,
@@ -483,7 +521,7 @@ function MainAppContent({
   handleOpenHistory,
   handleNavigateToTutorial,
   handleOpenSecurity,
-        handleNavigateToStats,
+  handleNavigateToStats,
   handleNavigateToAppearance,
   handleNavigateToGoals,
   handleNavigateToAbout,
@@ -533,11 +571,37 @@ function MainAppContent({
     }
   }, [deleteLogId, logs, xpContext, confirmDeleteLog]);
 
+  const handleWelcomeSeen = useCallback(() => {
+    _updateSettings({ welcomeSeen: true });
+  }, [_updateSettings]);
+
+  const userName = useMemo(() => {
+    return session?.user?.user_metadata?.full_name?.split(' ')[0] || session?.user?.user_metadata?.name?.split(' ')[0] || '';
+  }, [session]);
+
   // Função renderPage dentro do MainAppContent
   const renderPage = useCallback(() => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardPage subjects={subjects} logs={logs} cycleStartDate={cycleStartDate} onDeleteLog={handleDeleteLog} onEditLog={handleEditLog} dailyGoal={dailyGoal} showPerformance={showPerformance} streak={streak} isLoading={loadingData} onNavigateToCycle={() => setActiveTab('cycle')} />;
+        return <DashboardPage 
+          subjects={subjects} 
+          logs={logs} 
+          cycleStartDate={cycleStartDate} 
+          onDeleteLog={handleDeleteLog} 
+          onEditLog={handleEditLog} 
+          dailyGoal={dailyGoal} 
+          showPerformance={showPerformance} 
+          streak={streak} 
+          isLoading={loadingData} 
+          onNavigateToCycle={() => setActiveTab('cycle')}
+          subscriptionStatus={subscriptionStatus}
+          trialEndsAt={trialEndsAt}
+          onNavigateToPlans={() => setActiveTab('plans')}
+          welcomeSeen={welcomeSeen}
+          onWelcomeSeen={handleWelcomeSeen}
+          onNavigateToTutorial={handleNavigateToTutorial}
+          userName={userName}
+        />;
       case 'timer':
         return (
           <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="animate-spin text-emerald-500 w-8 h-8" /></div>}>
@@ -586,6 +650,7 @@ function MainAppContent({
             onOpenSecurity={handleOpenSecurity}
             onOpenSettings={handleOpenSettings}
             onNavigateToAbout={handleNavigateToAbout}
+            onNavigateToPlans={() => setActiveTab('plans')}
             onLogout={handleLogout}
             onNavigateToProfile={_handleNavigateToProfile}
           />
@@ -673,13 +738,38 @@ function MainAppContent({
             <ProfilePage
               session={session}
               onNavigateBack={() => setActiveTab('more')}
+              subscriptionStatus={subscriptionStatus}
+              subscriptionType={subType}
+              trialEndsAt={trialEndsAt}
+              onNavigateToPlans={() => setActiveTab('plans')}
             />
           </Suspense>
+        );
+      case 'plans':
+        return (
+          <PlanPage 
+            subscriptionStatus={subscriptionStatus}
+            subscriptionType={subType}
+            onNavigateBack={() => setActiveTab('more')}
+          />
         );
       default:
         return null;
     }
-  }, [activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLog, dailyGoal, showPerformance, streak, loadingData, handleTimerStop, timerSeconds, setTimerSeconds, isTimerRunning, setIsTimerRunning, timerMode, setTimerMode, handleAddLog, prefilledTime, handleTimeClear, handleAddSubject, handleDeleteSubject, handleUpdateSubject, handleRestartCycle, handleReorderSubjects, session, handleNavigateToAchievements, handleNavigateToElo, handleNavigateToStats, handleNavigateToGoals, handleNavigateToAppearance, handleNavigateToAbout, handleOpenHistory, setShowFeedbackModal, handleNavigateToTutorial, handleOpenSecurity, handleOpenSettings, handleLogout, _handleNavigateToProfile, setActiveTab, handleTogglePerformance]);
+  }, [
+    activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLog, 
+    dailyGoal, showPerformance, streak, loadingData, handleTimerStop, 
+    timerSeconds, setTimerSeconds, isTimerRunning, setIsTimerRunning, 
+    timerMode, setTimerMode, handleAddLog, prefilledTime, handleTimeClear, 
+    handleAddSubject, handleDeleteSubject, handleUpdateSubject, 
+    handleRestartCycle, handleReorderSubjects, session, 
+    handleNavigateToAchievements, handleNavigateToElo, handleNavigateToStats, 
+    handleNavigateToGoals, handleNavigateToAppearance, handleNavigateToAbout, 
+    handleOpenHistory, setShowFeedbackModal, handleNavigateToTutorial, 
+    handleOpenSecurity, handleOpenSettings, handleLogout, _handleNavigateToProfile, 
+    setActiveTab, handleTogglePerformance, subscriptionStatus, subType, trialEndsAt,
+    welcomeSeen, handleWelcomeSeen, handleNavigateToTutorial, userName
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative transition-colors duration-300">
@@ -707,7 +797,7 @@ function MainAppContent({
       <AlertModal 
         isOpen={showRestartSuccess} 
         title="Ciclo Reiniciado!" 
-        message="Foco na missão! 👊" 
+        message="Foco na missão!" 
         buttonText="Bora!" 
         variant="success" 
         onClose={handleCloseRestartSuccess} 
@@ -760,6 +850,7 @@ function MainAppContent({
         onOpenHistory={handleOpenHistory}
         onOpenTutorial={handleNavigateToTutorial}
         onOpenSecurity={handleOpenSecurity}
+        isSecurityModalOpen={showChangePasswordModal}
         onNavigateToStats={handleNavigateToStats}
         onNavigateToAppearance={handleNavigateToAppearance}
         onNavigateToGoals={handleNavigateToGoals}
@@ -772,7 +863,7 @@ function MainAppContent({
       {/* Conteúdo Principal com Ajuste de Margem para Desktop */}
       <div className="pb-24 pt-2 md:ml-64 md:pb-8"> 
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+          <motion.div key={activeTab} {...FADE_UP_ANIMATION}>
             {renderPage()}
           </motion.div>
         </AnimatePresence>

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import React from 'react';
-import { Trash2, Pencil, Check, X, Filter, History, ArrowLeft, Loader2, Search } from 'lucide-react';
+import { Trash2, Pencil, Check, X, Filter, History, ArrowLeft, Loader2, Search, Circle } from 'lucide-react';
 import { Subject, StudyLog, StudyType } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/Button';
+import { FADE_UP_ANIMATION, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/animations';
 
 interface HistoryPageProps {
   logs: StudyLog[];
@@ -89,6 +90,15 @@ export default function HistoryPage({
     return labels[type];
   };
 
+  // Função para sanitizar input numérico
+  const sanitizeNumericInput = (value: string, max?: number, min: number = 0): number => {
+    if (value === '') return min;
+    const num = parseInt(value);
+    if (isNaN(num) || num < min) return min;
+    if (max !== undefined && num > max) return max;
+    return num;
+  };
+
   const formatTime = (hours: number, minutes: number, seconds?: number) => {
     const parts = [];
     if (hours > 0) parts.push(`${hours}h`);
@@ -100,14 +110,14 @@ export default function HistoryPage({
   const startEditing = (log: StudyLog) => {
     setEditingId(log.id);
     setEditForm({
-      hours: log.hours,
-      minutes: log.minutes,
+      hours: log.hours || 0,
+      minutes: log.minutes || 0,
       seconds: log.seconds || 0,
-      pages: log.pages,
-      correct: log.correct,
-      wrong: log.wrong,
-      blank: log.blank,
-      notes: log.notes,
+      pages: log.pages || 0,
+      correct: log.correct || 0,
+      wrong: log.wrong || 0,
+      blank: log.blank || 0,
+      notes: log.notes || '',
     });
   };
 
@@ -124,10 +134,7 @@ export default function HistoryPage({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
+      {...FADE_UP_ANIMATION}
       className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20"
     >
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -271,7 +278,12 @@ export default function HistoryPage({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <motion.tbody 
+                  className="divide-y divide-gray-200 dark:divide-gray-700"
+                  variants={STAGGER_CONTAINER}
+                  initial="hidden"
+                  animate="show"
+                >
                   {filteredLogs.map((log, index) => {
                     const isEditing = editingId === log.id;
                     const isEven = index % 2 === 0;
@@ -279,9 +291,7 @@ export default function HistoryPage({
                     return (
                       <React.Fragment key={log.id}>
                         <motion.tr
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.2, delay: index * 0.02 }}
+                          variants={STAGGER_ITEM}
                           className={isEven ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}
                         >
                           {/* Matéria */}
@@ -326,9 +336,18 @@ export default function HistoryPage({
                               )}
                               {log.type === 'questoes' && (
                                 <div className="flex gap-2">
-                                  <span className="text-emerald-600 dark:text-emerald-400">{log.correct || 0}✓</span>
-                                  <span className="text-red-600 dark:text-red-400">{log.wrong || 0}✗</span>
-                                  <span className="text-blue-600 dark:text-blue-400">{log.blank || 0}○</span>
+                                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    {log.correct || 0}
+                                    <Check size={12} />
+                                  </span>
+                                  <span className="text-red-600 dark:text-red-400 flex items-center gap-1">
+                                    {log.wrong || 0}
+                                    <X size={12} />
+                                  </span>
+                                  <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                    {log.blank || 0}
+                                    <Circle size={12} />
+                                  </span>
                                 </div>
                               )}
                               {log.notes && (
@@ -343,11 +362,17 @@ export default function HistoryPage({
                           <td className="px-4 py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-2">
                               <Button
-                                onClick={() => startEditing(log)}
-                                variant="primary"
+                                onClick={() => {
+                                  if (editingId === log.id) {
+                                    cancelEdit();
+                                  } else {
+                                    startEditing(log);
+                                  }
+                                }}
+                                variant={editingId === log.id ? "secondary" : "primary"}
                                 size="sm"
                                 className="p-2 h-auto min-w-0"
-                                title="Editar"
+                                title={editingId === log.id ? "Cancelar edição" : "Editar"}
                               >
                                 <Pencil size={16} />
                               </Button>
@@ -368,119 +393,159 @@ export default function HistoryPage({
                         <AnimatePresence>
                           {isEditing && (
                             <motion.tr
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.3, ease: 'easeInOut' }}
+                              initial={{ opacity: 0, y: -20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -20 }}
+                              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
                               className={isEven ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}
                             >
                               <td colSpan={6} className="px-4 py-4">
-                                <motion.div
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -10 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
+                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
                                 >
                                   <div className="space-y-4">
-                                    <div className="grid grid-cols-3 gap-3">
+                                    {/* Linha 1: Campos numéricos em grid responsivo */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                      
+                                      {/* Coluna 1: Tempo (sempre visível) */}
                                       <div>
-                                        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2">
-                                          Horas
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                          Tempo de Sessão <span className="text-red-500">*</span>
                                         </label>
-                                        <input
-                                          type="number"
-                                          value={editForm.hours || 0}
-                                          onChange={(e) => setEditForm({ ...editForm, hours: parseInt(e.target.value) || 0 })}
-                                          className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-center font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                        />
+                                        <div className="flex gap-2">
+                                          <div className="flex-1">
+                                            <input
+                                              type="number"
+                                              inputMode="numeric"
+                                              pattern="[0-9]*"
+                                              min="0"
+                                              max="23"
+                                              value={editForm.hours || 0}
+                                              onChange={(e) => setEditForm({ ...editForm, hours: sanitizeNumericInput(e.target.value, 23, 0) })}
+                                              className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                              placeholder="0"
+                                            />
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 block text-center mt-1">h</span>
+                                          </div>
+                                          
+                                          <div className="flex-1">
+                                            <input
+                                              type="number"
+                                              inputMode="numeric"
+                                              pattern="[0-9]*"
+                                              min="0"
+                                              max="59"
+                                              value={editForm.minutes || 0}
+                                              onChange={(e) => setEditForm({ ...editForm, minutes: sanitizeNumericInput(e.target.value, 59, 0) })}
+                                              className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                              placeholder="0"
+                                            />
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 block text-center mt-1">min</span>
+                                          </div>
+                                          
+                                          <div className="flex-1">
+                                            <input
+                                              type="number"
+                                              inputMode="numeric"
+                                              pattern="[0-9]*"
+                                              min="0"
+                                              max="59"
+                                              value={editForm.seconds || 0}
+                                              onChange={(e) => setEditForm({ ...editForm, seconds: sanitizeNumericInput(e.target.value, 59, 0) })}
+                                              className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                              placeholder="0"
+                                            />
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 block text-center mt-1">seg</span>
+                                          </div>
+                                        </div>
                                       </div>
+                                      
+                                      {/* Coluna 2: Questões (sempre visível) */}
                                       <div>
-                                        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2">
-                                          Minutos
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                          Questões
                                         </label>
-                                        <input
-                                          type="number"
-                                          value={editForm.minutes || 0}
-                                          onChange={(e) => setEditForm({ ...editForm, minutes: parseInt(e.target.value) || 0 })}
-                                          className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-center font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                        />
+                                        <div className="flex gap-2">
+                                          <div className="flex-1">
+                                            <input
+                                              type="number"
+                                              inputMode="numeric"
+                                              pattern="[0-9]*"
+                                              min="0"
+                                              value={editForm.correct || 0}
+                                              onChange={(e) => setEditForm({ ...editForm, correct: sanitizeNumericInput(e.target.value) })}
+                                              className="w-full px-3 py-2 rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 focus:border-emerald-500 outline-none text-center"
+                                              placeholder="0"
+                                            />
+                                            <div className="flex justify-center mt-1">
+                                              <Check size={14} className="text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="flex-1">
+                                            <input
+                                              type="number"
+                                              inputMode="numeric"
+                                              pattern="[0-9]*"
+                                              min="0"
+                                              value={editForm.wrong || 0}
+                                              onChange={(e) => setEditForm({ ...editForm, wrong: sanitizeNumericInput(e.target.value) })}
+                                              className="w-full px-3 py-2 rounded-lg border-2 border-red-500 dark:border-red-400 bg-white dark:bg-gray-800 text-red-700 dark:text-red-300 focus:border-red-500 outline-none text-center"
+                                              placeholder="0"
+                                            />
+                                            <div className="flex justify-center mt-1">
+                                              <X size={14} className="text-red-600 dark:text-red-400" />
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="flex-1">
+                                            <input
+                                              type="number"
+                                              inputMode="numeric"
+                                              pattern="[0-9]*"
+                                              min="0"
+                                              value={editForm.blank || 0}
+                                              onChange={(e) => setEditForm({ ...editForm, blank: sanitizeNumericInput(e.target.value) })}
+                                              className="w-full px-3 py-2 rounded-lg border-2 border-blue-500 dark:border-blue-400 bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-300 focus:border-blue-500 outline-none text-center"
+                                              placeholder="0"
+                                            />
+                                            <div className="flex justify-center mt-1">
+                                              <Circle size={14} className="text-gray-500 dark:text-gray-400" />
+                                            </div>
+                                          </div>
+                                        </div>
                                       </div>
+                                      
+                                      {/* Coluna 3: Páginas (sempre visível) */}
                                       <div>
-                                        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2">
-                                          Segundos
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                          Páginas Lidas
                                         </label>
                                         <input
                                           type="number"
-                                          value={editForm.seconds || 0}
-                                          onChange={(e) => setEditForm({ ...editForm, seconds: parseInt(e.target.value) || 0 })}
-                                          className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-center font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                        />
-                                      </div>
-                                    </div>
-
-                                    {log.type === 'teoria' && (
-                                      <div>
-                                        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2">
-                                          Páginas
-                                        </label>
-                                        <input
-                                          type="number"
+                                          inputMode="numeric"
+                                          pattern="[0-9]*"
+                                          min="0"
                                           value={editForm.pages || 0}
-                                          onChange={(e) => setEditForm({ ...editForm, pages: parseInt(e.target.value) || 0 })}
-                                          className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                          onChange={(e) => setEditForm({ ...editForm, pages: sanitizeNumericInput(e.target.value) })}
+                                          className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none"
+                                          placeholder="Ex: 50"
                                         />
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 block mt-1">págs</span>
                                       </div>
-                                    )}
-
-                                    {log.type === 'questoes' && (
-                                      <div className="grid grid-cols-3 gap-3">
-                                        <div>
-                                          <label className="block text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase mb-2">
-                                            Certas
-                                          </label>
-                                          <input
-                                            type="number"
-                                            value={editForm.correct || 0}
-                                            onChange={(e) => setEditForm({ ...editForm, correct: parseInt(e.target.value) || 0 })}
-                                            className="w-full p-2.5 bg-white dark:bg-gray-800 border border-emerald-500 rounded-lg text-center font-semibold text-emerald-700 dark:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                          />
-                                        </div>
-                                        <div>
-                                          <label className="block text-xs font-semibold text-red-600 dark:text-red-400 uppercase mb-2">
-                                            Erradas
-                                          </label>
-                                          <input
-                                            type="number"
-                                            value={editForm.wrong || 0}
-                                            onChange={(e) => setEditForm({ ...editForm, wrong: parseInt(e.target.value) || 0 })}
-                                            className="w-full p-2.5 bg-white dark:bg-gray-800 border border-red-500 rounded-lg text-center font-semibold text-red-700 dark:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                          />
-                                        </div>
-                                        <div>
-                                          <label className="block text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase mb-2">
-                                            Em Branco
-                                          </label>
-                                          <input
-                                            type="number"
-                                            value={editForm.blank || 0}
-                                            onChange={(e) => setEditForm({ ...editForm, blank: parseInt(e.target.value) || 0 })}
-                                            className="w-full p-2.5 bg-white dark:bg-gray-800 border border-blue-500 rounded-lg text-center font-semibold text-blue-700 dark:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                          />
-                                        </div>
-                                      </div>
-                                    )}
-
+                                      
+                                    </div>
+                                    
+                                    {/* Linha 2: Observações (full width) */}
                                     <div>
-                                      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2">
+                                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                         Observações
                                       </label>
-                                      <input
-                                        type="text"
+                                      <textarea
                                         value={editForm.notes || ''}
                                         onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                                        className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                        placeholder="Observações..."
+                                        rows={3}
+                                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 outline-none resize-none"
+                                        placeholder="Adicione observações sobre esta sessão (opcional)"
                                       />
                                     </div>
 
@@ -503,7 +568,7 @@ export default function HistoryPage({
                                       </Button>
                                     </div>
                                   </div>
-                                </motion.div>
+                                </div>
                               </td>
                             </motion.tr>
                           )}
@@ -511,7 +576,7 @@ export default function HistoryPage({
                       </React.Fragment>
                     );
                   })}
-                </tbody>
+                </motion.tbody>
               </table>
             </div>
           )}

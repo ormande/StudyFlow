@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, Volume2, VolumeX, Database, FileSpreadsheet, FileText, AlertTriangle, Trash2, Play, Bell, BellOff } from 'lucide-react';
+import { ArrowLeft, Eye, Volume2, VolumeX, Database, Settings, FileSpreadsheet, FileDown, AlertTriangle, Trash2, Play, Bell, BellOff, Loader2, MessageCircle } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
@@ -51,7 +51,10 @@ export default function SettingsPage({
       setNotificationsEnabled(notificationsSaved === 'true');
     } else {
       // Se não existe, verificar se já tem permissão concedida
-      setNotificationsEnabled(permission === 'granted');
+      // Mas só atualizar se a permissão realmente mudou para 'granted'
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+      }
     }
   }, [permission]);
 
@@ -82,22 +85,30 @@ export default function SettingsPage({
 
   // Gerenciar notificações do sistema
   const handleToggleNotifications = async (enabled: boolean) => {
-    if (enabled) {
-      // Se está ativando, pedir permissão
-      const result = await requestPermission();
-      if (result === 'granted') {
-        setNotificationsEnabled(true);
-        localStorage.setItem('settings_notifications_enabled', 'true');
-        addToast('Notificações habilitadas!', 'success');
-      } else if (result === 'denied') {
+    try {
+      if (enabled) {
+        // Se está ativando, pedir permissão
+        const result = await requestPermission();
+        if (result === 'granted') {
+          setNotificationsEnabled(true);
+          localStorage.setItem('settings_notifications_enabled', 'true');
+          addToast('Notificações habilitadas!', 'success');
+        } else if (result === 'denied') {
+          setNotificationsEnabled(false);
+          localStorage.setItem('settings_notifications_enabled', 'false');
+          addToast('Permissão negada no navegador', 'error');
+        }
+      } else {
+        // Se está desativando, apenas salvar preferência
         setNotificationsEnabled(false);
         localStorage.setItem('settings_notifications_enabled', 'false');
-        addToast('Permissão negada no navegador', 'error');
+        addToast('Notificações desabilitadas', 'success');
       }
-    } else {
-      // Se está desativando, apenas salvar preferência
-      setNotificationsEnabled(false);
-      localStorage.setItem('settings_notifications_enabled', 'false');
+    } catch (error: any) {
+      console.error('Erro ao alternar notificações:', error);
+      // Reverter o estado em caso de erro
+      setNotificationsEnabled(!enabled);
+      addToast('Erro ao alterar configuração de notificações. Tente novamente.', 'error');
     }
   };
 
@@ -114,7 +125,7 @@ export default function SettingsPage({
     }
 
     try {
-      await sendNotification('StudyFlow: As notificações estão funcionando! 🚀', {
+      await sendNotification('StudyFlow: As notificações estão funcionando!', {
         body: 'Teste de notificação realizado com sucesso.',
         tag: 'test-notification',
         requireInteraction: false
@@ -898,7 +909,7 @@ export default function SettingsPage({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="max-w-2xl mx-auto px-6 py-8 pb-24 md:pb-8"
+        className="max-w-2xl lg:max-w-6xl mx-auto px-6 py-8 pb-24 md:pb-8"
       >
         {/* Header */}
         <div className="mb-8">
@@ -914,8 +925,8 @@ export default function SettingsPage({
               Voltar
             </Button>
           )}
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2">
-            <Database className="text-emerald-500" size={28} />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+            <Settings className="text-emerald-500" size={28} />
             Configurações
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm">
@@ -923,9 +934,13 @@ export default function SettingsPage({
           </p>
         </div>
 
-        {/* Seção 1 - Privacidade */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+        {/* Grid de 2 Colunas no Desktop */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:items-start">
+          {/* COLUNA ESQUERDA */}
+          <div className="space-y-8">
+            {/* Seção 1 - Privacidade */}
+            <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Eye className="text-emerald-500" size={20} />
             Privacidade
           </h2>
@@ -946,11 +961,11 @@ export default function SettingsPage({
               />
             </div>
           </div>
-        </div>
+            </div>
 
-        {/* Seção 2 - Notificações */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+            {/* Seção 2 - Notificações */}
+            <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             {timerSoundEnabled ? (
               <Volume2 className="text-emerald-500" size={20} />
             ) : (
@@ -1026,62 +1041,93 @@ export default function SettingsPage({
               Testar Notificação
             </Button>
           </div>
-        </div>
+            </div>
+          </div>
 
-        {/* Seção 3 - Dados */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-            <Database className="text-blue-500" size={20} />
+          {/* COLUNA DIREITA */}
+          <div className="space-y-8">
+            {/* Seção 3 - Dados */}
+            <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Database className="text-emerald-500" size={20} />
             Dados
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button
+            {/* Botão Export CSV */}
+            <button
               onClick={handleExportCSV}
-              variant="ghost"
-              className="bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl p-6 flex flex-col items-center gap-3 border border-blue-200 dark:border-blue-800 h-auto"
+              className="group bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl p-5 flex items-center gap-4 transition-all active:scale-95 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm"
             >
-              <div className="p-3 bg-blue-500 rounded-xl text-white">
+              {/* Ícone à esquerda */}
+              <div className="flex-shrink-0 p-3 bg-blue-500 rounded-xl text-white group-hover:bg-blue-600 transition-colors">
                 <FileSpreadsheet size={24} />
               </div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white text-center">
-                Exportar CSV
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                Compatível Excel
-              </p>
-            </Button>
+              
+              {/* Textos à direita */}
+              <div className="flex-1 text-left">
+                <p className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                  Exportar CSV
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Compatível com Excel
+                </p>
+              </div>
+            </button>
 
-            <Button
+            {/* Botão Export PDF */}
+            <button
               onClick={handleExportPDF}
               disabled={isExportingPDF}
-              variant="ghost"
-              isLoading={isExportingPDF}
-              className="bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl p-6 flex flex-col items-center gap-3 border border-red-200 dark:border-red-800 h-auto"
+              className="group bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl p-5 flex items-center gap-4 transition-all active:scale-95 border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 dark:disabled:hover:border-gray-700"
             >
-              <div className="p-3 bg-red-500 rounded-xl text-white">
+              {/* Ícone à esquerda */}
+              <div className="flex-shrink-0 p-3 bg-red-500 rounded-xl text-white group-hover:bg-red-600 transition-colors">
                 {isExportingPDF ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <FileText size={24} />
-                  </motion.div>
+                  <Loader2 size={24} className="animate-spin" />
                 ) : (
-                  <FileText size={24} />
+                  <FileDown size={24} />
                 )}
               </div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white text-center">
-                {isExportingPDF ? 'Gerando...' : 'Exportar PDF'}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                Relatório profissional
-              </p>
-            </Button>
+              
+              {/* Textos à direita */}
+              <div className="flex-1 text-left">
+                <p className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                  {isExportingPDF ? 'Gerando...' : 'Exportar PDF'}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Relatório profissional
+                </p>
+              </div>
+            </button>
           </div>
-        </div>
+            </div>
 
-        {/* Seção 4 - Zona de Perigo */}
-        <div className="mb-8">
+            {/* Seção 4 - Ajuda & Suporte */}
+            <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <MessageCircle className="text-emerald-500" size={20} />
+            Ajuda & Suporte
+          </h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <a
+              href="https://t.me/studyflow_suporte_bot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <Button
+                variant="primary"
+                fullWidth
+                leftIcon={<MessageCircle size={18} />}
+              >
+                Falar com Suporte
+              </Button>
+            </a>
+          </div>
+            </div>
+
+            {/* Seção 5 - Zona de Perigo */}
+            <div>
           <h2 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
             <AlertTriangle className="text-red-600 dark:text-red-400" size={20} />
             Zona de Perigo
@@ -1107,6 +1153,8 @@ export default function SettingsPage({
             >
               {isResetting ? 'Apagando...' : 'Zerar Conta'}
             </Button>
+          </div>
+            </div>
           </div>
         </div>
       </motion.div>

@@ -5,6 +5,39 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-01-01 (Edição "Lançamento Comercial") - Atual
+
+Esta é a versão oficial de lançamento (Go-Live) do StudyFlow como produto comercial. Inclui a infraestrutura completa de pagamentos, uma reformulação visual profunda para Desktop e recursos essenciais de engajamento e suporte ao cliente.
+
+### Adicionado
+- **Monetização & Assinaturas:**
+  - Integração completa com Gateway de Pagamento (Efí Bank).
+  - Sistema de gestão de usuários e assinaturas (Tiers: Trial, Mensal e Vitalício) protegido por RLS.
+  - E-mails transacionais e de confirmação personalizados via Supabase.
+- **Ecossistema & Suporte:**
+  - Landing Page oficial focada em conversão, com FAQ estendido (7 novas perguntas) e SEO otimizado.
+  - Integração com canais oficiais de suporte (Telegram) dentro do app e no site.
+  - Botão de Feedback dedicado (Modal Integrado) para coleta de sugestões.
+- **Notificações Push:** Suporte a notificações via Service Worker, permitindo alertas no celular mesmo com o navegador fechado.
+- **Busca & Histórico:**
+  - Busca global implementada na página de Histórico.
+  - Melhoria na navegação temporal com filtros precisos de data.
+- **Onboarding:** Novo Banner de "Primeira Vez" (Welcome Modal) substituindo o antigo sistema de tour para uma recepção mais fluida.
+
+### Modificado
+- **Redesign Desktop:** Reformulação completa do layout para telas grandes (Responsividade aprimorada), melhorando o uso do espaço horizontal.
+- **Identidade do Usuário:** Exibição consistente da Foto/Avatar e Nome tanto na Sidebar (Desktop) quanto na página "Mais" (Mobile).
+- **Design System Final:**
+  - Padronização total de tipografia, cores e espaçamentos via Tailwind.
+  - Padronização de todas as animações utilizando variantes reutilizáveis do Framer Motion.
+- **Sistema de Toasts:** Implementação de uma **Fila de Toasts** (Queue) com delay automático para evitar sobreposição visual de alertas.
+
+### Corrigido
+- **UX Mobile:** Correção do campo de data de nascimento que vazava do container em telas pequenas.
+- **Conquistas:** Correção de bugs onde badges não acompanhavam a evolução das métricas em tempo real.
+- **Interface:** Ajustes finos no tamanho e padding dos toasts e remoção de botões duplicados de edição de perfil na navegação.
+- **Integridade:** Aumento do limite de logs para visualização e refinamento na subtração de XP.
+
 ## [1.8.0] - 2025-12-20 (Edição "Polimento & Performance") - Atual
 
 Esta versão foca na robustez da experiência do usuário, introduzindo um sistema de design padronizado (UI Kit), resolvendo limitações críticas de performance no histórico e garantindo a integridade dos dados de gamificação.

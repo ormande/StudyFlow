@@ -39,7 +39,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
       
       if (updateError) throw updateError;
       
-      addToast('Senha alterada com sucesso! 🔒', 'success');
+      addToast('Senha alterada com sucesso!', 'success');
       setNewPassword('');
       setConfirmPassword('');
       setError('');
@@ -86,7 +86,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                   <Lock size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-white">Alterar Senha</h3>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Alterar Senha</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     Defina uma nova senha para sua conta
                   </p>

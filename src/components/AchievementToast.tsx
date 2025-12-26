@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Trophy } from 'lucide-react';
 import { Achievement, getLevelBadgeColor, getLevelRoman } from '../types/achievements';
 
 interface AchievementToastProps {
@@ -26,8 +27,9 @@ export function AchievementToast({ achievement, level }: AchievementToastProps) 
       
       {/* Texto */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-gray-900 dark:text-white">
-          🏆 Nova Conquista Desbloqueada!
+        <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <Trophy size={16} className="text-amber-500" />
+          Nova Conquista Desbloqueada!
         </p>
         <p className="text-xs text-gray-700 dark:text-gray-300 font-semibold">
           {achievement.name} - Nível {getLevelRoman(level as 1 | 2 | 3)}

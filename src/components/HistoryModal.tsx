@@ -70,7 +70,7 @@ export default function HistoryModal({
           >
             {/* Header */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 flex-shrink-0">
-              <h3 className="font-bold text-gray-800 dark:text-white text-lg">Histórico de Hoje</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Histórico de Hoje</h3>
               <button 
                 onClick={onClose} 
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -121,7 +121,7 @@ export default function HistoryModal({
                             className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: getSubjectColor(log.subjectId) }}
                           />
-                          <span className="font-semibold text-gray-800 dark:text-white">
+                          <span className="font-semibold text-gray-900 dark:text-white">
                             {getSubjectName(log.subjectId)}
                           </span>
                         </div>

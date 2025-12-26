@@ -39,7 +39,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
       
       if (updateError) throw updateError;
       
-      addToast('Senha redefinida com sucesso! 🔒', 'success');
+      addToast('Senha redefinida com sucesso!', 'success');
       setNewPassword('');
       setConfirmPassword('');
       onClose();
@@ -77,7 +77,7 @@ export default function ResetPasswordModal({ isOpen, onClose }: ResetPasswordMod
               <Lock size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Redefinir Senha</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Redefinir Senha</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Por segurança, defina uma nova senha agora.
               </p>

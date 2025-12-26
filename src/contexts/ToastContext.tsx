@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode, ReactElement } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode, ReactElement, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
 
@@ -25,18 +25,31 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [queue, setQueue] = useState<Toast[]>([]);
   const queueTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  const addToast = (content: string | ReactElement, type: ToastType = 'info', duration: number = 3000): string => {
+  const removeToast = useCallback((id: string) => {
+    // Limpar timeout se existir
+    const timeoutId = timeoutRefs.current.get(id);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutRefs.current.delete(id);
+    }
+    
+    setToasts((state) => state.filter((toast) => toast.id !== id));
+  }, []);
+
+  const addToast = useCallback((content: string | ReactElement, type: ToastType = 'info', duration: number = 3000): string => {
     const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     const newToast: Toast = { id, content, type, duration };
 
     setToasts((state) => {
       // Se há espaço disponível, adiciona diretamente
       if (state.length < MAX_TOASTS) {
-        // Auto remove após duration
-        setTimeout(() => {
+        // Auto remove após duration usando ref para garantir closure correto
+        const timeoutId = setTimeout(() => {
           removeToast(id);
         }, duration);
+        timeoutRefs.current.set(id, timeoutId);
         return [...state, newToast];
       } else {
         // Se não há espaço, adiciona à fila
@@ -46,11 +59,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     });
 
     return id;
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((state) => state.filter((toast) => toast.id !== id));
-  };
+  }, [removeToast]);
 
   // Processa a fila quando há espaço disponível
   useEffect(() => {
@@ -68,10 +77,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
           // Adiciona o próximo toast da fila
           setToasts((prevToasts) => {
-            // Auto remove após duration
-            setTimeout(() => {
-              removeToast(nextToast.id);
+            // Auto remove após duration usando ref para garantir closure correto
+            const toastId = nextToast.id;
+            const timeoutId = setTimeout(() => {
+              removeToast(toastId);
             }, nextToast.duration || 3000);
+            timeoutRefs.current.set(toastId, timeoutId);
             return [...prevToasts, nextToast];
           });
 
@@ -87,7 +98,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         clearTimeout(queueTimeoutRef.current);
       }
     };
-  }, [toasts.length, queue.length]);
+  }, [toasts.length, queue.length, removeToast]);
 
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>
@@ -106,7 +117,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 // Componente visual individual
-function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
+const ToastItem = forwardRef<HTMLDivElement, { toast: Toast; onRemove: (id: string) => void }>(({ toast, onRemove }, ref) => {
   // Toasts sempre devem ter animação (são feedbacks importantes), mas respeitam prefers-reduced-motion do sistema
   const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const icons = {
@@ -127,12 +138,14 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
 
   return (
     <motion.div
+      ref={ref}
       layout={!prefersReducedMotion}
       initial={prefersReducedMotion ? undefined : { opacity: 0, x: 50, scale: 0.9 }}
       animate={prefersReducedMotion ? undefined : { opacity: 1, x: 0, scale: 1 }}
       exit={prefersReducedMotion ? undefined : { opacity: 0, x: 20, scale: 0.9 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, type: "spring", damping: 25, stiffness: 500 }}
       className={`pointer-events-auto bg-white dark:bg-gray-800 p-4 rounded-xl shadow-xl border-l-4 ${borders[toast.type]} flex items-start gap-3 w-[90vw] sm:min-w-[350px] sm:max-w-md mx-auto`}
+      onClick={(e) => e.stopPropagation()}
     >
       {!isCustomContent && icons[toast.type]}
       <div className="flex-1 min-w-0">
@@ -145,15 +158,22 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
         )}
       </div>
       <button 
-        onClick={() => onRemove(toast.id)} 
-        className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 flex-shrink-0"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onRemove(toast.id);
+        }} 
+        className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 flex-shrink-0 transition-colors"
         aria-label="Fechar"
+        type="button"
       >
         <X className="size-5" />
       </button>
     </motion.div>
   );
-}
+});
+
+ToastItem.displayName = 'ToastItem';
 
 // Hook para usar fácil
 export function useToast() {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Send, Loader2, Bug, Lightbulb, Heart } from 'lucide-react';
+import { X, Send, Loader2, Bug, Lightbulb, Heart, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
@@ -12,10 +12,10 @@ interface FeedbackModalProps {
   userId?: string;
 }
 
-const FEEDBACK_TYPES: { value: FeedbackType; label: string; icon: typeof Bug; emoji: string }[] = [
-  { value: 'bug', label: 'Bug/Erro', icon: Bug, emoji: '🐛' },
-  { value: 'suggestion', label: 'Sugestão de Melhoria', icon: Lightbulb, emoji: '💡' },
-  { value: 'compliment', label: 'Elogio/Comentário Positivo', icon: Heart, emoji: '❤️' },
+const FEEDBACK_TYPES: { value: FeedbackType; label: string; icon: typeof Bug }[] = [
+  { value: 'bug', label: 'Bug/Erro', icon: Bug },
+  { value: 'suggestion', label: 'Sugestão de Melhoria', icon: Lightbulb },
+  { value: 'compliment', label: 'Elogio/Comentário Positivo', icon: Heart },
 ];
 
 const PLACEHOLDERS: Record<FeedbackType, string> = {
@@ -27,7 +27,7 @@ const PLACEHOLDERS: Record<FeedbackType, string> = {
 const SUCCESS_MESSAGES: Record<FeedbackType, string> = {
   bug: 'Obrigado por reportar! Vamos investigar.',
   suggestion: 'Adoramos a ideia! Vamos avaliar.',
-  compliment: 'Isso nos motiva muito! ❤️',
+  compliment: 'Isso nos motiva muito!',
 };
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -187,13 +187,16 @@ export default function FeedbackModal({ isOpen, onClose, userEmail, userId }: Fe
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                💬 Dar Feedback
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Ajude-nos a melhorar o StudyFlow
-              </p>
+            <div className="flex items-center gap-2">
+              <MessageSquare size={24} className="text-emerald-500" />
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Dar Feedback
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Ajude-nos a melhorar o StudyFlow
+                </p>
+              </div>
             </div>
             <button
               onClick={onClose}
@@ -229,8 +232,7 @@ export default function FeedbackModal({ isOpen, onClose, userEmail, userId }: Fe
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <Icon size={18} className={isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'} />
-                        <span className="text-lg">{feedbackType.emoji}</span>
+                        <Icon size={20} className={isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'} />
                       </div>
                       <p className={`text-sm font-medium break-words ${isSelected ? 'font-bold' : ''}`}>
                         {feedbackType.label}

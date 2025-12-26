@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Trophy, Star, BarChart3, History, Palette, Target, MessageSquare, 
-  HelpCircle, Lock, LogOut, ChevronRight, Settings
+  HelpCircle, Lock, LogOut, ChevronRight, Settings, CreditCard
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
@@ -21,6 +21,7 @@ interface MorePageProps {
   onOpenSecurity: () => void;
   onOpenSettings: () => void;
   onNavigateToAbout?: () => void;
+  onNavigateToPlans?: () => void;
   onLogout: () => void;
   onNavigateToProfile?: () => void;
 }
@@ -38,6 +39,7 @@ export default function MorePage({
   onOpenSecurity,
   onOpenSettings,
   onNavigateToAbout: _onNavigateToAbout,
+  onNavigateToPlans,
   onLogout,
   onNavigateToProfile,
 }: MorePageProps) {
@@ -359,6 +361,24 @@ export default function MorePage({
               </div>
             </div>
           </Button>
+
+          {onNavigateToPlans && (
+            <Button
+              onClick={onNavigateToPlans}
+              variant="ghost"
+              fullWidth
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+              rightIcon={<ChevronRight size={16} className="text-gray-400" />}
+            >
+              <div className="flex items-center gap-3">
+                <CreditCard size={20} className="text-emerald-600 dark:text-emerald-400" />
+                <div className="flex flex-col items-start">
+                  <span className="font-semibold text-gray-900 dark:text-white">Planos</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Assine um plano e desbloqueie recursos</span>
+                </div>
+              </div>
+            </Button>
+          )}
         </div>
       </div>
 

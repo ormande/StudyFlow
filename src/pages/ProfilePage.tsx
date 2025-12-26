@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User, Camera, Save, Loader2, Crown } from 'lucide-react';
+import { ArrowLeft, User, Camera, Save, Loader2, Crown, Star, Gift, CreditCard, Diamond } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import Button from '../components/Button';
@@ -8,6 +8,10 @@ import Button from '../components/Button';
 interface ProfilePageProps {
   session: any;
   onNavigateBack?: () => void;
+  subscriptionStatus?: string | null;
+  subscriptionType?: string | null;
+  trialEndsAt?: string | null;
+  onNavigateToPlans?: () => void;
 }
 
 interface ProfileData {
@@ -17,7 +21,14 @@ interface ProfileData {
   avatar_url: string | null;
 }
 
-export default function ProfilePage({ session, onNavigateBack }: ProfilePageProps) {
+export default function ProfilePage({ 
+  session, 
+  onNavigateBack,
+  subscriptionStatus = null,
+  subscriptionType = null,
+  trialEndsAt = null,
+  onNavigateToPlans
+}: ProfilePageProps) {
   const { addToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,9 +40,10 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
     avatar_url: null,
   });
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Carregar dados do perfil
+  // Carregar dados do perfil e assinatura
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -64,6 +76,17 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
             setAvatarPreview(urlData.publicUrl);
           }
         }
+
+        // Buscar dados de assinatura
+        const { data: subscriptionData, error: subscriptionError } = await supabase
+          .from('user_settings')
+          .select('subscription_status, subscription_type, trial_ends_at, next_billing_date')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (!subscriptionError && subscriptionData) {
+          setNextBillingDate(subscriptionData.next_billing_date || null);
+        }
       } catch (error: any) {
         console.error('Erro ao carregar perfil:', error);
         addToast('Erro ao carregar perfil. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
@@ -74,6 +97,29 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
 
     fetchProfile();
   }, [session?.user?.id, addToast]);
+
+  // Determinar tipo de plano
+  const planType = useMemo(() => {
+    if (subscriptionStatus === 'trial') return 'trial';
+    if (subscriptionStatus === 'active') {
+      return subscriptionType === 'lifetime' ? 'lifetime' : 'monthly';
+    }
+    return 'none';
+  }, [subscriptionStatus, subscriptionType]);
+
+  // Calcular dias restantes do trial
+  const daysLeft = useMemo(() => {
+    if (planType === 'trial' && trialEndsAt) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endDate = new Date(trialEndsAt);
+      endDate.setHours(0, 0, 0, 0);
+      const diffMs = endDate.getTime() - today.getTime();
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      return days;
+    }
+    return null;
+  }, [planType, trialEndsAt]);
 
   // Upload de avatar
   const handleAvatarClick = () => {
@@ -207,7 +253,7 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-2xl mx-auto px-6 py-8 pb-24 md:pb-8"
+      className="max-w-2xl lg:max-w-6xl mx-auto px-6 py-8 pb-24 md:pb-8"
     >
       {/* Header */}
       <div className="mb-8">
@@ -223,7 +269,7 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
             Voltar
           </Button>
         )}
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
           <User className="text-emerald-500" size={28} />
           Meu Perfil
         </h1>
@@ -232,10 +278,14 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
         </p>
       </div>
 
-      {/* Card Principal */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 md:p-8 mb-6">
-        {/* Foto de Perfil */}
-        <div className="flex flex-col items-center mb-8">
+      {/* Grid Layout - Desktop Split */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+        {/* Coluna Esquerda - Cartão de Identidade */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-6 lg:self-start">
+          {/* Card de Perfil */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6">
+            {/* Foto de Perfil */}
+            <div className="flex flex-col items-center mb-6">
           <div className="relative">
             {avatarPreview ? (
               <img
@@ -269,115 +319,201 @@ export default function ProfilePage({ session, onNavigateBack }: ProfilePageProp
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
             Clique na câmera para alterar a foto
           </p>
-        </div>
-
-        {/* Dados Pessoais */}
-        <div className="space-y-4 mb-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
-            Dados Pessoais
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nome
-              </label>
-              <input
-                type="text"
-                value={profile.first_name}
-                onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
-                placeholder="Seu nome"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
             </div>
-            
+
+            {/* Nome Completo Display */}
+            {(profile.first_name || profile.last_name) && (
+              <div className="text-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {profile.first_name} {profile.last_name}
+                </h3>
+              </div>
+            )}
+
+            {/* E-mail (Read-only) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Sobrenome
+                E-mail
               </label>
               <input
-                type="text"
-                value={profile.last_name}
-                onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
-                placeholder="Seu sobrenome"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                type="email"
+                value={session?.user?.email || ''}
+                disabled
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 cursor-not-allowed text-sm"
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                O e-mail não pode ser alterado
+              </p>
             </div>
           </div>
 
-          <div className="min-w-0">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Data de Nascimento
-            </label>
-            <input
-              type="date"
-              value={profile.birth_date}
-              onChange={(e) => setProfile(prev => ({ ...prev, birth_date: e.target.value }))}
-              className="w-full max-w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent min-w-0"
-            />
-          </div>
-        </div>
-
-        {/* Conta (Read-only) */}
-        <div className="space-y-4 mb-6">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
-            Conta
-          </h2>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              E-mail
-            </label>
-            <input
-              type="email"
-              value={session?.user?.email || ''}
-              disabled
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 cursor-not-allowed"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              O e-mail não pode ser alterado
-            </p>
-          </div>
-        </div>
-
-        {/* Botão Salvar */}
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          variant="primary"
-          fullWidth
-          size="lg"
-          isLoading={saving}
-          leftIcon={!saving ? <Save size={20} /> : undefined}
-        >
-          {saving ? 'Salvando...' : 'Salvar Alterações'}
-        </Button>
-      </div>
-
-      {/* Card de Status da Assinatura */}
-      <div className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-2xl shadow-md p-6 md:p-8 border-2 border-amber-300 dark:border-amber-700">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-amber-500 rounded-xl text-white">
-            <Crown size={24} />
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
-              Status da Assinatura
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Acesso Premium Ativo
-            </p>
-            <Button
-              disabled
-              variant="secondary"
-              size="md"
-              className="bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+          {/* Card de Status da Assinatura */}
+          {planType === 'trial' && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-2xl shadow-md p-6"
             >
-              Gerenciar Assinatura
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={24} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold text-yellow-800 dark:text-yellow-200 mb-1 flex items-center gap-2">
+                    <Gift size={18} /> Plano Trial
+                  </h2>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
+                    Você está testando o StudyFlow gratuitamente!
+                  </p>
+                  {daysLeft !== null && daysLeft >= 0 && (
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-4 font-semibold">
+                      {daysLeft === 0 ? 'Último dia!' : `${daysLeft} ${daysLeft === 1 ? 'dia restante' : 'dias restantes'}`}
+                    </p>
+                  )}
+                  <Button
+                    onClick={onNavigateToPlans}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Gerenciar Assinatura
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {planType === 'monthly' && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 rounded-2xl shadow-md p-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={24} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-1 flex items-center gap-2">
+                    <CreditCard size={18} /> Plano Mensal Ativo
+                  </h2>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
+                    R$ 9,90/mês
+                  </p>
+                  {nextBillingDate && (
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-4">
+                      Próxima cobrança: {new Date(nextBillingDate).toLocaleDateString('pt-BR')}
+                    </p>
+                  )}
+                  <Button
+                    onClick={onNavigateToPlans}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Gerenciar Assinatura
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {planType === 'lifetime' && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-400 rounded-2xl shadow-md p-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Crown size={24} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold text-purple-800 dark:text-purple-200 mb-1 flex items-center gap-2">
+                    <Diamond size={18} /> Acesso Vitalício
+                  </h2>
+                  <p className="text-sm text-purple-700 dark:text-purple-300 mb-3">
+                    Acesso ilimitado para sempre!
+                  </p>
+                  <div className="mb-4">
+                    <span className="bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      Vitalício
+                    </span>
+                  </div>
+                  <Button
+                    onClick={onNavigateToPlans}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Gerenciar Assinatura
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Coluna Direita - Formulários */}
+        <div className="lg:col-span-8">
+          {/* Card de Dados Pessoais */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 md:p-8">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
+              Dados Pessoais
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nome
+                </label>
+                <input
+                  type="text"
+                  value={profile.first_name}
+                  onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
+                  placeholder="Seu nome"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Sobrenome
+                </label>
+                <input
+                  type="text"
+                  value={profile.last_name}
+                  onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
+                  placeholder="Seu sobrenome"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div className="min-w-0 mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Data de Nascimento
+              </label>
+              <input
+                type="date"
+                value={profile.birth_date}
+                onChange={(e) => setProfile(prev => ({ ...prev, birth_date: e.target.value }))}
+                className="w-full max-w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent min-w-0"
+              />
+            </div>
+
+            {/* Botão Salvar */}
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              variant="primary"
+              fullWidth
+              size="lg"
+              isLoading={saving}
+              leftIcon={!saving ? <Save size={20} /> : undefined}
+            >
+              {saving ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Funcionalidade em breve
-            </p>
           </div>
         </div>
       </div>

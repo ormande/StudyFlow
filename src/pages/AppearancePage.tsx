@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ArrowLeft, Sun, Moon, RefreshCw, Circle, Palette, Info, Eye } from 'lucide-react';
+import { Sun, Moon, RefreshCw, Circle, Palette, Info, Eye } from 'lucide-react';
 import { useAppearance, Theme } from '../hooks/useAppearance';
 import { useToast } from '../contexts/ToastContext';
 import Button from '../components/Button';
+import FloatingBackButton from '../components/FloatingBackButton';
 import { motion } from 'framer-motion';
 
 interface AppearancePageProps {
@@ -119,22 +120,16 @@ export default function AppearancePage({ onNavigateBack }: AppearancePageProps) 
 
   return (
     <div className="max-w-2xl lg:max-w-5xl mx-auto px-6 py-6 pb-24 md:pb-8">
+      {/* Botão Voltar Flutuante */}
+      {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
+
       {/* Header */}
       <div className="mb-8">
-        <Button
-          onClick={onNavigateBack}
-          variant="ghost"
-          size="md"
-          leftIcon={<ArrowLeft size={20} />}
-          className="md:hidden mb-4"
-        >
-          Voltar
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2 pl-14 md:pl-0">
           <Palette size={28} className="text-emerald-500" />
           Aparência
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">
+        <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">
           Personalize a aparência do app
         </p>
       </div>

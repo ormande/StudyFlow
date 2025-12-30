@@ -5,7 +5,81 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.0] - 2026-01-01 (Edição "Lançamento Comercial") - Atual
+## [1.9.1] - 2025-12-29 (Edição "Go-Live Ready") - Atual
+
+Esta versão finaliza os preparativos para o lançamento comercial em 1º de Janeiro de 2025. Foco em estabilidade, infraestrutura de emails profissionais, correções críticas de UX e configuração do domínio oficial.
+
+### Adicionado
+- **Infraestrutura de Emails:**
+  - Templates profissionais de email (Confirmação de Conta, Recuperação de Senha, Boas-vindas).
+  - Integração SMTP com Brevo (DNS: DKIM, DMARC configurados).
+  - Remetente profissional: `contato@getstudyflow.com.br`.
+  - Webhook Efi + Brevo para envio automático de email pós-compra.
+- **Domínio Oficial:**
+  - `getstudyflow.com.br` configurado na Vercel (Production).
+  - `www.getstudyflow.com.br` com redirect 307.
+  - `study-flow-six.vercel.app` mantido como Preview/backup.
+  - URL Configuration atualizada no Supabase.
+  - HTTPS funcionando em todos os domínios.
+- **Navegação e UX Mobile:**
+  - `FloatingBackButton`: Botão voltar flutuante em 11 páginas (mobile only).
+  - Scroll to top automático ao navegar entre páginas.
+  - Persistência da página atual no localStorage (F5 não volta pro Dashboard).
+  - Preservação do scroll da MorePage ao voltar de subpáginas.
+  - Safe Area na BottomNav para dispositivos iOS (notch/barra inferior).
+- **Autenticação:**
+  - Login permanente com `persistSession` e `autoRefreshToken` explícitos.
+  - Autocomplete de credenciais no navegador (`email`, `current-password`, `new-password`).
+  - Página de verificação de email (`VerifyEmailPage`).
+  - Toast de erro ao tentar login sem conta cadastrada.
+  - Toast de trial expirado ao redirecionar para PricingPage.
+- **Backup & Segurança:**
+  - Script de backup manual CLI (Node.js) para exportar tabelas do Supabase.
+  - Schema Mestre Unificado do banco de dados.
+  - Faxina de migrations obsoletas.
+
+### Modificado
+- **Layouts Desktop:**
+  - Novo layout "Split" (2 colunas) na ProfilePage.
+  - Grid responsivo (3 colunas) na AchievementsPage.
+  - SignupPage refatorada para melhor uso do espaço horizontal.
+- **Formulários:**
+  - Senha agora exige mínimo de 8 caracteres (padrão moderno).
+  - Botão "Aceito os termos" alinhado horizontalmente com o texto.
+  - Desabilitado zoom automático em inputs no mobile (viewport meta tag).
+- **Perfil:**
+  - Unificação do sistema de perfil (foto, nome, dados).
+  - Correção do "flicker" (piscada) na imagem de perfil/avatar.
+- **AboutPage:**
+  - Link oficial do Instagram (`@oficial.studyflow`) adicionado.
+  - Removido texto "Em breve" das redes sociais.
+  - Nome removido do header (AboutPage mais limpa).
+  - Página agora acessível no mobile.
+- **Sidebar:**
+  - Versão do StudyFlow corrigida.
+
+### Corrigido
+- **Bugs Críticos:**
+  - Bug de cupom (aplicação duplicada e validação).
+  - GoalsPage.tsx com erros de renderização.
+  - Modal de senha não fechando corretamente.
+  - Login travado em casos específicos.
+  - Exclusão de conta não funcionando completamente.
+  - Link de verificação levando para troca de senha incorretamente.
+- **UX/UI:**
+  - Overflow no input de data em dispositivos iOS/iPhone.
+  - AboutPage não aparecendo na navegação mobile.
+- **Infraestrutura:**
+  - Sentry funcionando e capturando erros.
+  - Trial expirando com comportamento correto (redirect + toast).
+
+### Removido
+- Arquivos e código não utilizados (limpeza geral do projeto).
+- Mensagens padrão de placeholder em alguns componentes.
+
+---
+
+## [1.9.0] - 2025-12-26 (Edição "Lançamento Comercial")
 
 Esta é a versão oficial de lançamento (Go-Live) do StudyFlow como produto comercial. Inclui a infraestrutura completa de pagamentos, uma reformulação visual profunda para Desktop e recursos essenciais de engajamento e suporte ao cliente.
 
@@ -38,7 +112,7 @@ Esta é a versão oficial de lançamento (Go-Live) do StudyFlow como produto com
 - **Interface:** Ajustes finos no tamanho e padding dos toasts e remoção de botões duplicados de edição de perfil na navegação.
 - **Integridade:** Aumento do limite de logs para visualização e refinamento na subtração de XP.
 
-## [1.8.0] - 2025-12-20 (Edição "Polimento & Performance") - Atual
+## [1.8.0] - 2025-12-20 (Edição "Polimento & Performance")
 
 Esta versão foca na robustez da experiência do usuário, introduzindo um sistema de design padronizado (UI Kit), resolvendo limitações críticas de performance no histórico e garantindo a integridade dos dados de gamificação.
 
@@ -137,6 +211,9 @@ Esta versão consolida a Gamificação, introduz a gestão completa de Perfil e 
 - Suporte a PWA (Instalação em Mobile).
 - Tema Claro/Escuro.
 
+[1.9.1]: https://github.com/ormande/study-flow/compare/v1.9.0...v1.9.1
+[1.9.0]: https://github.com/ormande/study-flow/compare/v1.8.0...v1.9.0
+[1.8.0]: https://github.com/ormande/study-flow/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/ormande/study-flow/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/ormande/study-flow/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/ormande/study-flow/compare/v1.0.0...v1.5.0

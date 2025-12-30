@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { X, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useToast } from '../contexts/ToastContext';
 
 export default function CheckoutVitalicio({ 
   onClose 
 }: { 
   onClose: () => void;
 }) {
+  const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -32,9 +34,17 @@ export default function CheckoutVitalicio({
       
       if (funcError) throw funcError;
       setCouponData(data);
+
+      // Adicionar feedback via toast
+      if (data?.valid) {
+        addToast(`Cupom aplicado! ${data.discount_percent}% de desconto`, 'success');
+      } else {
+        addToast(data?.error || 'Cupom inválido ou expirado', 'error');
+      }
     } catch (err) {
       console.error('Erro ao validar cupom:', err);
       setCouponData({ valid: false, error: 'Erro ao validar cupom' });
+      addToast('Erro ao validar cupom', 'error');
     } finally {
       setCouponLoading(false);
     }
@@ -55,7 +65,7 @@ export default function CheckoutVitalicio({
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        alert('Faça login primeiro');
+        addToast('Faça login primeiro', 'warning');
         onClose();
         return;
       }

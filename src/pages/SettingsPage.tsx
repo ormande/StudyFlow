@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, Volume2, VolumeX, Database, Settings, FileSpreadsheet, FileDown, AlertTriangle, Trash2, Play, Bell, BellOff, Loader2, MessageCircle } from 'lucide-react';
+import { Eye, Volume2, VolumeX, Database, Settings, FileSpreadsheet, FileDown, AlertTriangle, Trash2, Play, Bell, BellOff, Loader2, MessageCircle } from 'lucide-react';
 import { Subject, StudyLog } from '../types';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
@@ -9,6 +9,7 @@ import { useNotification } from '../hooks/useNotification';
 import IOSSwitch from '../components/IOSSwitch';
 import ConfirmModal from '../components/ConfirmModal';
 import Button from '../components/Button';
+import FloatingBackButton from '../components/FloatingBackButton';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { registerPoppinsFontSimple } from '../utils/pdfFonts';
@@ -911,25 +912,16 @@ export default function SettingsPage({
         transition={{ duration: 0.3 }}
         className="max-w-2xl lg:max-w-6xl mx-auto px-6 py-8 pb-24 md:pb-8"
       >
+        {/* Botão Voltar Flutuante */}
+        {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
+
         {/* Header */}
         <div className="mb-8">
-          {/* Botão Voltar - Apenas Mobile */}
-          {onNavigateBack && (
-            <Button
-              onClick={onNavigateBack}
-              variant="ghost"
-              size="md"
-              leftIcon={<ArrowLeft size={20} />}
-              className="md:hidden mb-4"
-            >
-              Voltar
-            </Button>
-          )}
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2 pl-14 md:pl-0">
             <Settings className="text-emerald-500" size={28} />
             Configurações
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">
             Gerencie suas preferências e dados
           </p>
         </div>

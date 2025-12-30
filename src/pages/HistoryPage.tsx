@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import React from 'react';
-import { Trash2, Pencil, Check, X, Filter, History, ArrowLeft, Loader2, Search, Circle } from 'lucide-react';
+import { Trash2, Pencil, Check, X, Filter, History, Loader2, Search, Circle } from 'lucide-react';
 import { Subject, StudyLog, StudyType } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/Button';
+import FloatingBackButton from '../components/FloatingBackButton';
 import { FADE_UP_ANIMATION, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/animations';
 
 interface HistoryPageProps {
@@ -137,28 +138,19 @@ export default function HistoryPage({
       {...FADE_UP_ANIMATION}
       className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20"
     >
+      {/* Botão Voltar Flutuante */}
+      {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
+
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Cabeçalho da Página */}
         <div className="mb-6">
-          {/* Botão Voltar - Apenas Mobile */}
-          {onNavigateBack && (
-            <Button
-              onClick={onNavigateBack}
-              variant="ghost"
-              size="md"
-              leftIcon={<ArrowLeft size={20} />}
-              className="md:hidden mb-4"
-            >
-              Voltar
-            </Button>
-          )}
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3 mb-2 pl-14 md:pl-0">
             <History className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Histórico
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 pl-14 md:pl-0">
             Seus registros de estudo
           </p>
         </div>

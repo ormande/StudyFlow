@@ -44,6 +44,7 @@ export interface GamificationData {
 export function useGamification(logs: StudyLog[], streak: number = 0): GamificationData {
   return useMemo(() => {
     // Calcular XP total
+    // REGRAS OFICIAIS: 1 XP/minuto + 5 XP/questão correta + 2 XP/página
     let totalXP = 0;
 
     logs.forEach((log) => {
@@ -51,12 +52,11 @@ export function useGamification(logs: StudyLog[], streak: number = 0): Gamificat
       const minutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
       totalXP += Math.floor(minutes);
 
-      // 1 questão registrada = 2 XP
-      const totalQuestions = (log.correct || 0) + (log.wrong || 0) + (log.blank || 0);
-      totalXP += totalQuestions * 2;
-
-      // 1 questão correta = 5 XP extras
+      // 1 questão correta = 5 XP
       totalXP += (log.correct || 0) * 5;
+
+      // 1 página lida = 2 XP
+      totalXP += (log.pages || 0) * 2;
     });
 
     // Calcular Badges

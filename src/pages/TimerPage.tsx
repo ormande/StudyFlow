@@ -390,15 +390,15 @@ export default function TimerPage({
                 <Button
                   key={preset.label}
                   onClick={() => handlePresetSelect(preset)}
-                  variant="secondary"
+                  variant={selectedPreset?.label === preset.label ? "primary" : "secondary"}
                   size="sm"
                   className="px-2 py-1.5 flex flex-col items-center"
                   aria-label={`Selecionar preset Pomodoro: ${preset.label} (${preset.minutes} minutos)`}
-                  title={`${preset.label} (${preset.minutes}min)`}
+                  title={`${preset.label} (${preset.minutes} min)`}
                 >
                   {preset.label}
                   <br />
-                  <span className="text-xs opacity-90">({preset.minutes}min)</span>
+                  <span className="text-xs opacity-90">({preset.minutes} min)</span>
                 </Button>
               ))}
             </motion.div>
@@ -803,7 +803,7 @@ export default function TimerPage({
                 <div className="space-y-2">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Sessão:</p>
                   <p className="text-xl font-bold text-emerald-500">
-                    {selectedPreset.label} ({selectedPreset.minutes}min)
+                    {selectedPreset.label} ({selectedPreset.minutes} min)
                   </p>
                 </div>
               )}
@@ -829,25 +829,30 @@ export default function TimerPage({
                   initial="hidden"
                   animate="show"
                 >
-                  {POMODORO_PRESETS.map((preset) => (
-                    <motion.button
-                      key={preset.minutes}
-                      variants={STAGGER_ITEM}
-                      whileHover={{ 
-                        scale: 1.05,
-                        backgroundColor: "rgb(16, 185, 129)", // emerald-500
-                        color: "white",
-                        transition: { duration: 0.2 }
-                      }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handlePresetSelect(preset)}
-                      className="px-4 py-3 rounded-xl text-sm font-semibold transition-colors bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    >
-                      {preset.label}
-                      <br />
-                      <span className="text-xs opacity-80">({preset.minutes}min)</span>
-                    </motion.button>
-                  ))}
+                  {POMODORO_PRESETS.map((preset) => {
+                    const isSelected = selectedPreset?.label === preset.label;
+                    return (
+                      <motion.button
+                        key={preset.minutes}
+                        variants={STAGGER_ITEM}
+                        whileHover={{ 
+                          scale: 1.05,
+                          transition: { duration: 0.2 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handlePresetSelect(preset)}
+                        className={`px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
+                          isSelected 
+                            ? 'bg-emerald-500 text-white shadow-lg' 
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-emerald-500 hover:text-white'
+                        }`}
+                      >
+                        {preset.label}
+                        <br />
+                        <span className={`text-xs ${isSelected ? 'opacity-90' : 'opacity-80'}`}>({preset.minutes} min)</span>
+                      </motion.button>
+                    );
+                  })}
                 </motion.div>
               </motion.div>
             )}

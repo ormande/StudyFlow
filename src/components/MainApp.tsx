@@ -37,6 +37,9 @@ import { calculateXPFromLog } from '../hooks/useXP';
 import FabTimer from './FabTimer';
 import EloUpgradeModal from './EloUpgradeModal';
 
+const CURRENT_PAGE_KEY = 'studyflow_current_page';
+const MORE_PAGE_SCROLL_KEY = 'studyflow_more_scroll';
+
 interface MainAppProps {
   session: any;
   onHardReset: () => void;
@@ -53,11 +56,37 @@ export default function MainApp({
     hasMoreLogs, loadingMoreLogs, loadMoreLogs, searchLogs, searchTerm,
     daysFilter, applyDaysFilter,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
-    addLog, deleteLog, editLog, updateSettings, markTutorialCompleted
+    addLog, deleteLog, editLog, updateSettings
   } = useSupabaseData(session);
 
   // UI STATE
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    // 1. Prioridade para redirecionamento após login (Deep Link)
+    const redirectedTab = sessionStorage.getItem('studyflow_redirect_tab');
+    if (redirectedTab) {
+      sessionStorage.removeItem('studyflow_redirect_tab');
+      // Validar se é uma aba válida
+      const validTabs: TabType[] = ['dashboard', 'timer', 'register', 'cycle', 'more', 'achievements', 'elo', 'goals', 'stats', 'history', 'appearance', 'about', 'tutorial', 'settings', 'profile', 'plans'];
+      if (validTabs.includes(redirectedTab as TabType)) {
+        return redirectedTab as TabType;
+      }
+    }
+
+    // 2. Persistência (F5)
+    const saved = localStorage.getItem(CURRENT_PAGE_KEY);
+    // Lista de tabs válidas que devem ser persistidas
+    const validTabs: TabType[] = ['dashboard', 'timer', 'register', 'cycle', 'more', 'achievements', 'elo', 'goals', 'stats', 'history', 'appearance', 'about', 'tutorial', 'settings', 'profile', 'plans'];
+    if (saved && validTabs.includes(saved as TabType)) {
+      return saved as TabType;
+    }
+    return 'dashboard';
+  });
+
+  // Persistir página atual no localStorage
+  useEffect(() => {
+    localStorage.setItem(CURRENT_PAGE_KEY, activeTab);
+  }, [activeTab]);
+
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
@@ -78,6 +107,9 @@ export default function MainApp({
   const countdownIntervalRef = useRef<number | null>(null);
   const countdownSecondsRef = useRef<number>(0);
   const lastTimerSecondsRef = useRef<number>(0);
+  const morePageScrollRef = useRef<number>(
+    parseInt(localStorage.getItem(MORE_PAGE_SCROLL_KEY) || '0')
+  );
 
   // useMemo para calcular streak (evita recálculo desnecessário) - DEVE VIR ANTES DE useAchievements
   // ✅ OTIMIZADO: Usa allLogDates (apenas date + timestamp) ao invés de logs completos
@@ -233,7 +265,9 @@ export default function MainApp({
     addLog(log);
   }, [addLog]);
 
-  const handleEditLog = useCallback((id: string, updates: Partial<import('../types').StudyLog>) => {
+  // handleEditLog básico - será sobrescrito por handleEditLogWithXP no MainAppContent
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleEditLogBase = useCallback((id: string, updates: Partial<import('../types').StudyLog>) => {
     editLog(id, updates);
   }, [editLog]);
 
@@ -260,57 +294,107 @@ export default function MainApp({
 
   // Handlers para MorePage
   const handleNavigateToAchievements = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('achievements');
-  }, []);
+  }, [activeTab]);
 
   const handleNavigateToElo = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('elo');
-  }, []);
+  }, [activeTab]);
 
   const handleNavigateToMore = useCallback(() => {
     setActiveTab('more');
   }, []);
 
   const handleOpenHistory = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('history');
-  }, []);
+  }, [activeTab]);
 
 
   const handleNavigateToTutorial = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('tutorial');
-  }, []);
+  }, [activeTab]);
 
   const handleOpenSecurity = useCallback(() => {
     setShowChangePasswordModal(true);
   }, []);
 
   const handleNavigateToStats = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('stats');
-  }, []);
+  }, [activeTab]);
 
   const handleNavigateToAppearance = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('appearance');
-  }, []);
+  }, [activeTab]);
 
   const handleNavigateToGoals = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('goals');
-  }, []);
+  }, [activeTab]);
 
   const handleNavigateToAbout = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('about');
-  }, []);
+  }, [activeTab]);
 
   const handleOpenSettings = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('settings');
-  }, []);
+  }, [activeTab]);
 
   const handleLogout = useCallback(() => {
     setShowLogoutConfirm(true);
   }, []);
 
   const handleNavigateToProfile = useCallback(() => {
+    if (activeTab === 'more') {
+      const scrollY = window.scrollY;
+      morePageScrollRef.current = scrollY;
+      localStorage.setItem(MORE_PAGE_SCROLL_KEY, scrollY.toString());
+    }
     setActiveTab('profile');
-  }, []);
+  }, [activeTab]);
 
   if (loadingData) {
     return (
@@ -334,7 +418,7 @@ export default function MainApp({
 
     // Redirecionar para pricing apenas se não tiver assinatura ativa/trial válido
     if (hasNoSubscription || isTrialExpired || isSubscriptionCancelled) {
-      return <PricingPage onBack={onHardReset} onNavigateToLogin={() => {}} onNavigateToSignup={() => {}} />;
+      return <PricingPage fromExpiredTrial={!!isTrialExpired} onBack={onHardReset} onNavigateToLogin={() => {}} onNavigateToSignup={() => {}} />;
     }
   }
 
@@ -409,7 +493,7 @@ export default function MainApp({
         handleUpdateSubject={handleUpdateSubject}
         handleReorderSubjects={handleReorderSubjects}
         handleAddLog={handleAddLog}
-        handleEditLog={handleEditLog}
+        handleEditLog={_handleEditLogBase}
         handleTogglePerformance={handleTogglePerformance}
         handleCancelDeleteLog={handleCancelDeleteLog}
         handleCancelRestartCycle={handleCancelRestartCycle}
@@ -436,7 +520,6 @@ export default function MainApp({
         deleteLog={deleteLog}
         editLog={editLog}
         updateSettings={updateSettings}
-        markTutorialCompleted={markTutorialCompleted}
         sendNotification={sendNotification}
         addToast={addToast}
         hasMoreLogs={hasMoreLogs}
@@ -446,6 +529,7 @@ export default function MainApp({
         searchTerm={searchTerm}
         daysFilter={daysFilter}
         onDaysFilterChange={applyDaysFilter}
+        morePageScrollRef={morePageScrollRef}
       />
       </AchievementsProvider>
     </XPProvider>
@@ -509,7 +593,7 @@ function MainAppContent({
   handleUpdateSubject,
   handleReorderSubjects,
   handleAddLog,
-  handleEditLog,
+  handleEditLog: _handleEditLogFromParent, // Não usado - substituído por handleEditLogWithXP
   handleTogglePerformance,
   handleCancelDeleteLog,
   handleCancelRestartCycle,
@@ -536,7 +620,6 @@ function MainAppContent({
   deleteLog: _deleteLog,
   editLog: _editLog,
   updateSettings: _updateSettings,
-  markTutorialCompleted: _markTutorialCompleted,
   sendNotification: _sendNotification,
   addToast: _addToast,
   hasMoreLogs,
@@ -545,10 +628,23 @@ function MainAppContent({
   searchLogs,
   searchTerm,
   daysFilter,
-  onDaysFilterChange
+  onDaysFilterChange,
+  morePageScrollRef
 }: any) {
   const { pendingCount } = useAchievementsContext();
   const xpContext = useXPContext();
+
+  // Scroll to top quando muda de página (exceto ao voltar para MorePage)
+  useEffect(() => {
+    if (activeTab === 'more' && morePageScrollRef.current > 0) {
+      // Restaurar scroll da MorePage
+      setTimeout(() => {
+        window.scrollTo({ top: morePageScrollRef.current, behavior: 'instant' });
+      }, 50);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [activeTab]);
 
   // Função wrapper para deletar log com remoção de XP
   const handleConfirmDeleteLog = useCallback(() => {
@@ -571,6 +667,36 @@ function MainAppContent({
     }
   }, [deleteLogId, logs, xpContext, confirmDeleteLog]);
 
+  // Função wrapper para editar log COM recálculo de XP
+  const handleEditLogWithXP = useCallback((id: string, updates: Partial<import('../types').StudyLog>) => {
+    // 1. Buscar log antigo
+    const oldLog = logs.find((log: import('../types').StudyLog) => log.id === id);
+    
+    if (oldLog) {
+      // 2. Calcular XP antigo
+      const oldXP = calculateXPFromLog(oldLog);
+      
+      // 3. Calcular XP novo (com updates aplicados)
+      const newLog = { ...oldLog, ...updates };
+      const newXP = calculateXPFromLog(newLog);
+      
+      // 4. Calcular diferença de XP
+      const xpDiff = newXP - oldXP;
+      
+      // 5. Ajustar XP se houver diferença
+      if (xpDiff > 0) {
+        // Ganhou XP (editou para mais tempo/questões)
+        xpContext.addXP(xpDiff, 'Registro editado', '', false);
+      } else if (xpDiff < 0) {
+        // Perdeu XP (editou para menos tempo/questões)
+        xpContext.removeXP(Math.abs(xpDiff), 'Registro editado');
+      }
+    }
+    
+    // 6. Atualizar log no banco
+    _editLog(id, updates);
+  }, [logs, xpContext, _editLog]);
+
   const handleWelcomeSeen = useCallback(() => {
     _updateSettings({ welcomeSeen: true });
   }, [_updateSettings]);
@@ -588,7 +714,7 @@ function MainAppContent({
           logs={logs} 
           cycleStartDate={cycleStartDate} 
           onDeleteLog={handleDeleteLog} 
-          onEditLog={handleEditLog} 
+          onEditLog={handleEditLogWithXP} 
           dailyGoal={dailyGoal} 
           showPerformance={showPerformance} 
           streak={streak} 
@@ -683,7 +809,7 @@ function MainAppContent({
               logs={logs} 
               subjects={subjects} 
               onDeleteLog={handleDeleteLog} 
-              onEditLog={handleEditLog}
+              onEditLog={handleEditLogWithXP}
               onNavigateBack={() => setActiveTab('more')}
               hasMoreLogs={hasMoreLogs}
               loadingMoreLogs={loadingMoreLogs}
@@ -757,7 +883,7 @@ function MainAppContent({
         return null;
     }
   }, [
-    activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLog, 
+    activeTab, subjects, logs, cycleStartDate, handleDeleteLog, handleEditLogWithXP, 
     dailyGoal, showPerformance, streak, loadingData, handleTimerStop, 
     timerSeconds, setTimerSeconds, isTimerRunning, setIsTimerRunning, 
     timerMode, setTimerMode, handleAddLog, prefilledTime, handleTimeClear, 
@@ -831,7 +957,7 @@ function MainAppContent({
         logs={logs}
         subjects={subjects}
         onDeleteLog={handleDeleteLog}
-        onEditLog={handleEditLog}
+        onEditLog={handleEditLogWithXP}
       />
 
       {/* Change Password Modal */}

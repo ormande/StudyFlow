@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Trophy, Star, BarChart3, History, Palette, Target, MessageSquare, 
-  HelpCircle, Lock, LogOut, ChevronRight, Settings, CreditCard
+  HelpCircle, Lock, LogOut, ChevronRight, Settings, CreditCard, Info
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
@@ -26,6 +26,8 @@ interface MorePageProps {
   onNavigateToProfile?: () => void;
 }
 
+const PROFILE_CACHE_KEY = 'studyflow_profile_cache';
+
 export default function MorePage({
   session,
   onNavigateToAchievements,
@@ -38,15 +40,23 @@ export default function MorePage({
   onOpenTutorial,
   onOpenSecurity,
   onOpenSettings,
-  onNavigateToAbout: _onNavigateToAbout,
+  onNavigateToAbout,
   onNavigateToPlans,
   onLogout,
   onNavigateToProfile,
 }: MorePageProps) {
   const { addToast } = useToast();
-  const [profileData, setProfileData] = useState<{ firstName: string; avatarUrl: string | null }>({
-    firstName: '',
-    avatarUrl: null,
+  const [imgError, setImgError] = useState(false);
+  const [profileData, setProfileData] = useState<{ firstName: string; avatarUrl: string | null }>(() => {
+    const cached = sessionStorage.getItem(PROFILE_CACHE_KEY);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        return { firstName: '', avatarUrl: null };
+      }
+    }
+    return { firstName: '', avatarUrl: null };
   });
 
   // Buscar dados do perfil
@@ -56,30 +66,32 @@ export default function MorePage({
     async function fetchProfile() {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('user_settings')
           .select('first_name, avatar_url')
-          .eq('id', session.user.id)
+          .eq('user_id', session.user.id)
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
-          // PGRST116 = nenhum resultado encontrado (ok para primeiro acesso)
           console.error('Erro ao carregar perfil:', error);
         }
 
         if (data) {
           let avatarUrl = null;
           if (data.avatar_url) {
-            // Obter URL pública do avatar
             const { data: urlData } = supabase.storage
               .from('avatars')
               .getPublicUrl(data.avatar_url);
             avatarUrl = urlData.publicUrl;
           }
 
-          setProfileData({
+          const newProfile = {
             firstName: data.first_name || '',
             avatarUrl,
-          });
+          };
+          
+          setProfileData(newProfile);
+          setImgError(false);
+          sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(newProfile));
         }
       } catch (error: any) {
         console.error('Erro ao carregar perfil:', error);
@@ -151,11 +163,13 @@ export default function MorePage({
       {/* Header - Perfil do usuário */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6">
         <div className="flex items-center gap-4">
-          {profileData.avatarUrl ? (
+          {profileData.avatarUrl && !imgError ? (
             <img
               src={profileData.avatarUrl}
               alt="Avatar"
               className="w-16 h-16 rounded-full object-cover"
+              loading="eager"
+              onError={() => setImgError(true)}
             />
           ) : (
             <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white text-2xl font-bold">
@@ -375,6 +389,24 @@ export default function MorePage({
                 <div className="flex flex-col items-start">
                   <span className="font-semibold text-gray-900 dark:text-white">Planos</span>
                   <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Assine um plano e desbloqueie recursos</span>
+                </div>
+              </div>
+            </Button>
+          )}
+
+          {onNavigateToAbout && (
+            <Button
+              onClick={onNavigateToAbout}
+              variant="ghost"
+              fullWidth
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
+              rightIcon={<ChevronRight size={16} className="text-gray-400" />}
+            >
+              <div className="flex items-center gap-3">
+                <Info size={20} className="text-gray-600 dark:text-gray-400" />
+                <div className="flex flex-col items-start">
+                  <span className="font-semibold text-gray-900 dark:text-white">Sobre</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Informações do app e contato</span>
                 </div>
               </div>
             </Button>

@@ -18,28 +18,16 @@ export default function BottomNav({ activeTab, onTabChange, pendingAchievementsC
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 transition-colors duration-300">
-      <div className="grid grid-cols-5 h-16">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 transition-colors duration-300 pb-[calc(env(safe-area-inset-bottom)+0.25rem)]">
+      <div className="grid grid-cols-5 h-14 md:h-16">
         {tabs.map((tab) => {
           const Icon = tab.id === 'more' ? Trophy : tab.icon;
           const isActive = activeTab === tab.id;
           const showBadge = tab.id === 'more' && pendingAchievementsCount > 0;
 
-          // Mapear IDs do tour
-          const tourIdMap: Record<string, string> = {
-            dashboard: 'nav-dashboard',
-            cycle: 'nav-cycle',
-            timer: 'nav-timer',
-            register: 'nav-register',
-            more: 'nav-more',
-            history: 'nav-history',
-          };
-          const tourId = tourIdMap[tab.id] || undefined;
-
           return (
             <button
               key={tab.id}
-              id={tourId}
               onClick={() => {
                 if (tab.id === 'more' && pendingAchievementsCount > 0) {
                   onTabChange('achievements');

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, TrendingUp, Sparkles, ArrowLeft, Check, Lock, Lightbulb, BookOpen, FileText, Book, Flame, BarChart2, Star } from 'lucide-react';
+import { Trophy, TrendingUp, Sparkles, Check, Lock, Lightbulb, BookOpen, FileText, Book, BarChart2, Star, ArrowLeft } from 'lucide-react';
 import { useXPContext } from '../contexts/XPContext';
 import { ELOS } from '../types/elo';
 import { StudyLog } from '../types';
 import EloHistoryModal from '../components/EloHistoryModal';
 import Button from '../components/Button';
+import FloatingBackButton from '../components/FloatingBackButton';
 
 interface EloPageProps {
   logs: StudyLog[];
@@ -30,32 +31,24 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* Botão Voltar Flutuante */}
+      {onNavigateToMore && <FloatingBackButton onClick={onNavigateToMore} />}
+
       {/* Header */}
       <div className="mb-6">
-        {onNavigateToMore && (
-          <Button
-            onClick={onNavigateToMore}
-            variant="ghost"
-            size="md"
-            leftIcon={<ArrowLeft size={20} />}
-            className="md:hidden mb-4"
-          >
-            Voltar
-          </Button>
-        )}
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 transition-colors flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 transition-colors flex items-center gap-2 pl-14 md:pl-0">
           <Star className="text-emerald-500" size={28} />
           Elo
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors">Acompanhe seu progresso e suba de nível</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors pl-14 md:pl-0">Acompanhe seu progresso e suba de nível</p>
       </div>
 
       {/* Hero Card - Elo Atual */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-gray-700"
+        className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-gray-700"
       >
         <div className="flex flex-col items-center text-center space-y-6">
           {/* Medalha com efeito de brilho */}
@@ -146,7 +139,7 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
       </motion.div>
 
       {/* Lista de Elos */}
-      <div className="space-y-4">
+      <div className="mt-8 space-y-4">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Trophy className="text-emerald-500" size={28} />
           Todos os Elos
@@ -220,7 +213,7 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
       </div>
 
       {/* Explicação de XP */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Como ganhar XP */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -232,41 +225,47 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
             Como ganhar XP?
           </h3>
           <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
               <BookOpen className="text-emerald-600 dark:text-emerald-400 mt-0.5" size={20} />
               <div className="flex-1">
-                <p className="font-semibold text-gray-900 dark:text-white">Estudar teoria</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">+10 XP por hora</p>
+                <p className="font-semibold text-gray-900 dark:text-white">Tempo de estudo</p>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">+1 XP por minuto estudado</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Teoria, questões ou revisão - todos contam!</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
               <FileText className="text-blue-600 dark:text-blue-400 mt-0.5" size={20} />
               <div className="flex-1">
-                <p className="font-semibold text-gray-900 dark:text-white">Resolver questões</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">+5 XP por questão correta</p>
+                <p className="font-semibold text-gray-900 dark:text-white">Questões corretas</p>
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">+5 XP por acerto</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Questões erradas ou em branco não dão XP</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
               <Book className="text-purple-600 dark:text-purple-400 mt-0.5" size={20} />
               <div className="flex-1">
-                <p className="font-semibold text-gray-900 dark:text-white">Ler páginas</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">+2 XP por página</p>
+                <p className="font-semibold text-gray-900 dark:text-white">Páginas lidas</p>
+                <p className="text-sm text-purple-700 dark:text-purple-300 font-medium">+2 XP por página</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Incentivo extra para quem estuda por leitura!</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-              <Flame className="text-orange-600 dark:text-orange-400 mt-0.5" size={20} />
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900 dark:text-white">Manter ofensiva</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">+50 XP bônus ao completar 7 dias</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
               <Trophy className="text-amber-600 dark:text-amber-400 mt-0.5" size={20} />
               <div className="flex-1">
                 <p className="font-semibold text-gray-900 dark:text-white">Resgatar conquistas</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">+100 a +500 XP dependendo da conquista</p>
+                <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">+50 a +500 XP bônus</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cada conquista dá XP ao ser resgatada</p>
               </div>
             </div>
+          </div>
+          
+          {/* Exemplo prático */}
+          <div className="mt-4 p-3 rounded-lg bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+            <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase mb-2">Exemplo prático</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="font-medium">1h de estudo</span> + <span className="font-medium">20 páginas</span> + <span className="font-medium">10 acertos</span> = <span className="font-bold text-emerald-600 dark:text-emerald-400">150 XP</span>
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">(60 min × 1) + (20 págs × 2) + (10 acertos × 5) = 150 XP</p>
           </div>
         </motion.div>
 

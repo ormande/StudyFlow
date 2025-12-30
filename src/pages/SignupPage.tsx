@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, CheckCircle, ArrowRight, User, Calendar, Camera } from 'lucide-react';
+import { Mail, Lock, CheckCircle, ArrowRight, User, Calendar, Camera, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 import Button from '../components/Button';
@@ -10,14 +10,15 @@ import PrivacyModal from '../components/PrivacyModal';
 interface SignupPageProps {
   onBack: () => void;
   onNavigateToLogin: () => void;
-  onSuccess: () => void;
+  onSuccess: (email?: string) => void;
   onStartSignup?: () => void;
 }
 
 export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onStartSignup }: SignupPageProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [birthDate, setBirthDate] = useState('');
+  const [birthDate, setBirthDate] = useState(''); // Armazena no formato DD/MM/AAAA
+  const [isDateValid, setIsDateValid] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -25,12 +26,50 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
   const [loading, setLoading] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { addToast } = useToast();
+  const validateDate = (value: string): boolean => {
+    if (value.length < 10) return true; // Ainda digitando
+    const [d, m, y] = value.split('/').map(Number);
+    const date = new Date(y, m - 1, d);
+    const now = new Date();
+    
+    // Verifica se os valores batem (evita 31/02 que o JS converte para 03/03)
+    const matches = date.getDate() === d && date.getMonth() === m - 1 && date.getFullYear() === y;
+    // Não permite data futura ou ano muito antigo
+    const isReasonable = y > 1900 && date <= now;
+    
+    return matches && isReasonable;
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ''); // Remove não-numéricos
+    
+    // Bloqueio imediato de valores impossíveis
+    if (value.length >= 2) {
+      const day = parseInt(value.slice(0, 2));
+      if (day > 31) value = '31' + value.slice(2);
+      if (day === 0 && value.length === 2) value = '01';
+    }
+    if (value.length >= 4) {
+      const month = parseInt(value.slice(2, 4));
+      if (month > 12) value = value.slice(0, 2) + '12' + value.slice(4);
+      if (month === 0 && value.length === 4) value = value.slice(0, 2) + '01';
+    }
+
+    if (value.length > 8) value = value.slice(0, 8);
+
+    if (value.length >= 5) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length >= 3) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    
+    setBirthDate(value);
+    setIsDateValid(validateDate(value));
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -58,13 +97,28 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
       return;
     }
 
-    if (!birthDate) {
-      addToast('Data de nascimento é obrigatória.', 'warning');
+    if (!birthDate || birthDate.length < 10) {
+      addToast('Data de nascimento inválida. Use DD/MM/AAAA.', 'warning');
       return;
     }
 
-    if (calculateAge(birthDate) < 13) {
+    // Converter DD/MM/AAAA -> AAAA-MM-DD
+    const [d, m, y] = birthDate.split('/');
+    const isoDate = `${y}-${m}-${d}`;
+
+    if (calculateAge(isoDate) < 13) {
       addToast('Você precisa ter pelo menos 13 anos para usar o StudyFlow.', 'warning');
+      return;
+    }
+
+    if (password.length < 8) {
+      addToast('A senha deve ter pelo menos 8 caracteres.', 'warning');
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      addToast('A senha deve conter letras maiúsculas, minúsculas e números.', 'warning');
       return;
     }
 
@@ -82,285 +136,360 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
     if (onStartSignup) onStartSignup();
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (signUpError) throw signUpError;
 
-      // AGUARDAR sessão estar disponível
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const { data: { session } } = await supabase.auth.getSession();
+      // Se não houver sessão imediata (ex: confirmação de email habilitada)
+      if (!signUpData.session) {
+        setLoading(false);
+        onSuccess(email);
+        return;
+      }
 
-      if (session?.user) {
-        let uploadedAvatarUrl = null;
+      const session = signUpData.session;
+      let uploadedAvatarUrl = null;
 
-        // Upload do avatar se houver
-        if (avatarFile) {
-          const fileExt = avatarFile.name.split('.').pop();
-          const fileName = `${session.user.id}/avatar.${fileExt}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(fileName, avatarFile, { upsert: true });
-          
-          if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage
-              .from('avatars')
-              .getPublicUrl(fileName);
-            uploadedAvatarUrl = publicUrl;
-          } else {
-            console.error('Erro upload avatar:', uploadError);
-          }
-        }
-
-        // Dados para salvar no user_settings
-        const settingsData = {
-          user_id: session.user.id,
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          birth_date: birthDate,
-          avatar_url: uploadedAvatarUrl,
-          terms_accepted: true,
-          terms_accepted_at: new Date().toISOString(),
-          subscription_status: 'trial',
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          cycle_start_date: Date.now(),
-          daily_goal: 0,
-          show_performance: true,
-          tutorial_completed: false
-        };
-
-        const { error: settingsError } = await supabase
-          .from('user_settings')
-          .insert(settingsData);
+      // Upload do avatar se houver
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${session.user.id}/avatar.${fileExt}`;
         
-        if (settingsError) {
-          console.error('Erro ao criar trial (insert):', settingsError);
-          // Tenta update como fallback
-          await supabase
-            .from('user_settings')
-            .update(settingsData)
-            .eq('user_id', session.user.id);
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile, { upsert: true });
+        
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+          uploadedAvatarUrl = publicUrl;
+        } else {
+          console.error('Erro upload avatar:', uploadError);
         }
       }
 
+      // Dados para salvar no user_settings
+      const settingsData = {
+        user_id: session.user.id,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        birth_date: isoDate,
+        avatar_url: uploadedAvatarUrl,
+        terms_accepted: true,
+        terms_accepted_at: new Date().toISOString(),
+        subscription_status: 'trial',
+        trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        cycle_start_date: Date.now(),
+        daily_goal: 0,
+        show_performance: true,
+        tutorial_completed: false
+      };
+
+      // Usa upsert para garantir que as configurações sejam salvas mesmo se o trigger handle_new_user já as criou
+      const { error: settingsError } = await supabase
+        .from('user_settings')
+        .upsert(settingsData, { onConflict: 'user_id' });
+      
+      if (settingsError) {
+        console.error('Erro ao salvar configurações do usuário:', settingsError);
+      }
+
       addToast('Conta criada com sucesso! Aproveite seus 7 dias grátis.', 'success');
-      onSuccess();
-    } catch (error: any) {
-      addToast(error.message, 'error');
       setLoading(false);
       onSuccess();
+    } catch (error: any) {
+      console.error('Erro no signup:', error);
+      addToast(error.message || 'Erro ao criar conta.', 'error');
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-6 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md space-y-8 my-8"
-      >
-        <div className="text-center">
-          <img src="/icon-512.png" alt="StudyFlow" className="w-20 h-20 mx-auto mb-4 rounded-2xl" />
-          <h1 className="text-3xl font-black tracking-tight mb-2 uppercase text-emerald-600 dark:text-emerald-500">Crie sua conta</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Preencha seus dados para começar sua jornada.
-          </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col lg:flex-row transition-colors duration-300">
+      {/* Lado Esquerdo - Hero/Branding (Visível apenas no Desktop) */}
+      <div className="hidden lg:flex lg:w-5/12 bg-emerald-600 dark:bg-emerald-700 items-center justify-center p-12 relative overflow-hidden">
+        {/* Background Patterns */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-400 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
         </div>
 
-        <motion.form
-          onSubmit={handleSignup}
-          className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 space-y-5"
+        <motion.div 
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 text-white max-w-lg"
         >
-          {/* Foto de Perfil */}
-          <div className="flex flex-col items-center gap-3 mb-2">
-            <div 
-              className="relative w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden group cursor-pointer"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {avatarPreview ? (
-                <>
-                  <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="text-white" size={24} />
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center text-gray-400">
-                  <Camera size={24} />
-                  <span className="text-[10px] font-bold mt-1 uppercase">Foto</span>
+          <img src="/icon-512.png" alt="StudyFlow" className="w-24 h-24 mb-8 rounded-2xl shadow-2xl brightness-110" />
+          <h1 className="text-5xl font-black mb-6 leading-tight">Sua jornada rumo à aprovação começa agora.</h1>
+          <p className="text-xl text-emerald-50 mb-12 opacity-90 leading-relaxed">
+            Junte-se a milhares de estudantes e organize sua rotina com ciclos de estudo, gamificação e métricas reais.
+          </p>
+          
+          <div className="space-y-6">
+            {[
+              "7 dias de acesso total grátis",
+              "Ciclos de estudo personalizados",
+              "Ranking e conquistas",
+              "Sincronização em tempo real"
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle size={18} className="text-white" />
                 </div>
-              )}
-            </div>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*" 
-              onChange={handleFileChange} 
-            />
-            {avatarPreview && (
-              <button 
-                type="button" 
-                onClick={() => { setAvatarFile(null); setAvatarPreview(null); }}
-                className="text-xs text-red-500 font-bold hover:underline"
-              >
-                Remover foto
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5 ml-1">
-                Nome
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  required
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-2.5 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
-                  placeholder="Seu nome"
-                />
+                <span className="text-lg font-medium">{item}</span>
               </div>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5 ml-1">
-                Sobrenome
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-2.5 px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
-                  placeholder="Sobrenome"
-                />
-              </div>
-            </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Lado Direito - Formulário */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative overflow-y-auto">
+        {/* Botão Voltar (Desktop/Mobile) */}
+        {onBack && (
+          <div className="absolute top-6 left-6 md:top-8 md:left-8 z-10">
+            <Button
+              onClick={onBack}
+              variant="ghost"
+              size="sm"
+              leftIcon={<ArrowLeft size={18} />}
+              className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+            >
+              Voltar
+            </Button>
+          </div>
+        )}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-xl space-y-8 py-12 lg:py-0"
+        >
+          <div className="text-center lg:text-left">
+            <img src="/icon-512.png" alt="StudyFlow" className="w-16 h-16 mx-auto lg:mx-0 mb-4 rounded-2xl lg:hidden" />
+            <h2 className="text-3xl font-black tracking-tight mb-2 uppercase text-emerald-600 dark:text-emerald-500">Crie sua conta</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              Preencha seus dados para começar sua jornada.
+            </p>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5 ml-1">
-              Data de Nascimento
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="date"
-                required
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-2.5 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all [color-scheme:light] dark:[color-scheme:dark]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5 ml-1">
-              Seu E-mail
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-2.5 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
-                placeholder="seu@email.com"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5 ml-1">
-              Senha (mín. 6 caracteres)
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-2.5 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
-                placeholder="••••••"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5 ml-1">
-              Confirmar Senha
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-2.5 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
-                placeholder="••••••"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 cursor-pointer group" onClick={() => setAcceptedTerms(!acceptedTerms)}>
-              <div className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${acceptedTerms ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-gray-600'}`}>
-                {acceptedTerms && <CheckCircle size={14} className="text-white" />}
-              </div>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
-                Eu aceito os <button type="button" onClick={(e) => { e.stopPropagation(); setShowTermsModal(true); }} className="text-emerald-500 font-bold underline hover:text-emerald-600 transition-colors">Termos de Uso</button> e a <button type="button" onClick={(e) => { e.stopPropagation(); setShowPrivacyModal(true); }} className="text-emerald-500 font-bold underline hover:text-emerald-600 transition-colors">Política de Privacidade</button>.
-              </p>
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            disabled={loading}
-            variant="primary"
-            fullWidth
-            size="lg"
-            isLoading={loading}
-            leftIcon={!loading && <ArrowRight size={20} />}
-            className="py-4 shadow-lg shadow-emerald-600/20 font-bold"
+          <motion.form
+            onSubmit={handleSignup}
+            className="bg-white dark:bg-gray-800 p-6 md:p-10 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 space-y-6 transition-colors duration-300"
           >
-            Criar Conta Grátis
-          </Button>
+            {/* Foto de Perfil - Estilo Profile Page */}
+            <div className="flex flex-col md:flex-row items-center gap-8 mb-6 bg-gray-50 dark:bg-gray-700/30 p-6 rounded-2xl border border-dashed border-gray-200 dark:border-gray-600">
+              <div 
+                className="relative w-24 h-24 md:w-28 md:h-28 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center border-2 border-emerald-500 shadow-md overflow-hidden group cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {avatarPreview ? (
+                  <>
+                    <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="text-white" size={24} />
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center text-gray-400">
+                    <Camera size={28} />
+                    <span className="text-[10px] font-bold mt-1 uppercase">Foto</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 text-center md:text-left space-y-2">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Foto de Perfil</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Personalize seu perfil com uma foto (máx. 2MB)</p>
+                {avatarPreview && (
+                  <button 
+                    type="button" 
+                    onClick={() => { setAvatarFile(null); setAvatarPreview(null); }}
+                    className="text-xs text-red-500 font-bold hover:underline"
+                  >
+                    Remover foto
+                  </button>
+                )}
+              </div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleFileChange} 
+              />
+            </div>
 
-          <div className="text-center pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
+                  Nome
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="text"
+                    name="first_name"
+                    autoComplete="given-name"
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
+                    placeholder="Seu nome"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
+                  Sobrenome
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="last_name"
+                    autoComplete="family-name"
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
+                    placeholder="Sobrenome"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
+                  Nascimento
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    value={birthDate}
+                    onChange={handleDateChange}
+                    placeholder="DD/MM/AAAA"
+                    className={`w-full bg-gray-50 dark:bg-gray-700 border ${!isDateValid ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-emerald-500'} rounded-xl py-3 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none transition-all`}
+                  />
+                </div>
+                {!isDateValid && (
+                  <p className="text-[10px] text-red-500 mt-1 ml-1 font-bold">Data inválida ou no futuro</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
+                  Seu E-mail
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
+                    placeholder="seu@email.com"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
+                  Senha (mín. 8)
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="password"
+                    name="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
+                  Confirmar
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="password"
+                    name="confirm_password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setAcceptedTerms(!acceptedTerms)}>
+                <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${acceptedTerms ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-gray-600'}`}>
+                  {acceptedTerms && <CheckCircle size={14} className="text-white" />}
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
+                  Eu aceito os <button type="button" onClick={(e) => { e.stopPropagation(); setShowTermsModal(true); }} className="text-emerald-500 font-bold underline hover:text-emerald-600 transition-colors">Termos de Uso</button> e a <button type="button" onClick={(e) => { e.stopPropagation(); setShowPrivacyModal(true); }} className="text-emerald-500 font-bold underline hover:text-emerald-600 transition-colors">Política de Privacidade</button>.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading || !isDateValid}
+              variant="primary"
+              fullWidth
+              size="lg"
+              isLoading={loading}
+              leftIcon={!loading && <ArrowRight size={20} />}
+              className="py-4 shadow-lg shadow-emerald-600/20 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Criar Conta Grátis
+            </Button>
+
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={onNavigateToLogin}
+                className="text-sm text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              >
+                Já tem conta? <span className="font-bold underline">Faça login</span>
+              </button>
+            </div>
+          </motion.form>
+
+          <div className="text-center lg:hidden">
             <button
               type="button"
-              onClick={onNavigateToLogin}
-              className="text-sm text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              onClick={onBack}
+              className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors font-medium"
             >
-              Já tem conta? <span className="font-bold underline">Faça login</span>
+              Voltar para a página inicial
             </button>
           </div>
-        </motion.form>
-
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-          >
-            Voltar para a página inicial
-          </button>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       {/* Modais */}
       <TermsModal 

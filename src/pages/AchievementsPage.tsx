@@ -10,9 +10,10 @@ import {
   Achievement,
   UserAchievement
 } from '../types/achievements';
-import { Sparkles, Trophy, Lock, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Sparkles, Trophy, Lock, CheckCircle2 } from 'lucide-react';
 import Skeleton from '../components/Skeleton';
 import Button from '../components/Button';
+import FloatingBackButton from '../components/FloatingBackButton';
 import { FADE_UP_ANIMATION, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/animations';
 
 interface AchievementsPageProps {
@@ -153,24 +154,16 @@ export default function AchievementsPage({
       className="max-w-4xl xl:max-w-7xl mx-auto px-6 py-6 pb-24"
       {...FADE_UP_ANIMATION}
     >
+      {/* Botão Voltar Flutuante */}
+      {onNavigateToMore && <FloatingBackButton onClick={onNavigateToMore} />}
+
       {/* Header */}
       <div className="mb-6">
-        {onNavigateToMore && (
-          <Button
-            onClick={onNavigateToMore}
-            variant="ghost"
-            size="md"
-            leftIcon={<ArrowLeft size={20} />}
-            className="md:hidden mb-4"
-          >
-            Voltar
-          </Button>
-        )}
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2 pl-14 md:pl-0">
           <Trophy className="text-emerald-500" size={28} />
           Conquistas
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">
+        <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">
           {claimedCount} de {totalCount} conquistas resgatadas
         </p>
       </div>

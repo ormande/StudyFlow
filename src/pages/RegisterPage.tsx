@@ -39,8 +39,56 @@ export default function RegisterPage({
   const [subtopicId, setSubtopicId] = useState('');
   const [type, setType] = useState<'teoria' | 'questoes' | 'revisao'>('teoria');
   const [dateOption, setDateOption] = useState<'today' | 'yesterday' | 'other'>('today');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Armazena sempre YYYY-MM-DD
+  const [maskedDate, setMaskedDate] = useState(''); // Armazena DD/MM/AAAA para o input desktop
+  const [isDateValid, setIsDateValid] = useState(true);
   const [hours, setHours] = useState('');
+  
+  // ... (restante do código)
+
+  const validateDateString = (value: string): boolean => {
+    if (!value || value.length < 10) return true;
+    const [d, m, y] = value.split('/').map(Number);
+    const date = new Date(y, m - 1, d);
+    const now = new Date();
+    const matches = date.getDate() === d && date.getMonth() === m - 1 && date.getFullYear() === y;
+    const isReasonable = y > 1900 && date <= now;
+    return matches && isReasonable;
+  };
+
+  const handleMaskedDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    
+    if (value.length >= 2) {
+      const day = parseInt(value.slice(0, 2));
+      if (day > 31) value = '31' + value.slice(2);
+      if (day === 0 && value.length === 2) value = '01';
+    }
+    if (value.length >= 4) {
+      const month = parseInt(value.slice(2, 4));
+      if (month > 12) value = value.slice(0, 2) + '12' + value.slice(4);
+      if (month === 0 && value.length === 4) value = value.slice(0, 2) + '01';
+    }
+
+    if (value.length > 8) value = value.slice(0, 8);
+
+    if (value.length >= 5) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length >= 3) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    setMaskedDate(value);
+
+    const valid = validateDateString(value);
+    setIsDateValid(valid);
+
+    // Se estiver completo e for válido, atualiza o date original
+    if (value.length === 10 && valid) {
+      const [d, m, y] = value.split('/');
+      const isoDate = `${y}-${m}-${d}`;
+      handleDateChange(isoDate);
+    }
+  };
   const [seconds, setSeconds] = useState('');
   const [minutes, setMinutes] = useState('');
   const [notes, setNotes] = useState('');
@@ -326,27 +374,25 @@ export default function RegisterPage({
                   <div className="hidden md:block flex-shrink-0 relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none z-10" size={20} />
                     <input 
-                      type="date" 
-                      value={date} 
-                      max={new Date().toISOString().split('T')[0]} 
-                      onChange={(e) => handleDateChange(e.target.value)} 
-                      className="w-full px-3 py-3 pl-10 pr-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:border-emerald-500 focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors h-12 text-center cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:opacity-0 [color-scheme:light] dark:[color-scheme:dark]"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 12px center',
-                        backgroundSize: '20px 20px'
-                      }}
+                      type="text"
+                      inputMode="numeric"
+                      value={maskedDate}
+                      onChange={handleMaskedDateChange}
+                      placeholder="DD/MM/AAAA"
+                      className={`w-full px-3 py-3 pl-10 bg-gray-50 dark:bg-gray-700 border ${!isDateValid ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-gray-600 hover:border-emerald-500 focus:border-emerald-500'} rounded-xl outline-none text-sm text-gray-900 dark:text-white transition-colors h-12 text-center`}
                     />
                   </div>
+                  {!isDateValid && (
+                    <p className="text-[10px] text-red-500 mt-1 text-center font-bold">Data inválida</p>
+                  )}
                   
-                  {/* Input de data padrão (mobile) */}
+                  {/* Input de data padrão (mobile) - Mantido calendário funcional conforme solicitado */}
                   <input 
                     type="date" 
                     value={date} 
                     max={new Date().toISOString().split('T')[0]} 
                     onChange={(e) => handleDateChange(e.target.value)} 
-                    className="w-full md:hidden px-3 py-3 pr-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark] min-w-0 text-center cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:opacity-0" 
+                    className="w-full md:hidden px-3 py-3 pr-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark] min-w-0 text-center cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E")`,
                       backgroundRepeat: 'no-repeat',
@@ -457,7 +503,7 @@ export default function RegisterPage({
                 : 'text-gray-700 dark:text-gray-300'
             }`}>
               {selectedSubtopic?.completed 
-                ? 'Já concluído ✓'
+                ? 'Já concluído'
                 : !subtopicId 
                   ? 'Selecione um subtópico'
                   : 'Marcar como concluído'
@@ -668,11 +714,12 @@ export default function RegisterPage({
           <div className="w-full max-w-lg">
             <Button 
               onClick={handleSubmit} 
+              disabled={!isDateValid}
               variant="primary"
               fullWidth
               size="lg"
               leftIcon={<Save size={20} />}
-              className="font-bold shadow-lg"
+              className="font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Salvar Registro
             </Button>

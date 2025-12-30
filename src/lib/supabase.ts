@@ -10,4 +10,11 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 // Cria a conexão oficial
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage
+  }
+});

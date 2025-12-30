@@ -45,7 +45,7 @@ export default function WelcomeModal({ isOpen, onClose, onGoToTutorial, userName
               </motion.div>
               
               <h2 className="text-2xl font-black text-white mb-2">
-                Bem-vindo ao StudyFlow{userName ? `, ${userName}` : ''}! 🎉
+                Bem-vindo ao StudyFlow{userName ? `, ${userName}` : ''}!
               </h2>
               <p className="text-emerald-50 text-sm">
                 Agora você faz parte da nossa família

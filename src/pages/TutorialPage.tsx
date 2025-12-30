@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Target, Clock, Trophy, ArrowLeft } from 'lucide-react';
-import Button from '../components/Button';
+import { Target, Clock, Trophy } from 'lucide-react';
+import FloatingBackButton from '../components/FloatingBackButton';
 
 interface TutorialPageProps {
   onNavigateBack?: () => void;
@@ -41,20 +41,11 @@ export default function TutorialPage({ onNavigateBack }: TutorialPageProps) {
       transition={{ duration: 0.3 }}
       className="max-w-4xl mx-auto px-6 py-8 pb-24 md:pb-8"
     >
+      {/* Botão Voltar Flutuante */}
+      {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
+
       {/* Header */}
-      <div className="text-center mb-8">
-        {/* Botão Voltar - Apenas Mobile */}
-        {onNavigateBack && (
-          <Button
-            onClick={onNavigateBack}
-            variant="ghost"
-            size="md"
-            leftIcon={<ArrowLeft size={20} />}
-            className="md:hidden mb-4"
-          >
-            Voltar
-          </Button>
-        )}
+      <div className="text-center mb-8 pt-12 md:pt-0">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
           Como usar o StudyFlow
         </h1>

@@ -1,6 +1,43 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Função para enviar email via Brevo
+async function sendWelcomeEmail(email: string, name: string) {
+  const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+  
+  if (!BREVO_API_KEY) {
+    console.error("BREVO_API_KEY não configurada");
+    return;
+  }
+
+  try {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        templateId: 1,
+        to: [{ email: email, name: name || "Estudante" }],
+        params: {
+          nome: name || "Estudante",
+        },
+      }),
+    });
+
+    if (response.ok) {
+      console.log(`Email de boas-vindas enviado para ${email}`);
+    } else {
+      const errorData = await response.text();
+      console.error("Erro ao enviar email:", errorData);
+    }
+  } catch (error) {
+    console.error("Erro ao chamar API do Brevo:", error);
+  }
+}
+
 serve(async (req) => {
   try {
     // 1. Ler corpo da requisição (pode ser JSON ou URL-encoded)
@@ -41,10 +78,15 @@ serve(async (req) => {
     const customId = notification.custom_id || body.custom_id;
     const amount = notification.value || notification.total || body.value || 0;
 
-    console.log("Dados extraídos:", { chargeId, status, customId, amount });
+    // Extrair user_id e coupon_id do customId (formato: "user_id__coupon_id")
+    const customIdParts = (customId || '').split('__');
+    const userId = customIdParts[0];
+    const couponId = customIdParts.length > 1 ? customIdParts[1] : null;
+
+    console.log("Dados extraídos:", { chargeId, status, customId, userId, couponId, amount });
 
     // 3. Se pagamento confirmado, atualizar usuário
-    if (status === "paid" && customId) {
+    if (status === "paid" && userId) {
       const supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SB_SERVICE_ROLE_KEY") ?? ""
@@ -61,17 +103,73 @@ serve(async (req) => {
           : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       };
 
-      console.log("Atualizando usuário:", customId, subscriptionData);
+      console.log("Atualizando usuário:", userId, subscriptionData);
 
       const { error } = await supabaseAdmin
         .from("user_settings")
         .update(subscriptionData)
-        .eq("user_id", customId);
+        .eq("user_id", userId);
 
       if (error) {
         console.error("Erro ao atualizar user_settings:", error);
       } else {
         console.log("Usuário atualizado com sucesso!");
+
+        // Buscar email do usuário para enviar boas-vindas
+        try {
+          const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+          
+          if (!userError && userData?.user?.email) {
+            const userEmail = userData.user.email;
+            const userName = userData.user.user_metadata?.full_name || 
+                            userData.user.user_metadata?.name || 
+                            "Estudante";
+            
+            // Enviar email de boas-vindas
+            await sendWelcomeEmail(userEmail, userName);
+          } else {
+            console.error("Erro ao buscar dados do usuário:", userError);
+          }
+        } catch (emailError) {
+          console.error("Erro ao processar envio de email:", emailError);
+        }
+
+        // Registrar uso do cupom (apenas quando pagamento confirmado)
+        if (couponId) {
+          try {
+            // Verificar se já não foi registrado (evitar duplicação)
+            const { data: existingUse } = await supabaseAdmin
+              .from("coupon_uses")
+              .select("id")
+              .eq("coupon_id", couponId)
+              .eq("user_id", userId)
+              .single();
+
+            if (!existingUse) {
+              // Registrar uso
+              const { error: useError } = await supabaseAdmin
+                .from("coupon_uses")
+                .insert({
+                  coupon_id: couponId,
+                  user_id: userId,
+                });
+
+              if (!useError) {
+                // Incrementar contador
+                await supabaseAdmin.rpc("increment_coupon_uses", {
+                  p_coupon_id: couponId,
+                });
+                console.log(`Cupom ${couponId} registrado com sucesso para usuário ${userId}`);
+              } else {
+                console.error("Erro ao registrar uso do cupom:", useError);
+              }
+            } else {
+              console.log(`Cupom ${couponId} já foi registrado para este usuário`);
+            }
+          } catch (err) {
+            console.error("Erro ao processar cupom:", err);
+          }
+        }
       }
     }
 

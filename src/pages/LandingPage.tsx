@@ -119,23 +119,23 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="flex items-center gap-3"
+              className="flex items-center gap-1.5 sm:gap-3"
             >
               <button
                 onClick={() => onNavigate("login")}
-                className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 Login
               </button>
               <button
                 onClick={() => onNavigate("signup")}
-                className="px-4 py-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
               >
                 Cadastrar
               </button>
               <button
                 onClick={() => onNavigate("pricing")}
-                className="px-6 py-2 text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
+                className="px-3 sm:px-6 py-2 text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all whitespace-nowrap"
               >
                 Assine já
               </button>
@@ -522,19 +522,19 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               </a>
 
               <a
-                href="https://instagram.com/paiao.kayke"
+                href="https://instagram.com/oficial.studyflow"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
               >
                 <Instagram size={20} />
-                <span className="text-sm">@paiao.kayke</span>
+                <span className="text-sm">@oficial.studyflow</span>
               </a>
             </div>
           </div>
 
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
-            <p>© 2025 StudyFlow. Desenvolvido por Kayke Paião.</p>
+            <p>© 2026 StudyFlow. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

@@ -23,8 +23,14 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     setError('');
 
     // Validações
-    if (newPassword.length < 6) {
-      setError('A senha precisa ter pelo menos 6 caracteres.');
+    if (newPassword.length < 8) {
+      setError('A senha precisa ter pelo menos 8 caracteres.');
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setError('A senha deve conter letras maiúsculas, minúsculas e números.');
       return;
     }
 
@@ -116,8 +122,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    minLength={6}
+                    placeholder="••••••••"
+                    minLength={8}
                     required
                     autoFocus
                     className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-3 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
@@ -137,8 +143,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Digite a senha novamente"
-                    minLength={6}
+                    placeholder="••••••••"
+                    minLength={8}
                     required
                     className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 pl-10 pr-3 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                     disabled={loading}
@@ -166,7 +172,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || newPassword.length < 6 || confirmPassword.length < 6 || newPassword !== confirmPassword}
+                  disabled={loading || newPassword.length < 8 || confirmPassword.length < 8 || newPassword !== confirmPassword}
                   className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
                 >
                   {loading ? (

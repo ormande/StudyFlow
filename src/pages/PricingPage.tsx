@@ -1,24 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Zap, Crown, MessageCircle, ArrowLeft, X } from 'lucide-react';
 import Button from '../components/Button';
 import { supabase } from '../lib/supabase';
 import CheckoutMensal from '../components/CheckoutMensal';
 import CheckoutVitalicio from '../components/CheckoutVitalicio';
+import { useToast } from '../contexts/ToastContext';
+
+const CHECKOUT_INTENT_KEY = 'studyflow_checkout_intent';
 
 interface PricingPageProps {
   onBack?: () => void;
   onNavigateToLogin?: () => void;
   onNavigateToSignup?: () => void;
+  fromExpiredTrial?: boolean;
 }
 
-export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSignup }: PricingPageProps) {
+export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSignup, fromExpiredTrial }: PricingPageProps) {
+  const { addToast } = useToast();
   const [coupon, setCoupon] = useState('');
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCheckoutMensal, setShowCheckoutMensal] = useState(false);
   const [showCheckoutVitalicio, setShowCheckoutVitalicio] = useState(false);
+  const toastShownRef = useRef(false);
+
+  // Mostrar toast de trial expirado se necessário
+  useEffect(() => {
+    if (fromExpiredTrial && !toastShownRef.current) {
+      addToast('Seu período de teste expirou. Escolha um plano para continuar estudando.', 'warning');
+      toastShownRef.current = true;
+    }
+  }, [fromExpiredTrial, addToast]);
 
   // Verificar sessão ao montar o componente
   useEffect(() => {
@@ -36,6 +50,38 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
     return () => subscription.unsubscribe();
   }, []);
 
+  // Verificar se existe intenção de compra pendente após login
+  useEffect(() => {
+    if (!session) return;
+    
+    const savedIntent = localStorage.getItem(CHECKOUT_INTENT_KEY);
+    if (!savedIntent) return;
+    
+    try {
+      const intent = JSON.parse(savedIntent);
+      
+      // Verificar se a intenção não expirou (30 minutos)
+      const thirtyMinutes = 30 * 60 * 1000;
+      if (Date.now() - intent.timestamp > thirtyMinutes) {
+        localStorage.removeItem(CHECKOUT_INTENT_KEY);
+        return;
+      }
+      
+      // Limpar intenção do localStorage
+      localStorage.removeItem(CHECKOUT_INTENT_KEY);
+      
+      // Abrir checkout correspondente
+      if (intent.plan === 'mensal') {
+        setShowCheckoutMensal(true);
+      } else if (intent.plan === 'vitalicio') {
+        setShowCheckoutVitalicio(true);
+      }
+    } catch (e) {
+      // JSON inválido, limpar
+      localStorage.removeItem(CHECKOUT_INTENT_KEY);
+    }
+  }, [session]);
+
   const originalLifetimePrice = 97.00;
   const discountedLifetimePrice = 72.75;
   const currentLifetimePrice = isCouponApplied ? discountedLifetimePrice : originalLifetimePrice;
@@ -43,13 +89,19 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
   const handleApplyCoupon = () => {
     if (coupon.toUpperCase() === 'LANCA25') {
       setIsCouponApplied(true);
+      addToast('Cupom LANCA25 aplicado! 25% de desconto', 'success');
     } else {
-      alert('Cupom inválido');
+      addToast('Cupom inválido ou expirado', 'error');
     }
   };
 
   const handlePlanClick = (plan: 'mensal' | 'vitalicio') => {
     if (!session) {
+      // Salvar intenção de compra no localStorage
+      localStorage.setItem(CHECKOUT_INTENT_KEY, JSON.stringify({
+        plan,
+        timestamp: Date.now()
+      }));
       setShowAuthModal(true);
       return;
     }
@@ -63,13 +115,33 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-6 font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-6 font-sans relative">
+      {/* Botão Voltar (se houver onBack) - Fixo no canto superior esquerdo no desktop */}
+      {onBack && (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="absolute top-6 left-6 md:top-8 md:left-8 z-10 hidden md:block"
+        >
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            leftIcon={<ArrowLeft size={18} />}
+            className="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+          >
+            Voltar
+          </Button>
+        </motion.div>
+      )}
+
       <div className="max-w-4xl mx-auto">
-        {/* Botão voltar: sempre no mobile, no desktop só se onBack existir (não está logado no app) */}
+        {/* Botão voltar: apenas no mobile agora que o desktop tem o botão fixo */}
         {onBack && (
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors mb-8 font-semibold md:block"
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors mb-8 font-semibold md:hidden"
           >
             <ArrowLeft size={20} />
             Voltar

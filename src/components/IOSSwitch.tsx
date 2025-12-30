@@ -37,7 +37,7 @@ export default function IOSSwitch({
         scale: isPressed ? 0.95 : 1,
         backgroundColor: checked 
           ? 'rgb(16, 185, 129)' // emerald-500
-          : 'rgb(209, 213, 219)' // gray-300
+          : 'rgb(156, 163, 175)' // gray-400 (mais escuro que gray-300)
       }}
       transition={{
         duration: 0.2,
@@ -49,7 +49,6 @@ export default function IOSSwitch({
         rounded-full
         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        dark:bg-gray-600
       `}
     >
       {/* Círculo interno deslizante */}

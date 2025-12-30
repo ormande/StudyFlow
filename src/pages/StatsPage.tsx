@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Clock, HelpCircle, Target, Flame, TrendingUp, BarChart3, PieChart, Calendar, BookOpen, ChevronDown } from 'lucide-react';
+import { Clock, HelpCircle, Target, Flame, TrendingUp, BarChart3, PieChart, Calendar, BookOpen, ChevronDown } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -7,6 +7,7 @@ import {
 import { Subject, StudyLog } from '../types';
 import IOSSwitch from '../components/IOSSwitch';
 import Button from '../components/Button';
+import FloatingBackButton from '../components/FloatingBackButton';
 
 // Componente CustomTooltip para gráficos Recharts
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -353,19 +354,13 @@ export default function StatsPage({
   if (!hasFilteredLogs) {
     return (
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+        {/* Botão Voltar Flutuante */}
+        {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
+
         {/* Header */}
         <div className="mb-6">
-          <Button
-            onClick={onNavigateBack}
-            variant="ghost"
-            size="md"
-            leftIcon={<ArrowLeft size={20} />}
-            className="md:hidden mb-4"
-          >
-            Voltar
-          </Button>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Estatísticas</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">Gráficos e análises detalhadas</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 pl-14 md:pl-0">Estatísticas</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">Gráficos e análises detalhadas</p>
         </div>
 
         {/* Estado Vazio */}
@@ -424,19 +419,15 @@ export default function StatsPage({
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+      {/* Botão Voltar Flutuante */}
+      {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
+
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex-1">
-            <button
-              onClick={onNavigateBack}
-              className="md:hidden flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors mb-4"
-            >
-              <ArrowLeft size={20} />
-              <span className="font-semibold">Voltar</span>
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Estatísticas</h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">Gráficos e análises detalhadas</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 pl-14 md:pl-0">Estatísticas</h1>
+            <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">Gráficos e análises detalhadas</p>
           </div>
 
           {/* Filtros - Desktop */}

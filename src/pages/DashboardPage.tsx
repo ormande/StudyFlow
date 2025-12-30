@@ -319,9 +319,9 @@ export default function DashboardPage({
           {/* MOBILE LAYOUT */}
           <div className="lg:hidden space-y-6">
             {/* LINHA 1 - Mobile: Hoje e Total */}
-            <div className="grid grid-cols-2 gap-6" data-tour="stats-cards-wrapper" data-tour-mobile="true">
+            <div className="grid grid-cols-2 gap-6">
               {/* Card Hoje */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
                 <Button
                   onClick={() => setShowShareModal(true)}
                   variant="ghost"
@@ -343,7 +343,7 @@ export default function DashboardPage({
               </div>
 
               {/* Card Total */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
                 <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-1 opacity-90">
@@ -794,9 +794,9 @@ export default function DashboardPage({
           {/* DESKTOP LAYOUT */}
           <div className="hidden lg:block space-y-6">
             {/* LINHA 1 - Desktop: Hoje, Total, Streak, Progresso Hoje */}
-            <div className="grid grid-cols-4 gap-4" data-tour="dashboard-stats" data-tour-desktop="true">
+            <div className="grid grid-cols-4 gap-4">
               {/* Card Hoje */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
                 <Button
                   onClick={() => setShowShareModal(true)}
                   variant="ghost"
@@ -822,7 +822,7 @@ export default function DashboardPage({
               </div>
 
               {/* Card Total */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300" data-tour="stats-card">
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
                 <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
                 <div className="relative z-10 flex flex-col justify-between h-full min-h-[100px]">
                   <div className="flex items-center gap-2 mb-2 opacity-90">
@@ -849,7 +849,7 @@ export default function DashboardPage({
                   <div className="flex-1 flex flex-col justify-center">
                     <p className="text-4xl md:text-5xl font-black tracking-tight leading-none mb-1">{streak}</p>
                     <p className="text-xs font-medium opacity-80">
-                      {streak > 0 ? 'dias seguidos 🔥' : 'Comece sua ofensiva!'}
+                      {streak > 0 ? 'dias seguidos' : 'Comece sua ofensiva!'}
                     </p>
                   </div>
                 </div>

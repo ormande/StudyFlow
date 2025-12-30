@@ -24,8 +24,20 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
 
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        // Verificar se o e-mail está confirmado
+        if (data.user && !data.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          addToast('Por favor, confirme seu e-mail antes de acessar o app. Verifique sua caixa de entrada.', 'warning');
+          setLoading(false);
+          return;
+        }
+
+        // O listener em App.tsx cuidará do redirecionamento ao detectar a sessão.
+        // Adicionamos um pequeno log de sucesso no console para debug.
+        console.log('Login successful, session:', !!data.session);
         addToast('Login realizado com sucesso!', 'success');
       } 
       else if (mode === 'forgot') {
@@ -37,8 +49,17 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
         setMode('login');
       }
     } catch (err: any) {
+      console.error('Erro na autenticação:', err);
       let msg = err.message;
-      if (msg === 'Invalid login credentials') msg = 'E-mail ou senha incorretos.';
+
+      if (msg.includes('Invalid login credentials')) {
+        msg = 'E-mail não cadastrado ou senha incorreta.';
+      } else if (msg.includes('Email not confirmed')) {
+        msg = 'Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.';
+      } else if (msg.includes('Too many requests')) {
+        msg = 'Muitas tentativas seguidas. Tente novamente em alguns segundos.';
+      }
+
       addToast(msg, 'error');
     } finally {
       setLoading(false);
@@ -109,6 +130,8 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input 
                 type="email" 
+                name="email"
+                autoComplete="username email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -131,12 +154,14 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input 
                   type="password" 
+                  name="password"
+                  autoComplete="current-password"
                   required
-                  minLength={6}
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl pl-10 pr-3 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all h-12"
-                  placeholder="••••••"
+                  placeholder="••••••••"
                 />
               </div>
             </motion.div>

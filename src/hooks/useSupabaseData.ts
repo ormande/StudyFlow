@@ -21,7 +21,6 @@ export function useSupabaseData(session: any) {
   const [cycleStartDate, setCycleStartDate] = useState<number>(Date.now());
   const [dailyGoal, setDailyGoal] = useState<number>(0);
   const [showPerformance, setShowPerformance] = useState<boolean>(true);
-  const [tutorialCompleted, setTutorialCompleted] = useState<boolean>(false);
   const [welcomeSeen, setWelcomeSeen] = useState<boolean>(true); // Padrão true para não mostrar modal enquanto carrega
   const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'lifetime' | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'cancelled' | 'trial' | null>(null);
@@ -132,7 +131,6 @@ export function useSupabaseData(session: any) {
         setCycleStartDate(settingsData.cycle_start_date || Date.now());
         setDailyGoal(sanitizeNumber(settingsData.daily_goal));
         setShowPerformance(settingsData.show_performance ?? true);
-        setTutorialCompleted(settingsData.tutorial_completed ?? false);
         setWelcomeSeen(settingsData.welcome_seen ?? false);
         setSubscriptionType(settingsData.subscription_type || null);
         setSubscriptionStatus(settingsData.subscription_status || null);
@@ -479,7 +477,6 @@ export function useSupabaseData(session: any) {
       if (updates.cycleStartDate !== undefined) dbUpdates.cycle_start_date = updates.cycleStartDate;
       if (updates.dailyGoal !== undefined) dbUpdates.daily_goal = sanitizeNumber(updates.dailyGoal);
       if (updates.showPerformance !== undefined) dbUpdates.show_performance = updates.showPerformance;
-      if (updates.tutorialCompleted !== undefined) dbUpdates.tutorial_completed = updates.tutorialCompleted;
       if (updates.welcomeSeen !== undefined) dbUpdates.welcome_seen = updates.welcomeSeen;
 
       const { error } = await supabase.from('user_settings').update(dbUpdates).eq('user_id', session.user.id);
@@ -488,7 +485,6 @@ export function useSupabaseData(session: any) {
       if (updates.cycleStartDate !== undefined) setCycleStartDate(updates.cycleStartDate);
       if (updates.dailyGoal !== undefined) setDailyGoal(sanitizeNumber(updates.dailyGoal));
       if (updates.showPerformance !== undefined) setShowPerformance(updates.showPerformance);
-      if (updates.tutorialCompleted !== undefined) setTutorialCompleted(updates.tutorialCompleted);
       if (updates.welcomeSeen !== undefined) setWelcomeSeen(updates.welcomeSeen);
       
       // Sincronizar com outras abas
@@ -497,11 +493,6 @@ export function useSupabaseData(session: any) {
       console.error(error);
       addToast('Erro ao atualizar configurações. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
     }
-  };
-
-  // Função específica para marcar tutorial como completo
-  const markTutorialCompleted = async () => {
-    await updateSettings({ tutorialCompleted: true });
   };
 
   // Função auxiliar para calcular data de corte baseada em dias
@@ -726,11 +717,11 @@ export function useSupabaseData(session: any) {
   }, [daysFilter, searchTerm]);
 
   return {
-    subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, tutorialCompleted, welcomeSeen,
+    subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, welcomeSeen,
     subscriptionType, subscriptionStatus, trialEndsAt, loadingData,
     hasMoreLogs, loadingMoreLogs, loadMoreLogs, searchLogs, searchTerm,
     daysFilter, applyDaysFilter,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
-    addLog, deleteLog, editLog, updateSettings, markTutorialCompleted
+    addLog, deleteLog, editLog, updateSettings
   };
 }

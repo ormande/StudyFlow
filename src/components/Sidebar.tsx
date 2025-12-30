@@ -57,9 +57,9 @@ export default function Sidebar({
     async function fetchProfile() {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('user_settings')
           .select('first_name, avatar_url')
-          .eq('id', session.user.id)
+          .eq('user_id', session.user.id)
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
@@ -144,18 +144,9 @@ export default function Sidebar({
     const isActive = forceActive || activeTab === id;
     const handleClick = onClick || (() => onTabChange(id as TabType));
 
-    // Mapear IDs do tour
-    const tourIdMap: Record<string, string> = {
-      dashboard: 'nav-dashboard',
-      cycle: 'nav-cycle',
-      history: 'nav-history',
-    };
-    const tourId = tourIdMap[id] || undefined;
-
     return (
       <motion.button
         key={id}
-        id={tourId}
         onClick={handleClick}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -196,14 +187,14 @@ export default function Sidebar({
           <div>
             <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">StudyFlow</h1>
             <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              Versão 1.5.0
+              Versão 1.9.0
             </p>
           </div>
         </div>
       </div>
 
       {/* Navegação Principal */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-2" data-tour="navigation">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
         {menuItems.map((item) => {
           const button = renderNavButton(
             item.id,

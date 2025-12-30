@@ -77,7 +77,7 @@ serve(async (req) => {
         amount: 1,
       }],
       metadata: {
-        custom_id: user.id,
+        custom_id: coupon_id ? `${user.id}__${coupon_id}` : user.id,
         notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/efi-webhook`,
       },
     };
@@ -133,39 +133,7 @@ serve(async (req) => {
 
     console.log("Resposta do link:", JSON.stringify(linkData, null, 2));
 
-    // 7. Registrar uso do cupom (se houver)
-    if (coupon_id) {
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SB_SERVICE_ROLE_KEY") ?? ""
-      );
-
-      // Registrar uso na tabela coupon_uses
-      const { error: useError } = await supabaseAdmin
-        .from("coupon_uses")
-        .insert({
-          coupon_id: coupon_id,
-          user_id: user.id,
-        });
-
-      if (useError) {
-        console.error("Erro ao registrar uso do cupom:", useError);
-        // Não bloqueia o pagamento, só loga o erro
-      } else {
-        // Incrementar contador de usos
-        const { error: updateError } = await supabaseAdmin.rpc("increment_coupon_uses", {
-          p_coupon_id: coupon_id,
-        });
-
-        if (updateError) {
-          console.error("Erro ao incrementar usos do cupom:", updateError);
-        } else {
-          console.log("Cupom registrado com sucesso:", coupon_id);
-        }
-      }
-    }
-
-    // 8. Retornar link
+    // 7. Retornar link
     return new Response(
       JSON.stringify({
         charge_id: chargeId,

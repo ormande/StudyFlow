@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, BookOpen, HelpCircle, RefreshCw, Filter } from 'lucide-react';
+import { X, BookOpen, HelpCircle, RefreshCw, Filter, Check, XCircle, Circle } from 'lucide-react';
 import { Subject, StudyLog, StudyType } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -145,9 +145,9 @@ export default function HistoryModal({
                         {log.type === 'questoes' && (
                           <>
                             <span>•</span>
-                            <span className="text-emerald-600 dark:text-emerald-400">{log.correct || 0}✓</span>
-                            <span className="text-red-600 dark:text-red-400">{log.wrong || 0}✗</span>
-                            <span className="text-blue-600 dark:text-blue-400">{log.blank || 0}○</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">{log.correct || 0}<Check size={12} /></span>
+                            <span className="text-red-600 dark:text-red-400 flex items-center gap-0.5">{log.wrong || 0}<XCircle size={12} /></span>
+                            <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">{log.blank || 0}<Circle size={12} /></span>
                           </>
                         )}
                       </div>

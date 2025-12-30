@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, TrendingUp } from 'lucide-react';
+import { X, TrendingUp, Trash2, Sparkles, Trophy } from 'lucide-react';
 import { XPHistoryEntry } from '../types/elo';
 
 interface EloHistoryModalProps {
@@ -95,10 +95,20 @@ export default function EloHistoryModal({ isOpen, onClose, xpHistory, totalXP }:
                       animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700/50"
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 ${
-                        entry.isBonus ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30'
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        entry.amount < 0 
+                          ? 'bg-red-100 text-red-600 dark:bg-red-900/30' 
+                          : entry.isBonus 
+                            ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30' 
+                            : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30'
                       }`}>
-                        {entry.icon}
+                        {entry.amount < 0 ? (
+                          <Trash2 size={18} />
+                        ) : entry.isBonus ? (
+                          <Trophy size={18} />
+                        ) : (
+                          <Sparkles size={18} />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
@@ -109,11 +119,13 @@ export default function EloHistoryModal({ isOpen, onClose, xpHistory, totalXP }:
                         </p>
                       </div>
                       <div className={`px-2.5 py-1 rounded-lg font-bold text-xs whitespace-nowrap ${
-                        entry.isBonus
-                          ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
-                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
+                        entry.amount < 0
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+                          : entry.isBonus
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
                       }`}>
-                        +{entry.amount} XP
+                        {entry.amount > 0 ? `+${entry.amount}` : entry.amount} XP
                       </div>
                     </motion.div>
                   ))}

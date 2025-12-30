@@ -1,5 +1,8 @@
-import { X, Clock, BookOpen, HelpCircle, TrendingUp, Quote } from 'lucide-react';
+import { X, Clock, BookOpen, HelpCircle, TrendingUp, Quote, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Button from './Button';
+
+const APP_URL = "https://getstudyflow.com.br";
 
 const getRandomPhrase = () => {
   const phrases = [
@@ -142,8 +145,35 @@ export default function ShareModal({
                 </p>
               </div>
               
-              <div className="text-center">
-                 <p className="text-[10px] text-gray-400 dark:text-gray-500">Tire um print e compartilhe sua jornada!</p>
+              <div className="text-center space-y-4">
+                <p className="text-[10px] text-gray-400 dark:text-gray-500">Tire um print ou compartilhe o link!</p>
+                
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    fullWidth
+                    className="text-xs"
+                    onClick={() => {
+                      const text = `Estudei ${hours > 0 ? `${hours}h` : ''}${minutes}m hoje no StudyFlow!\nVenha estudar comigo: ${APP_URL}`;
+                      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                    }}
+                  >
+                    WhatsApp
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    fullWidth
+                    className="text-xs"
+                    onClick={() => {
+                      const text = `Estudei ${hours > 0 ? `${hours}h` : ''}${minutes}m hoje no StudyFlow!\n#StudyFlow #Estudos #Concursos`;
+                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(APP_URL)}`, '_blank');
+                    }}
+                  >
+                    Twitter / X
+                  </Button>
+                </div>
               </div>
             </div>
           </motion.div>

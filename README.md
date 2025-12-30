@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.5.0-emerald" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.9.0-emerald" alt="Version" />
   <img src="https://img.shields.io/badge/license-Proprietário-red" alt="License" />
   <img src="https://img.shields.io/badge/status-beta-yellow" alt="Status" />
   <img src="https://img.shields.io/badge/projeto-portfólio-blueviolet" alt="Type" />
@@ -40,7 +40,7 @@ Diferente de outros apps do mercado, o StudyFlow oferece:
 
 Ideal para quem se prepara para concursos públicos, vestibulares, ENEM, OAB, ou qualquer prova que exija organização e disciplina.
 
-🔗 **Acesse o app:** [study-flow-six.vercel.app](https://study-flow-six.vercel.app/)
+🔗 **Acesse o app:** [getstudyflow.com.br](https://getstudyflow.com.br)
 
 ---
 
@@ -296,8 +296,8 @@ Entretanto, feedbacks e sugestões são bem-vindos! Se você encontrou um bug ou
 </p>
 
 <p align="center">
-  <a href="https://instagram.com/paiao.kayke">
-    <img src="https://img.shields.io/badge/-@paiao.kayke-E4405F?style=flat&logo=instagram&logoColor=white" alt="Instagram" />
+  <a href="https://instagram.com/oficial.studyflow">
+    <img src="https://img.shields.io/badge/-@oficial.studyflow-E4405F?style=flat&logo=instagram&logoColor=white" alt="Instagram" />
   </a>
   <a href="https://github.com/ormande">
     <img src="https://img.shields.io/badge/-GitHub-181717?style=flat&logo=github&logoColor=white" alt="GitHub" />

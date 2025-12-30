@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Zap, Crown, ArrowLeft, Star, Gift, CreditCard, Diamond, XCircle, AlertCircle, X } from 'lucide-react';
+import { Check, Zap, Crown, Star, Gift, CreditCard, Diamond, XCircle, AlertCircle, X } from 'lucide-react';
 import Button from '../components/Button';
 import CheckoutMensal from '../components/CheckoutMensal';
 import CheckoutVitalicio from '../components/CheckoutVitalicio';
+import FloatingBackButton from '../components/FloatingBackButton';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 
@@ -19,8 +20,6 @@ export default function PlanPage({
   onNavigateBack 
 }: PlanPageProps) {
   const { addToast } = useToast();
-  const [coupon, setCoupon] = useState('');
-  const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [showCheckoutMensal, setShowCheckoutMensal] = useState(false);
   const [showCheckoutVitalicio, setShowCheckoutVitalicio] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -77,18 +76,6 @@ export default function PlanPage({
     fetchPlanStatus();
   }, []);
 
-  const originalLifetimePrice = 97.00;
-  const discountedLifetimePrice = 72.75;
-  const currentLifetimePrice = isCouponApplied ? discountedLifetimePrice : originalLifetimePrice;
-
-  const handleApplyCoupon = () => {
-    if (coupon.toUpperCase() === 'LANCA25') {
-      setIsCouponApplied(true);
-    } else {
-      alert('Cupom inválido');
-    }
-  };
-
   const isSubscribed = planStatus.type !== 'none' && planStatus.status === 'active';
 
   const handleCancelSubscription = async () => {
@@ -127,19 +114,11 @@ export default function PlanPage({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-      {/* Header com botão voltar fixo no mobile */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={onNavigateBack}
-            className="md:hidden flex items-center gap-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors font-semibold"
-          >
-            <ArrowLeft size={20} />
-            Voltar
-          </button>
-          <div className="hidden md:block w-10 h-10" />
-        </div>
+      {/* Botão Voltar Flutuante */}
+      {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
 
+      {/* Header com botão voltar fixo no mobile */}
+      <div className="max-w-4xl mx-auto px-6 py-8 pt-12 md:pt-8">
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">
             Assinatura StudyFlow
@@ -334,11 +313,8 @@ export default function PlanPage({
             </div>
             <div className="mb-8">
               <span className="text-4xl font-black text-gray-900 dark:text-white">
-                R$ {currentLifetimePrice.toFixed(2).replace('.', ',')}
+                R$ 97,00
               </span>
-              {isCouponApplied && (
-                <span className="ml-2 text-lg text-gray-400 line-through">R$ 97,00</span>
-              )}
             </div>
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
@@ -354,23 +330,6 @@ export default function PlanPage({
                 Sem mensalidades
               </li>
             </ul>
-
-            {planStatus.type !== 'lifetime' && (
-              <div className="mb-6">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Cupom de desconto"
-                    value={coupon}
-                    onChange={(e) => setCoupon(e.target.value)}
-                    className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 text-sm outline-none focus:border-emerald-500 transition-all text-gray-900 dark:text-white"
-                  />
-                  <Button variant="secondary" size="sm" onClick={handleApplyCoupon}>
-                    Aplicar
-                  </Button>
-                </div>
-              </div>
-            )}
 
             <Button
               fullWidth

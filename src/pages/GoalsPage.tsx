@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Minus, Save, AlertTriangle, Clock, HelpCircle, Settings, Info, Target } from 'lucide-react';
+import { Plus, Minus, Save, AlertTriangle, Clock, HelpCircle, Settings, Info, Target } from 'lucide-react';
 import { useGoals, Goals } from '../hooks/useGoals';
 import { StudyLog } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import IOSSwitch from '../components/IOSSwitch';
 import Button from '../components/Button';
+import FloatingBackButton from '../components/FloatingBackButton';
 
 interface GoalsPageProps {
   logs: StudyLog[];
@@ -175,22 +176,16 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+      {/* Botão Voltar Flutuante */}
+      {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
+
       {/* Header */}
       <div className="mb-6">
-        <Button
-          onClick={onNavigateBack}
-          variant="ghost"
-          size="md"
-          leftIcon={<ArrowLeft size={20} />}
-          className="md:hidden mb-4"
-        >
-          Voltar
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2 pl-14 md:pl-0">
           <Target className="text-emerald-500" size={28} />
           Metas de Estudo
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">Configure suas metas diárias e semanais</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">Configure suas metas diárias e semanais</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -611,7 +606,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
             Configurações Avançadas
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Contar finais de semana */}
             <div className="flex flex-col gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
               <div className="flex items-center justify-between">
@@ -647,23 +642,6 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                 {localGoals.settings.strictMode 
                   ? 'Só verde com 100%+' 
                   : 'Sistema de níveis (50%/80%/100%)'}
-              </p>
-            </div>
-
-            {/* Notificações */}
-            <div className="flex flex-col gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                  Notificações diárias
-                </span>
-                <IOSSwitch
-                  checked={localGoals.settings.notifications}
-                  onChange={(checked) => updateLocalGoal('settings', { notifications: checked })}
-                  aria-label="Notificações de progresso diário"
-                />
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Notifica fim do dia com % atingido
               </p>
             </div>
           </div>

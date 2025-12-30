@@ -1,4 +1,4 @@
-import { X, Clock, BookOpen, HelpCircle, TrendingUp, Quote, Share2 } from 'lucide-react';
+import { X, Clock, BookOpen, HelpCircle, TrendingUp, Quote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
 

@@ -15,6 +15,7 @@ interface SignupPageProps {
 }
 
 export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onStartSignup }: SignupPageProps) {
+  const { addToast } = useToast();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [birthDate, setBirthDate] = useState(''); // Armazena no formato DD/MM/AAAA

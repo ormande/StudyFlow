@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Zap, Crown, MessageCircle, ArrowLeft, X } from 'lucide-react';
+import { Check, Zap, Crown, MessageCircle, ArrowLeft, X, CreditCard, ShieldCheck, QrCode } from 'lucide-react';
 import Button from '../components/Button';
 import { supabase } from '../lib/supabase';
 import CheckoutMensal from '../components/CheckoutMensal';
 import CheckoutVitalicio from '../components/CheckoutVitalicio';
+import PixPaymentModal from '../components/PixPaymentModal';
 import { useToast } from '../contexts/ToastContext';
 
 const CHECKOUT_INTENT_KEY = 'studyflow_checkout_intent';
@@ -13,10 +14,12 @@ interface PricingPageProps {
   onBack?: () => void;
   onNavigateToLogin?: () => void;
   onNavigateToSignup?: () => void;
+  onPaymentConfirmed?: () => void;
   fromExpiredTrial?: boolean;
+  expirationType?: 'trial' | 'monthly';
 }
 
-export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSignup, fromExpiredTrial }: PricingPageProps) {
+export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSignup, onPaymentConfirmed, fromExpiredTrial, expirationType }: PricingPageProps) {
   const { addToast } = useToast();
   const [coupon, setCoupon] = useState('');
   const [isCouponApplied, setIsCouponApplied] = useState(false);
@@ -24,15 +27,21 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCheckoutMensal, setShowCheckoutMensal] = useState(false);
   const [showCheckoutVitalicio, setShowCheckoutVitalicio] = useState(false);
+  const [showPixModal, setShowPixModal] = useState(false);
+  const [pixPlan, setPixPlan] = useState<'lifetime' | 'monthly'>('monthly');
   const toastShownRef = useRef(false);
 
-  // Mostrar toast de trial expirado se necessário
+  // Mostrar toast de expiração se necessário
   useEffect(() => {
     if (fromExpiredTrial && !toastShownRef.current) {
-      addToast('Seu período de teste expirou. Escolha um plano para continuar estudando.', 'warning');
+      if (expirationType === 'monthly') {
+        addToast('Sua assinatura expirou. Renove para continuar estudando.', 'warning');
+      } else {
+        addToast('Seu período de teste expirou. Escolha um plano para continuar estudando.', 'warning');
+      }
       toastShownRef.current = true;
     }
-  }, [fromExpiredTrial, addToast]);
+  }, [fromExpiredTrial, expirationType, addToast]);
 
   // Verificar sessão ao montar o componente
   useEffect(() => {
@@ -71,7 +80,10 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
       localStorage.removeItem(CHECKOUT_INTENT_KEY);
       
       // Abrir checkout correspondente
-      if (intent.plan === 'mensal') {
+      if (intent.method === 'pix') {
+        setPixPlan(intent.plan === 'mensal' ? 'monthly' : 'lifetime');
+        setShowPixModal(true);
+      } else if (intent.plan === 'mensal') {
         setShowCheckoutMensal(true);
       } else if (intent.plan === 'vitalicio') {
         setShowCheckoutVitalicio(true);
@@ -95,11 +107,12 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
     }
   };
 
-  const handlePlanClick = (plan: 'mensal' | 'vitalicio') => {
+  const handlePlanClick = (plan: 'mensal' | 'vitalicio', method: 'card' | 'pix' = 'card') => {
     if (!session) {
       // Salvar intenção de compra no localStorage
       localStorage.setItem(CHECKOUT_INTENT_KEY, JSON.stringify({
         plan,
+        method,
         timestamp: Date.now()
       }));
       setShowAuthModal(true);
@@ -107,6 +120,12 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
     }
     
     // Já logado, processa plano
+    if (method === 'pix') {
+      setPixPlan(plan === 'mensal' ? 'monthly' : 'lifetime');
+      setShowPixModal(true);
+      return;
+    }
+
     if (plan === 'mensal') {
       setShowCheckoutMensal(true);
     } else {
@@ -191,13 +210,30 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
                 Suporte prioritário
               </li>
             </ul>
-            <Button
-              fullWidth
-              size="lg"
-              onClick={() => handlePlanClick('mensal')}
-            >
-              Assinar Mensal
-            </Button>
+            <div className="space-y-3">
+              <Button
+                fullWidth
+                size="lg"
+                onClick={() => handlePlanClick('mensal', 'card')}
+                leftIcon={<CreditCard size={18} />}
+              >
+                Cartão ou Boleto
+              </Button>
+              <Button
+                fullWidth
+                size="lg"
+                variant="secondary"
+                onClick={() => handlePlanClick('mensal', 'pix')}
+                leftIcon={<QrCode size={18} />}
+                className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+              >
+                Pagar com PIX
+              </Button>
+              <div className="flex items-center justify-center gap-3 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 py-2 rounded-xl border border-gray-100 dark:border-gray-700">
+                <ShieldCheck size={14} className="text-emerald-500" />
+                <span>Pagamento 100% Seguro</span>
+              </div>
+            </div>
           </motion.div>
 
           {/* Plano Vitalício */}
@@ -255,14 +291,31 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
               </div>
             </div>
 
-            <Button
-              fullWidth
-              size="lg"
-              variant="primary"
-              onClick={() => handlePlanClick('vitalicio')}
-            >
-              Comprar Vitalício
-            </Button>
+            <div className="space-y-3">
+              <Button
+                fullWidth
+                size="lg"
+                variant="primary"
+                onClick={() => handlePlanClick('vitalicio', 'card')}
+                leftIcon={<CreditCard size={18} />}
+              >
+                Cartão ou Boleto
+              </Button>
+              <Button
+                fullWidth
+                size="lg"
+                variant="secondary"
+                onClick={() => handlePlanClick('vitalicio', 'pix')}
+                leftIcon={<QrCode size={18} />}
+                className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+              >
+                Pagar com PIX
+              </Button>
+              <div className="flex items-center justify-center gap-3 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/30 py-2 rounded-xl border border-gray-100 dark:border-gray-700">
+                <ShieldCheck size={14} className="text-emerald-500" />
+                <span>Pagamento Único e Seguro</span>
+              </div>
+            </div>
           </motion.div>
         </div>
 
@@ -316,7 +369,7 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
                 >
                   <X size={24} />
                 </button>
-
+1
                 {/* Conteúdo */}
                 <div className="text-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -365,15 +418,42 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
 
       {/* Checkout Bricks - Plano Mensal */}
       {showCheckoutMensal && (
-        <CheckoutMensal onClose={() => setShowCheckoutMensal(false)} />
+        <CheckoutMensal 
+          onClose={() => setShowCheckoutMensal(false)} 
+          onPaymentConfirmed={() => {
+            if (onPaymentConfirmed) onPaymentConfirmed();
+          }}
+        />
       )}
 
       {/* Checkout Bricks - Plano Vitalício */}
       {showCheckoutVitalicio && (
         <CheckoutVitalicio 
           onClose={() => setShowCheckoutVitalicio(false)} 
+          onPaymentConfirmed={() => {
+            if (onPaymentConfirmed) onPaymentConfirmed();
+          }}
         />
       )}
+
+      {/* Pagamento PIX */}
+      <PixPaymentModal
+        isOpen={showPixModal}
+        onClose={() => setShowPixModal(false)}
+        plan={pixPlan}
+        couponCode={isCouponApplied ? coupon : undefined}
+        onPaymentConfirmed={() => {
+          if (onPaymentConfirmed) {
+            onPaymentConfirmed();
+          } else {
+            // Fallback caso a prop não tenha sido passada
+            localStorage.removeItem('studyflow_current_page');
+            setTimeout(() => {
+              window.location.reload();
+            }, 500);
+          }
+        }}
+      />
     </div>
   );
 }

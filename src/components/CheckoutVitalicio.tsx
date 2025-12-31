@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { X, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { X, AlertTriangle, CheckCircle2, QrCode, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
+import PixPaymentModal from './PixPaymentModal';
 
 export default function CheckoutVitalicio({ 
-  onClose 
+  onClose,
+  onPaymentConfirmed
 }: { 
   onClose: () => void;
+  onPaymentConfirmed?: () => void;
 }) {
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [showPixModal, setShowPixModal] = useState(false);
   const [error, setError] = useState('');
   
   // Novos estados para cupom
@@ -159,7 +163,7 @@ export default function CheckoutVitalicio({
                 Acesso Vitalício
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6">
-                Você será redirecionado para o checkout seguro do Efi Bank onde poderá escolher entre Cartão ou Boleto.
+                Escolha sua forma de pagamento para ter acesso vitalício ao StudyFlow.
               </p>
 
               {/* Campo de cupom */}
@@ -212,13 +216,25 @@ export default function CheckoutVitalicio({
                 )}
               </div>
 
-              <button
-                onClick={redirectToCheckout}
-                disabled={loading}
-                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Preparando...' : 'Ir para Pagamento'}
-              </button>
+              <div className="w-full space-y-3">
+                <button
+                  onClick={redirectToCheckout}
+                  disabled={loading}
+                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <CreditCard size={20} />
+                  {loading ? 'Preparando...' : 'Cartão ou Boleto'}
+                </button>
+
+                <button
+                  onClick={() => setShowPixModal(true)}
+                  disabled={loading}
+                  className="w-full py-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800 rounded-2xl font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <QrCode size={20} />
+                  Pagar com PIX
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -231,6 +247,17 @@ export default function CheckoutVitalicio({
             </div>
           </div>
         )}
+
+        <PixPaymentModal
+          isOpen={showPixModal}
+          onClose={() => setShowPixModal(false)}
+          plan="lifetime"
+          couponCode={couponData?.valid ? couponCode : undefined}
+          onPaymentConfirmed={() => {
+            if (onPaymentConfirmed) onPaymentConfirmed();
+            onClose();
+          }}
+        />
       </div>
     </div>
   );

@@ -27,36 +27,8 @@ function App() {
   const [forceLanding, setForceLanding] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // Usar hook de aparência para gerenciar tema
-  const { settings } = useAppearance();
-  
-  // Calcular isDarkMode baseado no tema atual
-  const isDarkMode = settings.theme === 'dark' || 
-    (settings.theme === 'auto' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  
-  // Atualizar cor de fundo do body e meta theme-color baseado no tema
-  useEffect(() => {
-    let themeColor = '#f9fafb';
-    if (settings.theme === 'high-contrast') {
-      document.body.style.backgroundColor = '#000000';
-      themeColor = '#000000';
-    } else if (isDarkMode) {
-      document.body.style.backgroundColor = '#111827';
-      themeColor = '#111827';
-    } else {
-      document.body.style.backgroundColor = '#f9fafb';
-      themeColor = '#ffffff';
-    }
-
-    // Atualizar meta tag theme-color para iOS/Android status bar
-    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (!metaThemeColor) {
-      metaThemeColor = document.createElement('meta');
-      metaThemeColor.setAttribute('name', 'theme-color');
-      document.head.appendChild(metaThemeColor);
-    }
-    metaThemeColor.setAttribute('content', themeColor);
-  }, [settings.theme, isDarkMode]);
+  // Usar hook de aparência para gerenciar tema (aplicado automaticamente)
+  useAppearance();
 
   // Verificar se deve mostrar landing page mesmo com sessão
   const shouldShowLanding = () => {
@@ -246,6 +218,15 @@ function App() {
               onBack={() => setAuthView('landing')}
               onNavigateToLogin={() => setAuthView('login')}
               onNavigateToSignup={() => setAuthView('signup')}
+              onPaymentConfirmed={() => {
+                // Limpar página salva para garantir que vá para o Dashboard
+                localStorage.removeItem('studyflow_current_page');
+                // Ao confirmar pagamento na PricingPage (fluxo inicial), 
+                // recarregamos para que o App.tsx detecte a nova sessão/status
+                setTimeout(() => {
+                  window.location.reload();
+                }, 500);
+              }}
             />
           )}
           {authView === 'signup' && (

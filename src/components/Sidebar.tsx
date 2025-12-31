@@ -187,7 +187,7 @@ export default function Sidebar({
           <div>
             <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">StudyFlow</h1>
             <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              Versão 1.9.0
+              Versão 1.9.2
             </p>
           </div>
         </div>

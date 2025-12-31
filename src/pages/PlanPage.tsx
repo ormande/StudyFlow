@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Zap, Crown, Star, Gift, CreditCard, Diamond, XCircle, AlertCircle, X } from 'lucide-react';
+import { Check, Zap, Crown, Star, Gift, CreditCard, Diamond, XCircle, AlertCircle, X, QrCode } from 'lucide-react';
 import Button from '../components/Button';
 import CheckoutMensal from '../components/CheckoutMensal';
 import CheckoutVitalicio from '../components/CheckoutVitalicio';
+import PixPaymentModal from '../components/PixPaymentModal';
 import FloatingBackButton from '../components/FloatingBackButton';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
@@ -22,6 +23,8 @@ export default function PlanPage({
   const { addToast } = useToast();
   const [showCheckoutMensal, setShowCheckoutMensal] = useState(false);
   const [showCheckoutVitalicio, setShowCheckoutVitalicio] = useState(false);
+  const [showPixModal, setShowPixModal] = useState(false);
+  const [pixPlan, setPixPlan] = useState<'lifetime' | 'monthly'>('monthly');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
@@ -284,14 +287,32 @@ export default function PlanPage({
                 Suporte prioritário
               </li>
             </ul>
-            <Button
-              fullWidth
-              size="lg"
-              disabled={planStatus.type === 'monthly' || planStatus.type === 'lifetime'}
-              onClick={() => setShowCheckoutMensal(true)}
-            >
-              {planStatus.type === 'monthly' ? 'Plano Atual' : (planStatus.type === 'lifetime' ? 'Já Vitalício' : 'Assinar Mensal')}
-            </Button>
+            <div className="space-y-3">
+              <Button
+                fullWidth
+                size="lg"
+                disabled={planStatus.type === 'monthly' || planStatus.type === 'lifetime'}
+                onClick={() => setShowCheckoutMensal(true)}
+                leftIcon={<CreditCard size={18} />}
+              >
+                {planStatus.type === 'monthly' ? 'Plano Atual' : (planStatus.type === 'lifetime' ? 'Já Vitalício' : 'Cartão ou Boleto')}
+              </Button>
+              {planStatus.type !== 'monthly' && planStatus.type !== 'lifetime' && (
+                <Button
+                  fullWidth
+                  size="lg"
+                  variant="secondary"
+                  onClick={() => {
+                    setPixPlan('monthly');
+                    setShowPixModal(true);
+                  }}
+                  leftIcon={<QrCode size={18} />}
+                  className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                >
+                  Pagar com PIX
+                </Button>
+              )}
+            </div>
           </motion.div>
 
           {/* Plano Vitalício */}
@@ -331,15 +352,33 @@ export default function PlanPage({
               </li>
             </ul>
 
-            <Button
-              fullWidth
-              size="lg"
-              variant="primary"
-              disabled={planStatus.type === 'lifetime'}
-              onClick={() => setShowCheckoutVitalicio(true)}
-            >
-              {planStatus.type === 'lifetime' ? 'Plano Atual' : 'Comprar Vitalício'}
-            </Button>
+            <div className="space-y-3">
+              <Button
+                fullWidth
+                size="lg"
+                variant="primary"
+                disabled={planStatus.type === 'lifetime'}
+                onClick={() => setShowCheckoutVitalicio(true)}
+                leftIcon={<CreditCard size={18} />}
+              >
+                {planStatus.type === 'lifetime' ? 'Plano Atual' : 'Cartão ou Boleto'}
+              </Button>
+              {planStatus.type !== 'lifetime' && (
+                <Button
+                  fullWidth
+                  size="lg"
+                  variant="secondary"
+                  onClick={() => {
+                    setPixPlan('lifetime');
+                    setShowPixModal(true);
+                  }}
+                  leftIcon={<QrCode size={18} />}
+                  className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                >
+                  Pagar com PIX
+                </Button>
+              )}
+            </div>
           </motion.div>
         </div>
 
@@ -354,6 +393,17 @@ export default function PlanPage({
           onClose={() => setShowCheckoutVitalicio(false)} 
         />
       )}
+
+      {/* Pagamento PIX */}
+      <PixPaymentModal
+        isOpen={showPixModal}
+        onClose={() => setShowPixModal(false)}
+        plan={pixPlan}
+        onPaymentConfirmed={() => {
+          setPlanStatus(prev => ({ ...prev, status: 'active', type: pixPlan }));
+          addToast('Pagamento confirmado! Seu plano foi ativado.', 'success');
+        }}
+      />
 
       {/* Cancel Subscription Modal */}
       <AnimatePresence>

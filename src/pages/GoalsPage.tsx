@@ -203,7 +203,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                 Meta Diária (Sugerida)
               </label>
               <div className="flex items-center gap-3">
-                <Button
+                <button
                   onClick={() => {
                     if (isDailyEditing) {
                       setIsDailyEditing(false);
@@ -211,13 +211,11 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     }
                     adjustValue('dailyTimeGoal', -1);
                   }}
-                  variant="secondary"
-                  size="sm"
-                  className="w-12 h-12 md:w-14 md:h-14 p-0"
+                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
                   aria-label="Decrementar 30 minutos"
                 >
                   <Minus size={20} className="text-gray-700 dark:text-gray-300" />
-                </Button>
+                </button>
                 <div className="flex-1">
                   {!isDailyEditing ? (
                     <button
@@ -272,7 +270,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">horas/dia</p>
                   )}
                 </div>
-                <Button
+                <button
                   onClick={() => {
                     if (isDailyEditing) {
                       setIsDailyEditing(false);
@@ -280,13 +278,11 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     }
                     adjustValue('dailyTimeGoal', 1);
                   }}
-                  variant="secondary"
-                  size="sm"
-                  className="w-12 h-12 md:w-14 md:h-14 p-0"
+                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
                   aria-label="Incrementar 30 minutos"
                 >
                   <Plus size={20} className="text-gray-700 dark:text-gray-300" />
-                </Button>
+                </button>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Ajuda na consistência, mas é flexível</p>
               {validationErrors.dailyTime && (
@@ -323,7 +319,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     }
                     adjustValue('weeklyTimeGoal', -1);
                   }}
-                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
                   aria-label="Decrementar 1 hora"
                 >
                   <Minus size={20} className="text-gray-700 dark:text-gray-300" />
@@ -390,7 +386,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     }
                     adjustValue('weeklyTimeGoal', 1);
                   }}
-                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
                   aria-label="Incrementar 1 hora"
                 >
                   <Plus size={20} className="text-gray-700 dark:text-gray-300" />
@@ -427,7 +423,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                 Meta Diária (Sugerida)
               </label>
               <div className="flex items-center gap-3">
-                <Button
+                <button
                   onClick={() => {
                     if (isDailyQuestionsEditing) {
                       setIsDailyQuestionsEditing(false);
@@ -435,13 +431,11 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     }
                     adjustValue('dailyQuestionsGoal', -1);
                   }}
-                  variant="secondary"
-                  size="sm"
-                  className="w-12 h-12 md:w-14 md:h-14 p-0"
+                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
                   aria-label="Decrementar 5 questões"
                 >
                   <Minus size={20} className="text-gray-700 dark:text-gray-300" />
-                </Button>
+                </button>
                 <div className="flex-1">
                   {!isDailyQuestionsEditing ? (
                     <button
@@ -489,7 +483,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">questões/dia</p>
                   )}
                 </div>
-                <Button
+                <button
                   onClick={() => {
                     if (isDailyQuestionsEditing) {
                       setIsDailyQuestionsEditing(false);
@@ -497,13 +491,11 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     }
                     adjustValue('dailyQuestionsGoal', 1);
                   }}
-                  variant="secondary"
-                  size="sm"
-                  className="w-12 h-12 md:w-14 md:h-14 p-0"
+                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
                   aria-label="Incrementar 5 questões"
                 >
                   <Plus size={20} className="text-gray-700 dark:text-gray-300" />
-                </Button>
+                </button>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Quantidade sugerida por dia</p>
               {validationErrors.dailyQuestions && (
@@ -528,7 +520,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     }
                     adjustValue('weeklyQuestionsGoal', -1);
                   }}
-                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
                   aria-label="Decrementar 10 questões"
                 >
                   <Minus size={20} className="text-gray-700 dark:text-gray-300" />
@@ -588,7 +580,7 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
                     }
                     adjustValue('weeklyQuestionsGoal', 1);
                   }}
-                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
                   aria-label="Incrementar 10 questões"
                 >
                   <Plus size={20} className="text-gray-700 dark:text-gray-300" />

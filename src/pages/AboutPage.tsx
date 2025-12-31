@@ -42,7 +42,7 @@ export default function AboutPage({ onNavigateBack }: AboutPageProps) {
                 StudyFlow
               </h1>
               <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold rounded-lg">
-                v1.9.0
+                v1.9.2
               </span>
             </div>
             <p className="text-gray-600 dark:text-gray-400">

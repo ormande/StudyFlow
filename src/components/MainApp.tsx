@@ -52,7 +52,7 @@ export default function MainApp({
   // DATA HOOK
   const {
     subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, loadingData,
-    subscriptionStatus, trialEndsAt, subscriptionType: subType, welcomeSeen,
+    subscriptionStatus, trialEndsAt, nextBillingDate, subscriptionType: subType, welcomeSeen,
     hasMoreLogs, loadingMoreLogs, loadMoreLogs, searchLogs, searchTerm,
     daysFilter, applyDaysFilter,
     addSubject, deleteSubject, updateSubject, reorderSubjects,
@@ -184,9 +184,8 @@ export default function MainApp({
             // Enviar notificação quando timer acaba
             // (só chega aqui se estava rodando, pois o intervalo só existe quando isTimerRunning é true)
             const modeLabel = timerMode === 'pomodoro' ? 'Pomodoro' : 'Ciclo';
-            sendNotification(`${modeLabel} Finalizado!`, {
-              body: 'Hora de descansar (ou voltar a estudar). Bom trabalho!',
-              icon: '/icon-192.png'
+            sendNotification('StudyFlow', {
+              body: `${modeLabel} finalizado! Hora de descansar. Bom trabalho! 🎉`
             });
             return;
           }
@@ -413,12 +412,40 @@ export default function MainApp({
       endDate.setHours(0, 0, 0, 0);
       return endDate < today;
     })();
+
+    // Verificar expiração do mensal
+    const isMonthlyExpired = subscriptionStatus === 'active' && 
+      subType === 'monthly' && 
+      nextBillingDate && (() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const billingDate = new Date(nextBillingDate);
+        billingDate.setHours(0, 0, 0, 0);
+        return billingDate < today;
+      })();
+
     const isSubscriptionCancelled = subscriptionStatus === 'cancelled';
     const hasNoSubscription = !subscriptionStatus;
 
     // Redirecionar para pricing apenas se não tiver assinatura ativa/trial válido
-    if (hasNoSubscription || isTrialExpired || isSubscriptionCancelled) {
-      return <PricingPage fromExpiredTrial={!!isTrialExpired} onBack={onHardReset} onNavigateToLogin={() => {}} onNavigateToSignup={() => {}} />;
+    if (hasNoSubscription || isTrialExpired || isMonthlyExpired || isSubscriptionCancelled) {
+      return (
+        <PricingPage 
+          fromExpiredTrial={!!(isTrialExpired || isMonthlyExpired)} 
+          expirationType={isMonthlyExpired ? 'monthly' : 'trial'}
+          onBack={onHardReset} 
+          onNavigateToLogin={() => {}} 
+          onNavigateToSignup={() => {}} 
+          onPaymentConfirmed={() => {
+            // Limpar página salva para garantir que vá para o Dashboard
+            localStorage.removeItem('studyflow_current_page');
+            // Pequeno delay para garantir que o banco de dados sincronizou
+            setTimeout(() => {
+              window.location.reload();
+            }, 500);
+          }}
+        />
+      );
     }
   }
 

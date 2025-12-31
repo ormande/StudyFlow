@@ -93,7 +93,6 @@ export function useNotification() {
             const registration = await navigator.serviceWorker.ready;
             await registration.showNotification(title, {
               icon: '/icon-192.png',
-              badge: '/icon-192.png',
               ...options
             });
             return;
@@ -107,7 +106,6 @@ export function useNotification() {
       // Fallback: usar Notification API diretamente
       new Notification(title, {
         icon: '/icon-192.png',
-        badge: '/icon-192.png',
         ...options
       });
     } catch (e) {

@@ -19,6 +19,43 @@ const STORAGE_KEYS = {
 };
 
 /**
+ * Atualiza as meta tags para status bar (iOS e Android)
+ */
+const updateStatusBarMetas = (isDark: boolean, isHighContrast: boolean) => {
+  let themeColor = '#ffffff'; // Light mode default
+  let statusBarStyle = 'default'; // iOS status bar style
+  
+  if (isHighContrast) {
+    themeColor = '#000000';
+    statusBarStyle = 'black';
+  } else if (isDark) {
+    themeColor = '#111827'; // dark:bg-gray-900
+    statusBarStyle = 'black-translucent';
+  } else {
+    themeColor = '#ffffff'; // light mode
+    statusBarStyle = 'default';
+  }
+  
+  // Atualizar theme-color (Android e iOS)
+  let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (!metaThemeColor) {
+    metaThemeColor = document.createElement('meta');
+    metaThemeColor.setAttribute('name', 'theme-color');
+    document.head.appendChild(metaThemeColor);
+  }
+  metaThemeColor.setAttribute('content', themeColor);
+  
+  // Atualizar apple-mobile-web-app-status-bar-style (iOS)
+  let metaStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if (!metaStatusBar) {
+    metaStatusBar = document.createElement('meta');
+    metaStatusBar.setAttribute('name', 'apple-mobile-web-app-status-bar-style');
+    document.head.appendChild(metaStatusBar);
+  }
+  metaStatusBar.setAttribute('content', statusBarStyle);
+};
+
+/**
  * Aplica o tema ao documento HTML
  */
 const applyTheme = (theme: Theme) => {
@@ -27,13 +64,20 @@ const applyTheme = (theme: Theme) => {
   // Remover classes antigas
   html.classList.remove('light', 'dark', 'high-contrast');
   
+  let isDark = false;
+  const isHighContrast = theme === 'high-contrast';
+  
   if (theme === 'auto') {
     // Verificar preferência do sistema
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     html.classList.add(isDark ? 'dark' : 'light');
   } else {
     html.classList.add(theme);
+    isDark = theme === 'dark' || theme === 'high-contrast';
   }
+  
+  // Atualizar meta tags da status bar
+  updateStatusBarMetas(isDark, isHighContrast);
 };
 
 /**
@@ -89,6 +133,9 @@ export function useAppearance() {
         const html = document.documentElement;
         html.classList.remove('light', 'dark');
         html.classList.add(e.matches ? 'dark' : 'light');
+        
+        // Atualizar meta tags quando o tema do sistema mudar
+        updateStatusBarMetas(e.matches, false);
       };
       
       mediaQuery.addEventListener('change', handleChange);

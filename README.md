@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.0-emerald" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.9.2-emerald" alt="Version" />
   <img src="https://img.shields.io/badge/license-Proprietário-red" alt="License" />
   <img src="https://img.shields.io/badge/status-beta-yellow" alt="Status" />
   <img src="https://img.shields.io/badge/projeto-portfólio-blueviolet" alt="Type" />

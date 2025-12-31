@@ -25,6 +25,7 @@ export function useSupabaseData(session: any) {
   const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'lifetime' | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'active' | 'cancelled' | 'trial' | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [hasMoreLogs, setHasMoreLogs] = useState<boolean>(true);
   const [loadingMoreLogs, setLoadingMoreLogs] = useState<boolean>(false);
@@ -135,25 +136,39 @@ export function useSupabaseData(session: any) {
         setSubscriptionType(settingsData.subscription_type || null);
         setSubscriptionStatus(settingsData.subscription_status || null);
         setTrialEndsAt(settingsData.trial_ends_at || null);
+        setNextBillingDate(settingsData.next_billing_date || null);
 
-        // ✅ CORREÇÃO PARA USUÁRIOS ANTIGOS: Se não tem status, inicia trial de 7 dias
+        // ✅ CORREÇÃO: Inicia trial apenas se o usuário nunca teve um (trial_ends_at é null)
         if (!settingsData.subscription_status || settingsData.subscription_status === 'none') {
-          const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-          
-          // Atualiza no banco silenciosamente
-          supabase
-            .from('user_settings')
-            .update({
-              subscription_status: 'trial',
-              trial_ends_at: trialEndDate
-            })
-            .eq('user_id', session.user.id)
-            .then(({ error }) => {
-              if (!error) {
-                setSubscriptionStatus('trial');
-                setTrialEndsAt(trialEndDate);
-              }
-            });
+          if (!settingsData.trial_ends_at) {
+            // Primeiro acesso: concede 7 dias
+            const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+            
+            supabase
+              .from('user_settings')
+              .update({
+                subscription_status: 'trial',
+                trial_ends_at: trialEndDate
+              })
+              .eq('user_id', session.user.id)
+              .then(({ error }) => {
+                if (!error) {
+                  setSubscriptionStatus('trial');
+                  setTrialEndsAt(trialEndDate);
+                }
+              });
+          } else {
+            // Já teve trial antes: restaura o status sem renovar a data
+            supabase
+              .from('user_settings')
+              .update({ subscription_status: 'trial' })
+              .eq('user_id', session.user.id)
+              .then(({ error }) => {
+                if (!error) {
+                  setSubscriptionStatus('trial');
+                }
+              });
+          }
         }
       } else {
         // Se não existir, cria agora usando upsert para evitar erro 409
@@ -718,7 +733,7 @@ export function useSupabaseData(session: any) {
 
   return {
     subjects, logs, stats, allLogDates, cycleStartDate, dailyGoal, showPerformance, welcomeSeen,
-    subscriptionType, subscriptionStatus, trialEndsAt, loadingData,
+    subscriptionType, subscriptionStatus, trialEndsAt, nextBillingDate, loadingData,
     hasMoreLogs, loadingMoreLogs, loadMoreLogs, searchLogs, searchTerm,
     daysFilter, applyDaysFilter,
     addSubject, deleteSubject, updateSubject, reorderSubjects,

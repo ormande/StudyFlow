@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, QrCode, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import PixPaymentModal from './PixPaymentModal';
 
 interface CheckoutMensalProps {
   onClose: () => void;
+  onPaymentConfirmed?: () => void;
 }
 
-export default function CheckoutMensal({ onClose }: CheckoutMensalProps) {
+export default function CheckoutMensal({ onClose, onPaymentConfirmed }: CheckoutMensalProps) {
   const [loading, setLoading] = useState(false);
+  const [showPixModal, setShowPixModal] = useState(false);
 
   const onSubmit = async () => {
     setLoading(true);
@@ -69,15 +72,28 @@ export default function CheckoutMensal({ onClose }: CheckoutMensalProps) {
             Finalizar Assinatura
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Você será redirecionado para o checkout seguro do Efi Bank onde poderá escolher entre Cartão ou Boleto.
+            Escolha sua forma de pagamento preferida para ativar sua assinatura.
           </p>
-          <button
-            onClick={onSubmit}
-            disabled={loading}
-            className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Preparando...' : 'Ir para Pagamento'}
-          </button>
+          
+          <div className="w-full space-y-3">
+            <button
+              onClick={onSubmit}
+              disabled={loading}
+              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-500/25 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <CreditCard size={20} />
+              {loading ? 'Preparando...' : 'Cartão ou Boleto'}
+            </button>
+
+            <button
+              onClick={() => setShowPixModal(true)}
+              disabled={loading}
+              className="w-full py-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800 rounded-2xl font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <QrCode size={20} />
+              Pagar com PIX
+            </button>
+          </div>
         </div>
 
         {loading && (
@@ -88,6 +104,16 @@ export default function CheckoutMensal({ onClose }: CheckoutMensalProps) {
             </div>
           </div>
         )}
+
+        <PixPaymentModal
+          isOpen={showPixModal}
+          onClose={() => setShowPixModal(false)}
+          plan="monthly"
+          onPaymentConfirmed={() => {
+            if (onPaymentConfirmed) onPaymentConfirmed();
+            onClose();
+          }}
+        />
       </div>
     </div>
   );

@@ -5,7 +5,32 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.1] - 2025-12-29 (Edição "Go-Live Ready") - Atual
+## [1.9.2] - 2025-12-31 - Atual
+
+### Corrigido
+- **Status Bar iOS**: Cor da barra de status agora acompanha o tema do app (claro/escuro)
+  - Adicionadas meta tags específicas para iOS (`apple-mobile-web-app-status-bar-style`)
+  - Lógica centralizada no hook `useAppearance` para atualização dinâmica
+  - Cores corretas: branco (light), cinza escuro (dark), preto (high-contrast)
+- **GoalsPage**: Alinhamento e estilo consistente dos botões + e - nos campos de meta
+  - Todos os botões agora usam o mesmo estilo (sem bordas quadradas)
+  - Alinhamento vertical perfeito com campos de valor
+  - Layout responsivo mantido em todos os tamanhos de tela
+- **Notificações**: Removido texto redundante "from StudyFlow" nas notificações push
+  - Removido campo `badge` que causava linha extra
+  - Títulos simplificados e concisos
+  - Corpo das notificações mais informativo
+- **HistoryPage Mobile**: Layout de edição condensado para melhor experiência mobile
+  - Campos em grid compacto (3 colunas no mobile)
+  - Fontes e espaçamentos reduzidos (text-xs/text-sm)
+  - Redução de ~60% no espaço vertical ocupado
+- **StatsPage e HistoryPage - Filtros Dark Mode**: Corrigida cor da fonte nos dropdowns de filtro
+  - Selects agora usam `text-gray-900 dark:text-white`
+  - Ícones com contraste adequado em ambos os temas
+- **Date Inputs**: Campos de data agora respeitam os limites do container no mobile
+- **App.tsx**: Removida variável não utilizada do hook useAppearance (correção de lint)
+
+## [1.9.1] - 2025-12-29 (Edição "Go-Live Ready")
 
 Esta versão finaliza os preparativos para o lançamento comercial em 1º de Janeiro de 2025. Foco em estabilidade, infraestrutura de emails profissionais, correções críticas de UX e configuração do domínio oficial.
 
@@ -211,6 +236,7 @@ Esta versão consolida a Gamificação, introduz a gestão completa de Perfil e 
 - Suporte a PWA (Instalação em Mobile).
 - Tema Claro/Escuro.
 
+[1.9.2]: https://github.com/ormande/study-flow/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/ormande/study-flow/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/ormande/study-flow/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/ormande/study-flow/compare/v1.7.0...v1.8.0

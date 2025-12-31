@@ -544,11 +544,11 @@ export default function StatsPage({
         {/* Filtros - Mobile */}
         <div className="md:hidden space-y-3 mb-6">
           <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-gray-500" />
+            <Calendar size={16} className="text-gray-500 dark:text-gray-400" />
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value as PeriodOption)}
-              className="flex-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm"
+              className="flex-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white"
             >
               {Object.entries(periodLabels).map(([key, label]) => (
                 <option key={key} value={key}>{label}</option>
@@ -566,11 +566,11 @@ export default function StatsPage({
             />
           </div>
           <div className="flex items-center gap-2">
-            <BookOpen size={16} className="text-gray-500" />
+            <BookOpen size={16} className="text-gray-500 dark:text-gray-400" />
             <select
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
-              className="flex-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm"
+              className="flex-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white"
             >
               <option value="all">Todas as matérias</option>
               {subjects.map(subject => (

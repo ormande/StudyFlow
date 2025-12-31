@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Timer, AlertCircle, QrCode, ArrowRight } from 'lucide-react';
+import { X, Copy, Check, Timer, AlertCircle, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
 

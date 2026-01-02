@@ -171,19 +171,19 @@ export default function CheckoutVitalicio({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-left">
                   Cupom de desconto
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full">
                   <input
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                     placeholder="Digite o cupom"
                     disabled={couponLoading || couponData?.valid}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 outline-none transition-all"
+                    className="flex-1 min-w-0 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 outline-none transition-all"
                   />
                   {couponData?.valid ? (
                     <button
                       onClick={removeCoupon}
-                      className="px-4 py-2 text-sm text-red-500 hover:text-red-600 font-semibold transition-colors"
+                      className="flex-shrink-0 whitespace-nowrap px-3 py-2 text-sm text-red-500 hover:text-red-600 font-semibold transition-colors"
                     >
                       Remover
                     </button>
@@ -191,7 +191,7 @@ export default function CheckoutVitalicio({
                     <button
                       onClick={validateCoupon}
                       disabled={couponLoading || !couponCode.trim()}
-                      className="px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                      className="flex-shrink-0 whitespace-nowrap px-3 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-xl font-semibold transition-colors disabled:opacity-50 text-sm"
                     >
                       {couponLoading ? '...' : 'Aplicar'}
                     </button>

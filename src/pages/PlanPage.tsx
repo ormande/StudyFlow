@@ -27,6 +27,8 @@ export default function PlanPage({
   const [pixPlan, setPixPlan] = useState<'lifetime' | 'monthly'>('monthly');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [coupon, setCoupon] = useState('');
+  const [isCouponApplied, setIsCouponApplied] = useState(false);
 
   const [planStatus, setPlanStatus] = useState<{
     type: 'trial' | 'monthly' | 'lifetime' | 'none';
@@ -54,7 +56,6 @@ export default function PlanPage({
         return;
       }
 
-      // PRIORIDADE: subscription_status (não type!)
       if (data.subscription_status === 'trial') {
         setPlanStatus({
           type: 'trial',
@@ -62,7 +63,6 @@ export default function PlanPage({
           trialEndsAt: data.trial_ends_at,
         });
       } else if (data.subscription_status === 'active') {
-        // Verificar se é mensal ou vitalício pelo tipo
         setPlanStatus({
           type: data.subscription_type === 'lifetime' ? 'lifetime' : 'monthly',
           status: 'active',
@@ -99,9 +99,17 @@ export default function PlanPage({
     }
   };
 
+  const handleApplyCoupon = () => {
+    if (coupon.toUpperCase() === 'LANCA25') {
+      setIsCouponApplied(true);
+      addToast('Cupom LANCA25 aplicado! 25% de desconto', 'success');
+    } else {
+      addToast('Cupom inválido ou expirado', 'error');
+    }
+  };
+
   const daysLeft = useMemo(() => {
     if (planStatus.type === 'trial' && planStatus.trialEndsAt) {
-      // Comparar apenas datas (sem horário) para contagem intuitiva
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -117,10 +125,8 @@ export default function PlanPage({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-      {/* Botão Voltar Flutuante */}
       {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
 
-      {/* Header com botão voltar fixo no mobile */}
       <div className="max-w-4xl mx-auto px-6 py-8 pt-12 md:pt-8">
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">
@@ -334,8 +340,11 @@ export default function PlanPage({
             </div>
             <div className="mb-8">
               <span className="text-4xl font-black text-gray-900 dark:text-white">
-                R$ 97,00
+                R$ {isCouponApplied ? '72,75' : '97,00'}
               </span>
+              {isCouponApplied && (
+                <span className="ml-2 text-lg text-gray-400 line-through">R$ 97,00</span>
+              )}
             </div>
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
@@ -351,6 +360,30 @@ export default function PlanPage({
                 Sem mensalidades
               </li>
             </ul>
+
+            {/* Campo de cupom */}
+            {planStatus.type !== 'lifetime' && (
+              <div className="mb-6">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Cupom de desconto"
+                    value={coupon}
+                    onChange={(e) => setCoupon(e.target.value)}
+                    className="flex-1 min-w-0 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 text-sm outline-none focus:border-emerald-500 transition-all text-gray-900 dark:text-white"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    className="flex-shrink-0 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Aplicar
+                  </button>
+                </div>
+                {isCouponApplied && (
+                  <p className="text-xs text-emerald-600 mt-2">✓ Cupom LANCA25 aplicado! 25% off</p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-3">
               <Button
@@ -381,7 +414,6 @@ export default function PlanPage({
             </div>
           </motion.div>
         </div>
-
       </div>
 
       {/* Checkout Modals */}
@@ -389,9 +421,7 @@ export default function PlanPage({
         <CheckoutMensal onClose={() => setShowCheckoutMensal(false)} />
       )}
       {showCheckoutVitalicio && (
-        <CheckoutVitalicio 
-          onClose={() => setShowCheckoutVitalicio(false)} 
-        />
+        <CheckoutVitalicio onClose={() => setShowCheckoutVitalicio(false)} />
       )}
 
       {/* Pagamento PIX */}
@@ -399,6 +429,7 @@ export default function PlanPage({
         isOpen={showPixModal}
         onClose={() => setShowPixModal(false)}
         plan={pixPlan}
+        couponCode={isCouponApplied ? coupon : undefined}
         onPaymentConfirmed={() => {
           setPlanStatus(prev => ({ ...prev, status: 'active', type: pixPlan }));
           addToast('Pagamento confirmado! Seu plano foi ativado.', 'success');
@@ -470,4 +501,3 @@ export default function PlanPage({
     </div>
   );
 }
-

@@ -5,7 +5,19 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.2] - 2025-12-31 - Atual
+## [1.9.3] - 2026-01-02 - Atual
+
+### Corrigido
+- **Safe Area iOS**: Fundo da status bar agora acompanha a cor do app (light/dark)
+- **Notificações**: Removido texto "from StudyFlow" redundante
+- **Modais**: Overlay agora cobre toda a tela incluindo safe areas
+- **SharingModal**: Botão com cor correta no dark mode
+- **RegisterPage**: Botões de data e tipo de estudo com contorno visível no dark mode
+- **HistoryPage Mobile**: Layout de edição condensado (campos na mesma linha)
+- **ProfilePage**: Seção de assinatura redesenhada (mobile e desktop)
+- **ProfilePage**: Botão "Gerenciar Assinatura" com cor mais visível
+
+## [1.9.2] - 2025-12-31
 
 ### Corrigido
 - **Status Bar iOS**: Cor da barra de status agora acompanha o tema do app (claro/escuro)

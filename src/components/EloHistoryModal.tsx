@@ -44,7 +44,7 @@ export default function EloHistoryModal({ isOpen, onClose, xpHistory, totalXP }:
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 w-full h-full bg-gray-900/50 dark:bg-black/60 backdrop-blur-sm"
             style={{ width: '100vw', height: '100vh', left: 0, top: 0, right: 0, bottom: 0 }}
           />
 

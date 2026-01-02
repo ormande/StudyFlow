@@ -322,15 +322,14 @@ export default function DashboardPage({
             <div className="grid grid-cols-2 gap-6">
               {/* Card Hoje */}
               <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
-                <Button
+                <button
                   onClick={() => setShowShareModal(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 h-auto min-w-0"
+                  className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all active:scale-95 h-auto min-w-0"
                   title="Compartilhar Progresso do Dia"
+                  aria-label="Compartilhar Progresso do Dia"
                 >
                   <Share2 size={18} />
-                </Button>
+                </button>
                 <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-1 opacity-90">
@@ -797,15 +796,14 @@ export default function DashboardPage({
             <div className="grid grid-cols-4 gap-4">
               {/* Card Hoje */}
               <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
-                <Button
+                <button
                   onClick={() => setShowShareModal(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 h-auto min-w-0"
+                  className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all active:scale-95 h-auto min-w-0"
                   title="Compartilhar Progresso do Dia"
+                  aria-label="Compartilhar Progresso do Dia"
                 >
                   <Share2 size={18} />
-                </Button>
+                </button>
                 <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
                 <div className="relative z-10 flex flex-col justify-between h-full min-h-[100px]">
                   <div className="flex items-center gap-2 mb-2 opacity-90">

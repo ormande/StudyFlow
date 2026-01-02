@@ -184,8 +184,8 @@ export default function MainApp({
             // Enviar notificação quando timer acaba
             // (só chega aqui se estava rodando, pois o intervalo só existe quando isTimerRunning é true)
             const modeLabel = timerMode === 'pomodoro' ? 'Pomodoro' : 'Ciclo';
-            sendNotification('StudyFlow', {
-              body: `${modeLabel} finalizado! Hora de descansar. Bom trabalho! 🎉`
+            sendNotification(`${modeLabel} Finalizado ⏰`, {
+              body: `Seu ${modeLabel.toLowerCase()} chegou ao fim. Bom trabalho! 🎉`
             });
             return;
           }

@@ -22,7 +22,7 @@ const STORAGE_KEYS = {
  * Atualiza as meta tags para status bar (iOS e Android)
  */
 const updateStatusBarMetas = (isDark: boolean, isHighContrast: boolean) => {
-  let themeColor = '#ffffff'; // Light mode default
+  let themeColor = '#f9fafb'; // Light mode (gray-50)
   let statusBarStyle = 'default'; // iOS status bar style
   
   if (isHighContrast) {
@@ -32,7 +32,7 @@ const updateStatusBarMetas = (isDark: boolean, isHighContrast: boolean) => {
     themeColor = '#111827'; // dark:bg-gray-900
     statusBarStyle = 'black-translucent';
   } else {
-    themeColor = '#ffffff'; // light mode
+    themeColor = '#f9fafb'; // light mode (gray-50)
     statusBarStyle = 'default';
   }
   

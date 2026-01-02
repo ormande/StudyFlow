@@ -50,7 +50,7 @@ export default function ShareModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+          className="fixed inset-0 w-full h-full bg-gray-900/50 dark:bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
           onClick={onClose}
         >
           <motion.div
@@ -72,7 +72,7 @@ export default function ShareModal({
             </button>
 
             {/* Header Sólido */}
-            <div className="bg-emerald-600 dark:bg-emerald-700 px-6 py-6 text-center relative">
+            <div className="bg-emerald-600 px-6 py-6 text-center relative">
               <h2 className="text-xl font-bold text-white mb-1">Resumo do Dia</h2>
               <p className="text-emerald-100 text-xs uppercase tracking-wide font-medium">Foco na missão</p>
             </div>

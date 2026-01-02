@@ -126,8 +126,8 @@ export default function SettingsPage({
     }
 
     try {
-      await sendNotification('StudyFlow', {
-        body: 'As notificações estão funcionando! ✅',
+      await sendNotification('StudyFlow Funcionando! ✅', {
+        body: 'As notificações do sistema estão configuradas corretamente.',
         tag: 'test-notification',
         requireInteraction: false
       });

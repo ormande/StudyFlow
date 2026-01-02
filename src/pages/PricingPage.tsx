@@ -350,7 +350,7 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAuthModal(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              className="fixed inset-0 w-full h-full bg-gray-900/50 dark:bg-black/60 backdrop-blur-sm z-50"
             />
             
             {/* Modal */}

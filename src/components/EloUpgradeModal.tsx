@@ -53,7 +53,7 @@ export default function EloUpgradeModal({ isOpen, onClose, oldElo, newElo, total
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 w-full h-full bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-[100]"
           />
 
           {/* Modal Principal */}

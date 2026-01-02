@@ -394,15 +394,15 @@ export default function HistoryPage({
                               <td colSpan={6} className="px-2 md:px-4 py-3 md:py-4">
                                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 md:p-4 border border-gray-200 dark:border-gray-600">
                                   <div className="space-y-3 md:space-y-4">
-                                    {/* Layout Mobile Compacto / Desktop Grid */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                                    {/* Layout Mobile e Desktop - 3 colunas */}
+                                    <div className="grid grid-cols-3 gap-2 md:gap-4">
                                       
                                       {/* Tempo */}
                                       <div>
-                                        <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 md:mb-2">
+                                        <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
                                           Tempo <span className="text-red-500">*</span>
                                         </label>
-                                        <div className="flex gap-1.5 md:gap-2">
+                                        <div className="flex gap-1 md:gap-2">
                                           <div className="flex-1">
                                             <input
                                               type="number"
@@ -412,10 +412,10 @@ export default function HistoryPage({
                                               max="23"
                                               value={editForm.hours || 0}
                                               onChange={(e) => setEditForm({ ...editForm, hours: sanitizeNumericInput(e.target.value, 23, 0) })}
-                                              className="w-full px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
-                                            <span className="text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">h</span>
+                                            <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">h</span>
                                           </div>
                                           
                                           <div className="flex-1">
@@ -427,35 +427,20 @@ export default function HistoryPage({
                                               max="59"
                                               value={editForm.minutes || 0}
                                               onChange={(e) => setEditForm({ ...editForm, minutes: sanitizeNumericInput(e.target.value, 59, 0) })}
-                                              className="w-full px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
-                                            <span className="text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">min</span>
-                                          </div>
-                                          
-                                          <div className="flex-1">
-                                            <input
-                                              type="number"
-                                              inputMode="numeric"
-                                              pattern="[0-9]*"
-                                              min="0"
-                                              max="59"
-                                              value={editForm.seconds || 0}
-                                              onChange={(e) => setEditForm({ ...editForm, seconds: sanitizeNumericInput(e.target.value, 59, 0) })}
-                                              className="w-full px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
-                                              placeholder="0"
-                                            />
-                                            <span className="text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">seg</span>
+                                            <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">m</span>
                                           </div>
                                         </div>
                                       </div>
                                       
                                       {/* Questões */}
                                       <div>
-                                        <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 md:mb-2">
+                                        <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
                                           Questões
                                         </label>
-                                        <div className="flex gap-1.5 md:gap-2">
+                                        <div className="flex gap-1 md:gap-2">
                                           <div className="flex-1">
                                             <input
                                               type="number"
@@ -464,11 +449,11 @@ export default function HistoryPage({
                                               min="0"
                                               value={editForm.correct || 0}
                                               onChange={(e) => setEditForm({ ...editForm, correct: sanitizeNumericInput(e.target.value) })}
-                                              className="w-full px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 focus:border-emerald-500 outline-none text-center"
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
                                             <div className="flex justify-center mt-0.5">
-                                              <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
+                                              <Check size={10} className="text-emerald-600 dark:text-emerald-400 md:w-3 md:h-3" />
                                             </div>
                                           </div>
                                           
@@ -480,27 +465,11 @@ export default function HistoryPage({
                                               min="0"
                                               value={editForm.wrong || 0}
                                               onChange={(e) => setEditForm({ ...editForm, wrong: sanitizeNumericInput(e.target.value) })}
-                                              className="w-full px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base rounded-lg border-2 border-red-500 dark:border-red-400 bg-white dark:bg-gray-800 text-red-700 dark:text-red-300 focus:border-red-500 outline-none text-center"
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-red-500 dark:border-red-400 bg-white dark:bg-gray-800 text-red-700 dark:text-red-300 focus:border-red-500 outline-none text-center"
                                               placeholder="0"
                                             />
                                             <div className="flex justify-center mt-0.5">
-                                              <X size={12} className="text-red-600 dark:text-red-400" />
-                                            </div>
-                                          </div>
-                                          
-                                          <div className="flex-1">
-                                            <input
-                                              type="number"
-                                              inputMode="numeric"
-                                              pattern="[0-9]*"
-                                              min="0"
-                                              value={editForm.blank || 0}
-                                              onChange={(e) => setEditForm({ ...editForm, blank: sanitizeNumericInput(e.target.value) })}
-                                              className="w-full px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base rounded-lg border-2 border-blue-500 dark:border-blue-400 bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-300 focus:border-blue-500 outline-none text-center"
-                                              placeholder="0"
-                                            />
-                                            <div className="flex justify-center mt-0.5">
-                                              <Circle size={12} className="text-gray-500 dark:text-gray-400" />
+                                              <X size={10} className="text-red-600 dark:text-red-400 md:w-3 md:h-3" />
                                             </div>
                                           </div>
                                         </div>
@@ -508,7 +477,7 @@ export default function HistoryPage({
                                       
                                       {/* Páginas */}
                                       <div>
-                                        <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 md:mb-2">
+                                        <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
                                           Páginas
                                         </label>
                                         <input
@@ -518,35 +487,35 @@ export default function HistoryPage({
                                           min="0"
                                           value={editForm.pages || 0}
                                           onChange={(e) => setEditForm({ ...editForm, pages: sanitizeNumericInput(e.target.value) })}
-                                          className="w-full px-2 md:px-3 py-1.5 md:py-2 text-sm md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
-                                          placeholder="Ex: 50"
+                                          className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                          placeholder="0"
                                         />
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">págs</span>
+                                        <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">págs</span>
                                       </div>
                                       
                                     </div>
-                                    
+
                                     {/* Observações */}
                                     <div>
-                                      <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 md:mb-2">
+                                      <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
                                         Observações
                                       </label>
                                       <textarea
                                         value={editForm.notes || ''}
                                         onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                                         rows={2}
-                                        className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 outline-none resize-none"
+                                        className="w-full px-2 md:px-4 py-1.5 md:py-3 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 outline-none resize-none"
                                         placeholder="Observações (opcional)"
                                       />
                                     </div>
 
                                     {/* Botões */}
-                                    <div className="flex gap-2 justify-end pt-1 md:pt-2">
+                                    <div className="flex gap-2 justify-end">
                                       <Button
                                         onClick={cancelEdit}
                                         variant="secondary"
                                         size="sm"
-                                        className="text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2"
+                                        className="text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-auto"
                                         leftIcon={<X size={14} />}
                                       >
                                         Cancelar
@@ -555,7 +524,7 @@ export default function HistoryPage({
                                         onClick={() => saveEdit(log)}
                                         variant="primary"
                                         size="sm"
-                                        className="text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2"
+                                        className="text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-auto"
                                         leftIcon={<Check size={14} />}
                                       >
                                         Salvar

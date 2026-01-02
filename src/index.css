@@ -7,10 +7,24 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  html, body {
+    height: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
   body {
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: #f9fafb; /* Light mode default (gray-50) */
+    color: #111827;
+  }
+
+  html.dark body {
+    background-color: #111827; /* Dark mode default (gray-900) */
+    color: #f9fafb;
   }
 
   /* Acessibilidade: Foco Visual */

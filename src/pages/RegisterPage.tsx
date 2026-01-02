@@ -335,7 +335,7 @@ export default function RegisterPage({
               onClick={() => handleDateOptionChange('today')}
               variant={dateOption === 'today' ? 'primary' : 'secondary'}
               size="md"
-              className="min-h-[44px]"
+              className={`min-h-[44px] ${dateOption === 'today' ? '' : 'border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50'}`}
             >
               Hoje
             </Button>
@@ -344,7 +344,7 @@ export default function RegisterPage({
               onClick={() => handleDateOptionChange('yesterday')}
               variant={dateOption === 'yesterday' ? 'primary' : 'secondary'}
               size="md"
-              className="min-h-[44px]"
+              className={`min-h-[44px] ${dateOption === 'yesterday' ? '' : 'border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50'}`}
             >
               Ontem
             </Button>
@@ -353,7 +353,7 @@ export default function RegisterPage({
               onClick={() => handleDateOptionChange('other')}
               variant={dateOption === 'other' ? 'primary' : 'secondary'}
               size="md"
-              className="min-h-[44px]"
+              className={`min-h-[44px] ${dateOption === 'other' ? '' : 'border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50'}`}
             >
               Outro
             </Button>
@@ -427,7 +427,7 @@ export default function RegisterPage({
                   onClick={() => setType(btn.id as any)} 
                   variant={type === btn.id ? 'primary' : 'secondary'}
                   size="sm"
-                  className="py-3.5 flex flex-col items-center justify-center gap-1.5 min-h-[44px] [&>span]:flex [&>span]:flex-col [&>span]:items-center [&>span]:justify-center [&>span]:gap-1.5"
+                  className={`py-3.5 flex flex-col items-center justify-center gap-1.5 min-h-[44px] [&>span]:flex [&>span]:flex-col [&>span]:items-center [&>span]:justify-center [&>span]:gap-1.5 ${type === btn.id ? '' : 'border border-gray-200 dark:border-gray-600 dark:bg-gray-700/50'}`}
                 >
                   <Icon className="w-4 h-4" />
                   {btn.label}

@@ -323,12 +323,206 @@ export default function ProfilePage({
         </p>
       </div>
 
+      {/* Cards de Status da Assinatura - Largura Total */}
+      <div className="mb-6 lg:mb-8">
+        {/* Card de Status da Assinatura */}
+        {planType === 'trial' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-2xl shadow-md p-4 md:p-6"
+          >
+            {/* Layout Mobile Compacto */}
+            <div className="md:hidden flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={18} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-0.5 truncate">
+                    Plano Trial
+                  </h2>
+                  {daysLeft !== null && daysLeft >= 0 && (
+                    <p className="text-[10px] text-yellow-600 dark:text-yellow-400 font-semibold">
+                      {daysLeft === 0 ? 'Último dia!' : `${daysLeft} ${daysLeft === 1 ? 'dia' : 'dias'} restantes`}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="sm"
+                className="flex-shrink-0 text-xs px-3 py-2 h-auto"
+              >
+                Gerenciar
+              </Button>
+            </div>
+
+            {/* Layout Desktop - Horizontal */}
+            <div className="hidden md:flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={32} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-yellow-800 dark:text-yellow-200 mb-1 flex items-center gap-2">
+                    <Gift size={20} /> Plano Trial
+                  </h2>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Você está testando o StudyFlow gratuitamente!
+                    {daysLeft !== null && daysLeft >= 0 && (
+                      <span className="ml-2 font-semibold">
+                        • {daysLeft === 0 ? 'Último dia!' : `${daysLeft} ${daysLeft === 1 ? 'dia restante' : 'dias restantes'}`}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="md"
+                className="flex-shrink-0"
+              >
+                Gerenciar Assinatura
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {planType === 'monthly' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 rounded-2xl shadow-md p-4 md:p-6"
+          >
+            {/* Layout Mobile Compacto */}
+            <div className="md:hidden flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={18} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-sm font-bold text-emerald-800 dark:text-emerald-200 mb-0.5 truncate">
+                    Plano Mensal
+                  </h2>
+                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                    R$ 9,90/mês
+                    {nextBillingDate && ` • Próx: ${new Date(nextBillingDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="sm"
+                className="flex-shrink-0 text-xs px-3 py-2 h-auto"
+              >
+                Gerenciar
+              </Button>
+            </div>
+
+            {/* Layout Desktop - Horizontal */}
+            <div className="hidden md:flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={32} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-emerald-800 dark:text-emerald-200 mb-1 flex items-center gap-2">
+                    <CreditCard size={20} /> Plano Mensal Ativo
+                  </h2>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                    R$ 9,90/mês
+                    {nextBillingDate && (
+                      <span className="ml-2">
+                        • Próxima cobrança: {new Date(nextBillingDate).toLocaleDateString('pt-BR')}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="md"
+                className="flex-shrink-0"
+              >
+                Gerenciar Assinatura
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {planType === 'lifetime' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-400 rounded-2xl shadow-md p-4 md:p-6"
+          >
+            {/* Layout Mobile Compacto */}
+            <div className="md:hidden flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Crown size={18} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-sm font-bold text-purple-800 dark:text-purple-200 mb-1 truncate">
+                    Acesso Vitalício
+                  </h2>
+                  <span className="bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider inline-block">
+                    Vitalício
+                  </span>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="sm"
+                className="flex-shrink-0 text-xs px-3 py-2 h-auto"
+              >
+                Gerenciar
+              </Button>
+            </div>
+
+            {/* Layout Desktop - Horizontal */}
+            <div className="hidden md:flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Crown size={32} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-purple-800 dark:text-purple-200 mb-1 flex items-center gap-2">
+                    <Diamond size={20} /> Acesso Vitalício
+                  </h2>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Acesso ilimitado para sempre!
+                    <span className="ml-3 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                      Vitalício
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="md"
+                className="flex-shrink-0"
+              >
+                Gerenciar Assinatura
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
       {/* Grid Layout - Desktop Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 lg:items-stretch">
         {/* Coluna Esquerda - Cartão de Identidade */}
-        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-6 lg:self-start">
+        <div className="lg:col-span-4">
           {/* Card de Perfil */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 h-full flex flex-col">
             {/* Foto de Perfil */}
             <div className="flex flex-col items-center mb-6">
           <div className="relative">
@@ -376,7 +570,7 @@ export default function ProfilePage({
             )}
 
             {/* E-mail (Read-only) */}
-            <div>
+            <div className="mt-auto">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 E-mail
               </label>
@@ -391,123 +585,18 @@ export default function ProfilePage({
               </p>
             </div>
           </div>
-
-          {/* Card de Status da Assinatura */}
-          {planType === 'trial' && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-2xl shadow-md p-6"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                  <Star size={24} fill="currentColor" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold text-yellow-800 dark:text-yellow-200 mb-1 flex items-center gap-2">
-                    <Gift size={18} /> Plano Trial
-                  </h2>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-                    Você está testando o StudyFlow gratuitamente!
-                  </p>
-                  {daysLeft !== null && daysLeft >= 0 && (
-                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-4 font-semibold">
-                      {daysLeft === 0 ? 'Último dia!' : `${daysLeft} ${daysLeft === 1 ? 'dia restante' : 'dias restantes'}`}
-                    </p>
-                  )}
-                  <Button
-                    onClick={onNavigateToPlans}
-                    variant="secondary"
-                    size="sm"
-                    className="w-full"
-                  >
-                    Gerenciar Assinatura
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {planType === 'monthly' && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 rounded-2xl shadow-md p-6"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                  <Star size={24} fill="currentColor" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-1 flex items-center gap-2">
-                    <CreditCard size={18} /> Plano Mensal Ativo
-                  </h2>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
-                    R$ 9,90/mês
-                  </p>
-                  {nextBillingDate && (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-4">
-                      Próxima cobrança: {new Date(nextBillingDate).toLocaleDateString('pt-BR')}
-                    </p>
-                  )}
-                  <Button
-                    onClick={onNavigateToPlans}
-                    variant="secondary"
-                    size="sm"
-                    className="w-full"
-                  >
-                    Gerenciar Assinatura
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {planType === 'lifetime' && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-400 rounded-2xl shadow-md p-6"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                  <Crown size={24} fill="currentColor" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold text-purple-800 dark:text-purple-200 mb-1 flex items-center gap-2">
-                    <Diamond size={18} /> Acesso Vitalício
-                  </h2>
-                  <p className="text-sm text-purple-700 dark:text-purple-300 mb-3">
-                    Acesso ilimitado para sempre!
-                  </p>
-                  <div className="mb-4">
-                    <span className="bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                      Vitalício
-                    </span>
-                  </div>
-                  <Button
-                    onClick={onNavigateToPlans}
-                    variant="secondary"
-                    size="sm"
-                    className="w-full"
-                  >
-                    Gerenciar Assinatura
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
 
         {/* Coluna Direita - Formulários */}
         <div className="lg:col-span-8">
           {/* Card de Dados Pessoais */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 md:p-8">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-              Dados Pessoais
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 md:p-8 h-full flex flex-col">
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
+                Dados Pessoais
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Nome
@@ -553,6 +642,7 @@ export default function ProfilePage({
                 )}
               </div>
             </div>
+            </div>
 
             {/* Botão Salvar */}
             <Button
@@ -563,7 +653,7 @@ export default function ProfilePage({
               size="lg"
               isLoading={saving}
               leftIcon={!saving ? <Save size={20} /> : undefined}
-              className="disabled:opacity-50 disabled:cursor-not-allowed"
+              className="disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
             >
               {saving ? 'Salvando...' : 'Salvar Alterações'}
             </Button>

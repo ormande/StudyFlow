@@ -784,7 +784,7 @@ export default function CyclePage({
 
       {/* NOVO: Modal de Edição */}
       {editingSubject && (
-        <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 w-full h-full bg-gray-900/50 dark:bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm lg:max-w-md shadow-2xl p-5 lg:p-6 space-y-4 animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Editar Matéria</h3>
             

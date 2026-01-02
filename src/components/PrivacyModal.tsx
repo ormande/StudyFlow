@@ -15,7 +15,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"
+          className="fixed inset-0 w-full h-full bg-gray-900/50 dark:bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={onClose}
         >
           <motion.div

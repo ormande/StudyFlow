@@ -1,12 +1,24 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Trophy, Star, BarChart3, History, Palette, Target, MessageSquare, 
-  HelpCircle, Lock, LogOut, ChevronRight, Settings, CreditCard, Info
-} from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../contexts/ToastContext';
-import Button from '../components/Button';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Trophy,
+  Star,
+  BarChart3,
+  History,
+  Palette,
+  Target,
+  MessageSquare,
+  HelpCircle,
+  Lock,
+  LogOut,
+  ChevronRight,
+  Settings,
+  CreditCard,
+  Info,
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../contexts/ToastContext";
+import Button from "../components/Button";
 
 interface MorePageProps {
   session: any;
@@ -26,7 +38,7 @@ interface MorePageProps {
   onNavigateToProfile?: () => void;
 }
 
-const PROFILE_CACHE_KEY = 'studyflow_profile_cache';
+const PROFILE_CACHE_KEY = "studyflow_profile_cache";
 
 export default function MorePage({
   session,
@@ -47,16 +59,19 @@ export default function MorePage({
 }: MorePageProps) {
   const { addToast } = useToast();
   const [imgError, setImgError] = useState(false);
-  const [profileData, setProfileData] = useState<{ firstName: string; avatarUrl: string | null }>(() => {
+  const [profileData, setProfileData] = useState<{
+    firstName: string;
+    avatarUrl: string | null;
+  }>(() => {
     const cached = sessionStorage.getItem(PROFILE_CACHE_KEY);
     if (cached) {
       try {
         return JSON.parse(cached);
       } catch (e) {
-        return { firstName: '', avatarUrl: null };
+        return { firstName: "", avatarUrl: null };
       }
     }
-    return { firstName: '', avatarUrl: null };
+    return { firstName: "", avatarUrl: null };
   });
 
   // Buscar dados do perfil
@@ -66,35 +81,35 @@ export default function MorePage({
     async function fetchProfile() {
       try {
         const { data, error } = await supabase
-          .from('user_settings')
-          .select('first_name, avatar_url')
-          .eq('user_id', session.user.id)
+          .from("user_settings")
+          .select("first_name, avatar_url")
+          .eq("user_id", session.user.id)
           .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Erro ao carregar perfil:', error);
+        if (error && error.code !== "PGRST116") {
+          console.error("Erro ao carregar perfil:", error);
         }
 
         if (data) {
           let avatarUrl = null;
           if (data.avatar_url) {
             const { data: urlData } = supabase.storage
-              .from('avatars')
+              .from("avatars")
               .getPublicUrl(data.avatar_url);
             avatarUrl = urlData.publicUrl;
           }
 
           const newProfile = {
-            firstName: data.first_name || '',
+            firstName: data.first_name || "",
             avatarUrl,
           };
-          
+
           setProfileData(newProfile);
           setImgError(false);
           sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(newProfile));
         }
       } catch (error: any) {
-        console.error('Erro ao carregar perfil:', error);
+        console.error("Erro ao carregar perfil:", error);
       }
     }
 
@@ -102,9 +117,10 @@ export default function MorePage({
   }, [session?.user?.id]);
 
   // Determinar nome a exibir
-  const displayName = profileData.firstName || session?.user?.email?.split('@')[0] || 'Usuário';
-  const userEmail = session?.user?.email || '';
-  
+  const displayName =
+    profileData.firstName || session?.user?.email?.split("@")[0] || "Usuário";
+  const userEmail = session?.user?.email || "";
+
   // Obter inicial para fallback do avatar
   const getInitial = () => {
     if (profileData.firstName) {
@@ -137,7 +153,7 @@ export default function MorePage({
     if (onNavigateToStats) {
       onNavigateToStats();
     } else {
-      addToast('Navegação para estatísticas não disponível', 'error');
+      addToast("Navegação para estatísticas não disponível", "error");
     }
   };
 
@@ -150,7 +166,7 @@ export default function MorePage({
   };
 
   const handleEditProfile = () => {
-    addToast('Edição de perfil em breve!', 'info');
+    addToast("Edição de perfil em breve!", "info");
   };
 
   return (
@@ -167,22 +183,28 @@ export default function MorePage({
             <img
               src={profileData.avatarUrl}
               alt="Avatar"
-              className="w-16 h-16 rounded-full object-cover"
+              className="w-14 h-14 sm:w-16 sm:h-16 min-w-[3.5rem] sm:min-w-[4rem] aspect-square rounded-full object-cover flex-shrink-0"
               loading="eager"
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white text-2xl font-bold">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 min-w-[3.5rem] sm:min-w-[4rem] aspect-square rounded-full bg-emerald-500 flex items-center justify-center text-white text-xl sm:text-2xl font-bold flex-shrink-0">
               {getInitial()}
             </div>
           )}
           <div className="flex-1">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{displayName}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{userEmail}</p>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              {displayName}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {userEmail}
+            </p>
           </div>
         </div>
         <Button
-          onClick={onNavigateToProfile ? onNavigateToProfile : handleEditProfile}
+          onClick={
+            onNavigateToProfile ? onNavigateToProfile : handleEditProfile
+          }
           variant="ghost"
           fullWidth
           size="sm"
@@ -206,11 +228,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md relative z-10 h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <Trophy size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Conquistas</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Badges e medalhas desbloqueadas</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <Trophy
+                size={20}
+                className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Conquistas
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Badges e medalhas desbloqueadas
+                </span>
               </div>
             </div>
           </Button>
@@ -223,11 +252,15 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md relative z-10 h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <Star size={20} className="text-amber-500" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Elo</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Sistema de ranking e progressão</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <Star size={20} className="text-amber-500 flex-shrink-0" />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Elo
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Sistema de ranking e progressão
+                </span>
               </div>
             </div>
           </Button>
@@ -247,11 +280,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <BarChart3 size={20} className="text-blue-600 dark:text-blue-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Estatísticas</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Gráficos e análises detalhadas</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <BarChart3
+                size={20}
+                className="text-blue-600 dark:text-blue-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Estatísticas
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Gráficos e análises detalhadas
+                </span>
               </div>
             </div>
           </Button>
@@ -263,11 +303,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <History size={20} className="text-gray-600 dark:text-gray-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Histórico</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Todos os seus registros de estudo</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <History
+                size={20}
+                className="text-gray-600 dark:text-gray-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Histórico
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Todos os seus registros de estudo
+                </span>
               </div>
             </div>
           </Button>
@@ -287,11 +334,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <Settings size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Configurações</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Preferências e opções do app</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <Settings
+                size={20}
+                className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Configurações
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Preferências e opções do app
+                </span>
               </div>
             </div>
           </Button>
@@ -303,11 +357,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <Palette size={20} className="text-purple-600 dark:text-purple-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Aparência</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Tema, fonte e animações</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <Palette
+                size={20}
+                className="text-purple-600 dark:text-purple-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Aparência
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Tema, fonte e animações
+                </span>
               </div>
             </div>
           </Button>
@@ -319,11 +380,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <Target size={20} className="text-orange-600 dark:text-orange-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Metas</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Configure suas metas diárias e semanais</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <Target
+                size={20}
+                className="text-orange-600 dark:text-orange-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Metas
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Configure suas metas diárias e semanais
+                </span>
               </div>
             </div>
           </Button>
@@ -335,11 +403,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <MessageSquare size={20} className="text-emerald-600 dark:text-emerald-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Dar Feedback</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Envie sugestões e reporte bugs</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <MessageSquare
+                size={20}
+                className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Dar Feedback
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Envie sugestões e reporte bugs
+                </span>
               </div>
             </div>
           </Button>
@@ -351,11 +426,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <HelpCircle size={20} className="text-blue-600 dark:text-blue-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Tutorial</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Guia interativo do app</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <HelpCircle
+                size={20}
+                className="text-blue-600 dark:text-blue-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Tutorial
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Guia interativo do app
+                </span>
               </div>
             </div>
           </Button>
@@ -367,11 +449,18 @@ export default function MorePage({
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
             rightIcon={<ChevronRight size={16} className="text-gray-400" />}
           >
-            <div className="flex items-center gap-3">
-              <Lock size={20} className="text-gray-600 dark:text-gray-400" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold text-gray-900 dark:text-white">Segurança</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Alterar senha e segurança</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <Lock
+                size={20}
+                className="text-gray-600 dark:text-gray-400 flex-shrink-0"
+              />
+              <div className="flex flex-col items-start min-w-0 text-left">
+                <span className="font-semibold text-gray-900 dark:text-white truncate">
+                  Segurança
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                  Alterar senha e segurança
+                </span>
               </div>
             </div>
           </Button>
@@ -384,11 +473,18 @@ export default function MorePage({
               className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
               rightIcon={<ChevronRight size={16} className="text-gray-400" />}
             >
-              <div className="flex items-center gap-3">
-                <CreditCard size={20} className="text-emerald-600 dark:text-emerald-400" />
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold text-gray-900 dark:text-white">Planos</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Assine um plano e desbloqueie recursos</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <CreditCard
+                  size={20}
+                  className="text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                />
+                <div className="flex flex-col items-start min-w-0 text-left">
+                  <span className="font-semibold text-gray-900 dark:text-white truncate">
+                    Planos
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                    Assine um plano e desbloqueie recursos
+                  </span>
                 </div>
               </div>
             </Button>
@@ -402,11 +498,18 @@ export default function MorePage({
               className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 flex items-center justify-between hover:shadow-md h-auto"
               rightIcon={<ChevronRight size={16} className="text-gray-400" />}
             >
-              <div className="flex items-center gap-3">
-                <Info size={20} className="text-gray-600 dark:text-gray-400" />
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold text-gray-900 dark:text-white">Sobre</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden">Informações do app e contato</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <Info
+                  size={20}
+                  className="text-gray-600 dark:text-gray-400 flex-shrink-0"
+                />
+                <div className="flex flex-col items-start min-w-0 text-left">
+                  <span className="font-semibold text-gray-900 dark:text-white truncate">
+                    Sobre
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 md:hidden truncate">
+                    Informações do app e contato
+                  </span>
                 </div>
               </div>
             </Button>

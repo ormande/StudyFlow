@@ -1,10 +1,20 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { User, Camera, Save, Loader2, Crown, Star, Gift, CreditCard, Diamond } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../contexts/ToastContext';
-import Button from '../components/Button';
-import FloatingBackButton from '../components/FloatingBackButton';
+import { useState, useEffect, useRef, useMemo } from "react";
+import { motion } from "framer-motion";
+import {
+  User,
+  Camera,
+  Save,
+  Loader2,
+  Crown,
+  Star,
+  Gift,
+  CreditCard,
+  Diamond,
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../contexts/ToastContext";
+import Button from "../components/Button";
+import FloatingBackButton from "../components/FloatingBackButton";
 
 interface ProfilePageProps {
   session: any;
@@ -22,22 +32,22 @@ interface ProfileData {
   avatar_url: string | null;
 }
 
-export default function ProfilePage({ 
-  session, 
+export default function ProfilePage({
+  session,
   onNavigateBack,
   subscriptionStatus = null,
   subscriptionType = null,
   trialEndsAt = null,
-  onNavigateToPlans
+  onNavigateToPlans,
 }: ProfilePageProps) {
   const { addToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [profile, setProfile] = useState<ProfileData>({
-    first_name: '',
-    last_name: '',
-    birth_date: '', // No formato DD/MM/AAAA para o input
+    first_name: "",
+    last_name: "",
+    birth_date: "", // No formato DD/MM/AAAA para o input
     avatar_url: null,
   });
   const [isDateValid, setIsDateValid] = useState(true);
@@ -47,10 +57,13 @@ export default function ProfilePage({
 
   const validateDate = (value: string): boolean => {
     if (!value || value.length < 10) return true;
-    const [d, m, y] = value.split('/').map(Number);
+    const [d, m, y] = value.split("/").map(Number);
     const date = new Date(y, m - 1, d);
     const now = new Date();
-    const matches = date.getDate() === d && date.getMonth() === m - 1 && date.getFullYear() === y;
+    const matches =
+      date.getDate() === d &&
+      date.getMonth() === m - 1 &&
+      date.getFullYear() === y;
     const isReasonable = y > 1900 && date <= now;
     return matches && isReasonable;
   };
@@ -62,52 +75,61 @@ export default function ProfilePage({
     async function fetchProfile() {
       try {
         const { data, error } = await supabase
-          .from('user_settings')
-          .select('first_name, last_name, birth_date, avatar_url')
-          .eq('user_id', session.user.id)
+          .from("user_settings")
+          .select("first_name, last_name, birth_date, avatar_url")
+          .eq("user_id", session.user.id)
           .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Erro ao carregar perfil:', error);
-          addToast('Erro ao carregar perfil. Detalhe: ' + error.message, 'error');
+        if (error && error.code !== "PGRST116") {
+          console.error("Erro ao carregar perfil:", error);
+          addToast(
+            "Erro ao carregar perfil. Detalhe: " + error.message,
+            "error"
+          );
         }
 
         if (data) {
           // Converter YYYY-MM-DD para DD/MM/YYYY para o input
-          let formattedDate = '';
+          let formattedDate = "";
           if (data.birth_date) {
-            const [y, m, d] = data.birth_date.split('-');
+            const [y, m, d] = data.birth_date.split("-");
             formattedDate = `${d}/${m}/${y}`;
           }
 
           setProfile({
-            first_name: data.first_name || '',
-            last_name: data.last_name || '',
+            first_name: data.first_name || "",
+            last_name: data.last_name || "",
             birth_date: formattedDate,
             avatar_url: data.avatar_url || null,
           });
           if (data.avatar_url) {
             const { data: urlData } = supabase.storage
-              .from('avatars')
+              .from("avatars")
               .getPublicUrl(data.avatar_url);
             setAvatarPreview(urlData.publicUrl);
           }
         }
 
-
         // Buscar dados de assinatura
-        const { data: subscriptionData, error: subscriptionError } = await supabase
-          .from('user_settings')
-          .select('subscription_status, subscription_type, trial_ends_at, next_billing_date')
-          .eq('user_id', session.user.id)
-          .single();
+        const { data: subscriptionData, error: subscriptionError } =
+          await supabase
+            .from("user_settings")
+            .select(
+              "subscription_status, subscription_type, trial_ends_at, next_billing_date"
+            )
+            .eq("user_id", session.user.id)
+            .single();
 
         if (!subscriptionError && subscriptionData) {
           setNextBillingDate(subscriptionData.next_billing_date || null);
         }
       } catch (error: any) {
-        console.error('Erro ao carregar perfil:', error);
-        addToast('Erro ao carregar perfil. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+        console.error("Erro ao carregar perfil:", error);
+        addToast(
+          "Erro ao carregar perfil. Detalhe: " +
+            (error?.message || "Erro desconhecido"),
+          "error"
+        );
       } finally {
         setLoading(false);
       }
@@ -118,16 +140,16 @@ export default function ProfilePage({
 
   // Determinar tipo de plano
   const planType = useMemo(() => {
-    if (subscriptionStatus === 'trial') return 'trial';
-    if (subscriptionStatus === 'active') {
-      return subscriptionType === 'lifetime' ? 'lifetime' : 'monthly';
+    if (subscriptionStatus === "trial") return "trial";
+    if (subscriptionStatus === "active") {
+      return subscriptionType === "lifetime" ? "lifetime" : "monthly";
     }
-    return 'none';
+    return "none";
   }, [subscriptionStatus, subscriptionType]);
 
   // Calcular dias restantes do trial
   const daysLeft = useMemo(() => {
-    if (planType === 'trial' && trialEndsAt) {
+    if (planType === "trial" && trialEndsAt) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const endDate = new Date(trialEndsAt);
@@ -140,17 +162,17 @@ export default function ProfilePage({
   }, [planType, trialEndsAt]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '');
-    
+    let value = e.target.value.replace(/\D/g, "");
+
     if (value.length >= 2) {
       const day = parseInt(value.slice(0, 2));
-      if (day > 31) value = '31' + value.slice(2);
-      if (day === 0 && value.length === 2) value = '01';
+      if (day > 31) value = "31" + value.slice(2);
+      if (day === 0 && value.length === 2) value = "01";
     }
     if (value.length >= 4) {
       const month = parseInt(value.slice(2, 4));
-      if (month > 12) value = value.slice(0, 2) + '12' + value.slice(4);
-      if (month === 0 && value.length === 4) value = value.slice(0, 2) + '01';
+      if (month > 12) value = value.slice(0, 2) + "12" + value.slice(4);
+      if (month === 0 && value.length === 4) value = value.slice(0, 2) + "01";
     }
 
     if (value.length > 8) value = value.slice(0, 8);
@@ -160,7 +182,7 @@ export default function ProfilePage({
     } else if (value.length >= 3) {
       value = `${value.slice(0, 2)}/${value.slice(2)}`;
     }
-    setProfile(prev => ({ ...prev, birth_date: value }));
+    setProfile((prev) => ({ ...prev, birth_date: value }));
     setIsDateValid(validateDate(value));
   };
 
@@ -174,14 +196,14 @@ export default function ProfilePage({
     if (!file || !session?.user?.id) return;
 
     // Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
-      addToast('Por favor, selecione uma imagem válida.', 'error');
+    if (!file.type.startsWith("image/")) {
+      addToast("Por favor, selecione uma imagem válida.", "error");
       return;
     }
 
     // Validar tamanho (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      addToast('A imagem deve ter no máximo 5MB.', 'error');
+      addToast("A imagem deve ter no máximo 5MB.", "error");
       return;
     }
 
@@ -197,14 +219,14 @@ export default function ProfilePage({
 
       // Preparar nome do arquivo: uid/timestamp.png
       const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop() || 'png';
+      const fileExt = file.name.split(".").pop() || "png";
       const fileName = `${session.user.id}/${timestamp}.${fileExt}`;
 
       // Upload para o bucket 'avatars'
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from("avatars")
         .upload(fileName, file, {
-          cacheControl: '3600',
+          cacheControl: "3600",
           upsert: true, // Substitui se já existir
         });
 
@@ -214,29 +236,36 @@ export default function ProfilePage({
 
       // Atualizar avatar_url no perfil
       const { error: updateError } = await supabase
-        .from('user_settings')
-        .upsert({
-          user_id: session.user.id,
-          avatar_url: fileName,
-        }, {
-          onConflict: 'user_id',
-        });
+        .from("user_settings")
+        .upsert(
+          {
+            user_id: session.user.id,
+            avatar_url: fileName,
+          },
+          {
+            onConflict: "user_id",
+          }
+        );
 
       if (updateError) {
         throw updateError;
       }
 
-      setProfile(prev => ({ ...prev, avatar_url: fileName }));
-      addToast('Foto de perfil atualizada com sucesso!', 'success');
+      setProfile((prev) => ({ ...prev, avatar_url: fileName }));
+      addToast("Foto de perfil atualizada com sucesso!", "success");
     } catch (error: any) {
-      console.error('Erro ao fazer upload do avatar:', error);
-      addToast('Erro ao fazer upload da foto. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+      console.error("Erro ao fazer upload do avatar:", error);
+      addToast(
+        "Erro ao fazer upload da foto. Detalhe: " +
+          (error?.message || "Erro desconhecido"),
+        "error"
+      );
       setAvatarPreview(null);
     } finally {
       setUploadingAvatar(false);
       // Limpar input para permitir selecionar o mesmo arquivo novamente
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -251,34 +280,39 @@ export default function ProfilePage({
       // Converter DD/MM/AAAA -> AAAA-MM-DD para o banco
       let isoDate = null;
       if (profile.birth_date && profile.birth_date.length === 10) {
-        const [d, m, y] = profile.birth_date.split('/');
+        const [d, m, y] = profile.birth_date.split("/");
         isoDate = `${y}-${m}-${d}`;
       } else if (profile.birth_date && profile.birth_date.length > 0) {
-        addToast('Data de nascimento inválida. Use DD/MM/AAAA.', 'warning');
+        addToast("Data de nascimento inválida. Use DD/MM/AAAA.", "warning");
         setSaving(false);
         return;
       }
 
-      const { error } = await supabase
-        .from('user_settings')
-        .upsert({
+      const { error } = await supabase.from("user_settings").upsert(
+        {
           user_id: session.user.id,
           first_name: profile.first_name.trim(),
           last_name: profile.last_name.trim(),
           birth_date: isoDate,
           avatar_url: profile.avatar_url,
-        }, {
-          onConflict: 'user_id',
-        });
+        },
+        {
+          onConflict: "user_id",
+        }
+      );
 
       if (error) {
         throw error;
       }
 
-      addToast('Perfil salvo com sucesso!', 'success');
+      addToast("Perfil salvo com sucesso!", "success");
     } catch (error: any) {
-      console.error('Erro ao salvar perfil:', error);
-      addToast('Erro ao salvar perfil. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+      console.error("Erro ao salvar perfil:", error);
+      addToast(
+        "Erro ao salvar perfil. Detalhe: " +
+          (error?.message || "Erro desconhecido"),
+        "error"
+      );
     } finally {
       setSaving(false);
     }
@@ -286,12 +320,12 @@ export default function ProfilePage({
 
   // Obter iniciais do nome
   const getInitials = () => {
-    const firstName = profile.first_name?.charAt(0) || '';
-    const lastName = profile.last_name?.charAt(0) || '';
+    const firstName = profile.first_name?.charAt(0) || "";
+    const lastName = profile.last_name?.charAt(0) || "";
     if (firstName || lastName) {
       return (firstName + lastName).toUpperCase();
     }
-    return session?.user?.email?.charAt(0).toUpperCase() || 'U';
+    return session?.user?.email?.charAt(0).toUpperCase() || "U";
   };
 
   if (loading) {
@@ -313,12 +347,14 @@ export default function ProfilePage({
       {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2 pl-14 md:pl-0">
-          <User className="text-emerald-500" size={28} />
-          Meu Perfil
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <User className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            Meu Perfil
+          </h1>
+        </div>
+        <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
           Gerencie suas informações pessoais
         </p>
       </div>
@@ -326,8 +362,8 @@ export default function ProfilePage({
       {/* Cards de Status da Assinatura - Largura Total */}
       <div className="mb-6 lg:mb-8">
         {/* Card de Status da Assinatura */}
-        {planType === 'trial' && (
-          <motion.div 
+        {planType === "trial" && (
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-2xl shadow-md p-4 md:p-6"
@@ -344,7 +380,11 @@ export default function ProfilePage({
                   </h2>
                   {daysLeft !== null && daysLeft >= 0 && (
                     <p className="text-[10px] text-yellow-600 dark:text-yellow-400 font-semibold">
-                      {daysLeft === 0 ? 'Último dia!' : `${daysLeft} ${daysLeft === 1 ? 'dia' : 'dias'} restantes`}
+                      {daysLeft === 0
+                        ? "Último dia!"
+                        : `${daysLeft} ${
+                            daysLeft === 1 ? "dia" : "dias"
+                          } restantes`}
                     </p>
                   )}
                 </div>
@@ -373,7 +413,12 @@ export default function ProfilePage({
                     Você está testando o StudyFlow gratuitamente!
                     {daysLeft !== null && daysLeft >= 0 && (
                       <span className="ml-2 font-semibold">
-                        • {daysLeft === 0 ? 'Último dia!' : `${daysLeft} ${daysLeft === 1 ? 'dia restante' : 'dias restantes'}`}
+                        •{" "}
+                        {daysLeft === 0
+                          ? "Último dia!"
+                          : `${daysLeft} ${
+                              daysLeft === 1 ? "dia restante" : "dias restantes"
+                            }`}
                       </span>
                     )}
                   </p>
@@ -391,8 +436,8 @@ export default function ProfilePage({
           </motion.div>
         )}
 
-        {planType === 'monthly' && (
-          <motion.div 
+        {planType === "monthly" && (
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 rounded-2xl shadow-md p-4 md:p-6"
@@ -409,7 +454,11 @@ export default function ProfilePage({
                   </h2>
                   <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
                     R$ 9,90/mês
-                    {nextBillingDate && ` • Próx: ${new Date(nextBillingDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`}
+                    {nextBillingDate &&
+                      ` • Próx: ${new Date(nextBillingDate).toLocaleDateString(
+                        "pt-BR",
+                        { day: "2-digit", month: "2-digit" }
+                      )}`}
                   </p>
                 </div>
               </div>
@@ -437,7 +486,8 @@ export default function ProfilePage({
                     R$ 9,90/mês
                     {nextBillingDate && (
                       <span className="ml-2">
-                        • Próxima cobrança: {new Date(nextBillingDate).toLocaleDateString('pt-BR')}
+                        • Próxima cobrança:{" "}
+                        {new Date(nextBillingDate).toLocaleDateString("pt-BR")}
                       </span>
                     )}
                   </p>
@@ -455,8 +505,8 @@ export default function ProfilePage({
           </motion.div>
         )}
 
-        {planType === 'lifetime' && (
-          <motion.div 
+        {planType === "lifetime" && (
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-400 rounded-2xl shadow-md p-4 md:p-6"
@@ -525,39 +575,39 @@ export default function ProfilePage({
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 h-full flex flex-col">
             {/* Foto de Perfil */}
             <div className="flex flex-col items-center mb-6">
-          <div className="relative">
-            {avatarPreview ? (
-              <img
-                src={avatarPreview}
-                alt="Avatar"
-                className="w-32 h-32 rounded-full object-cover border-4 border-emerald-500 shadow-lg"
-              />
-            ) : (
-              <div className="w-32 h-32 rounded-full bg-emerald-500 flex items-center justify-center text-white text-4xl font-bold border-4 border-emerald-600 shadow-lg">
-                {getInitials()}
+              <div className="relative">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-emerald-500 shadow-lg"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-emerald-500 flex items-center justify-center text-white text-4xl font-bold border-4 border-emerald-600 shadow-lg">
+                    {getInitials()}
+                  </div>
+                )}
+                <Button
+                  onClick={handleAvatarClick}
+                  disabled={uploadingAvatar}
+                  variant="primary"
+                  size="sm"
+                  isLoading={uploadingAvatar}
+                  className="absolute bottom-0 right-0 p-3 rounded-full shadow-lg hover:scale-110"
+                >
+                  {!uploadingAvatar && <Camera size={20} />}
+                </Button>
               </div>
-            )}
-            <Button
-              onClick={handleAvatarClick}
-              disabled={uploadingAvatar}
-              variant="primary"
-              size="sm"
-              isLoading={uploadingAvatar}
-              className="absolute bottom-0 right-0 p-3 rounded-full shadow-lg hover:scale-110"
-            >
-              {!uploadingAvatar && <Camera size={20} />}
-            </Button>
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Clique na câmera para alterar a foto
-          </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                Clique na câmera para alterar a foto
+              </p>
             </div>
 
             {/* Nome Completo Display */}
@@ -576,7 +626,7 @@ export default function ProfilePage({
               </label>
               <input
                 type="email"
-                value={session?.user?.email || ''}
+                value={session?.user?.email || ""}
                 disabled
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 cursor-not-allowed text-sm"
               />
@@ -595,53 +645,69 @@ export default function ProfilePage({
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
                 Dados Pessoais
               </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Nome
-                </label>
-                <input
-                  type="text"
-                  value={profile.first_name}
-                  onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
-                  placeholder="Seu nome"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Sobrenome
-                </label>
-                <input
-                  type="text"
-                  value={profile.last_name}
-                  onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
-                  placeholder="Seu sobrenome"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                />
-              </div>
-            </div>
 
-            <div className="min-w-0 mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Data de Nascimento
-              </label>
-              <div className="relative min-w-0">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={profile.birth_date}
-                  onChange={handleDateChange}
-                  placeholder="DD/MM/AAAA"
-                  className={`w-full max-w-full px-3 md:px-4 py-2 border ${!isDateValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-emerald-500'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:border-transparent min-w-0 outline-none transition-all`}
-                />
-                {!isDateValid && (
-                  <p className="text-[10px] text-red-500 mt-1 font-bold">Data inválida ou no futuro</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nome
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.first_name}
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        first_name: e.target.value,
+                      }))
+                    }
+                    placeholder="Seu nome"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Sobrenome
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.last_name}
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        last_name: e.target.value,
+                      }))
+                    }
+                    placeholder="Seu sobrenome"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  />
+                </div>
               </div>
-            </div>
+
+              <div className="min-w-0 mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Data de Nascimento
+                </label>
+                <div className="relative min-w-0">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={profile.birth_date}
+                    onChange={handleDateChange}
+                    placeholder="DD/MM/AAAA"
+                    className={`w-full max-w-full px-3 md:px-4 py-2 border ${
+                      !isDateValid
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 dark:border-gray-600 focus:ring-emerald-500"
+                    } rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:border-transparent min-w-0 outline-none transition-all`}
+                  />
+                  {!isDateValid && (
+                    <p className="text-[10px] text-red-500 mt-1 font-bold">
+                      Data inválida ou no futuro
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Botão Salvar */}
@@ -655,7 +721,7 @@ export default function ProfilePage({
               leftIcon={!saving ? <Save size={20} /> : undefined}
               className="disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
             >
-              {saving ? 'Salvando...' : 'Salvar Alterações'}
+              {saving ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </div>

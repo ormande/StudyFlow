@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
-import { Target, Clock, Trophy } from 'lucide-react';
-import FloatingBackButton from '../components/FloatingBackButton';
+import { motion } from "framer-motion";
+import { Target, Clock, Trophy, HelpCircle } from "lucide-react";
+import FloatingBackButton from "../components/FloatingBackButton";
 
 interface TutorialPageProps {
   onNavigateBack?: () => void;
@@ -10,27 +10,30 @@ export default function TutorialPage({ onNavigateBack }: TutorialPageProps) {
   const cards = [
     {
       icon: Target,
-      title: 'Ciclo de Estudos',
-      description: 'Gerencie suas matérias, configure metas de tempo e organize subtópicos. O ciclo ajuda você a acompanhar seu progresso e manter o foco nos seus objetivos de estudo.',
-      color: 'emerald',
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
+      title: "Ciclo de Estudos",
+      description:
+        "Gerencie suas matérias, configure metas de tempo e organize subtópicos. O ciclo ajuda você a acompanhar seu progresso e manter o foco nos seus objetivos de estudo.",
+      color: "emerald",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
     },
     {
       icon: Clock,
-      title: 'Timer & Registro',
-      description: 'Use o Timer para cronometrar suas sessões automaticamente ou configure um temporizador/Pomodoro. Depois, registre seus estudos manualmente na aba Registrar com detalhes como páginas, acertos e erros.',
-      color: 'blue',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      title: "Timer & Registro",
+      description:
+        "Use o Timer para cronometrar suas sessões automaticamente ou configure um temporizador/Pomodoro. Depois, registre seus estudos manualmente na aba Registrar com detalhes como páginas, acertos e erros.",
+      color: "blue",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
     },
     {
       icon: Trophy,
-      title: 'Gamificação',
-      description: 'Ganhe XP ao estudar e desbloqueie conquistas! O sistema de Elos mostra seu progresso e ranking. Quanto mais você estuda, mais você sobe de nível e desbloqueia novas conquistas.',
-      color: 'amber',
-      iconColor: 'text-amber-600 dark:text-amber-400',
-      bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+      title: "Gamificação",
+      description:
+        "Ganhe XP ao estudar e desbloqueie conquistas! O sistema de Elos mostra seu progresso e ranking. Quanto mais você estuda, mais você sobe de nível e desbloqueia novas conquistas.",
+      color: "amber",
+      iconColor: "text-amber-600 dark:text-amber-400",
+      bgColor: "bg-amber-50 dark:bg-amber-900/20",
     },
   ];
 
@@ -39,17 +42,27 @@ export default function TutorialPage({ onNavigateBack }: TutorialPageProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-4xl mx-auto px-6 py-8 pb-24 md:pb-8"
+      className="max-w-4xl mx-auto px-6 py-8 pb-24 md:pb-8 pt-12 md:pt-8"
     >
       {/* Botão Voltar Flutuante */}
       {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
 
-      {/* Header */}
-      <div className="text-center mb-8 pt-12 md:pt-0">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+      {/* Header com Título Tutorial */}
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <HelpCircle className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            Tutorial
+          </h1>
+        </div>
+      </div>
+
+      {/* Subtítulo - Como usar o StudyFlow */}
+      <div className="text-center mb-8 sm:mb-10">
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-1">
           Como usar o StudyFlow
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
           Aprenda a aproveitar ao máximo todas as funcionalidades do app
         </p>
       </div>
@@ -67,7 +80,9 @@ export default function TutorialPage({ onNavigateBack }: TutorialPageProps) {
               className={`${card.bgColor} rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700`}
             >
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl bg-white dark:bg-gray-800 shadow-sm flex-shrink-0`}>
+                <div
+                  className={`p-3 rounded-xl bg-white dark:bg-gray-800 shadow-sm flex-shrink-0`}
+                >
                   <Icon size={24} className={card.iconColor} />
                 </div>
                 <div className="flex-1">
@@ -83,8 +98,6 @@ export default function TutorialPage({ onNavigateBack }: TutorialPageProps) {
           );
         })}
       </div>
-
     </motion.div>
   );
 }
-

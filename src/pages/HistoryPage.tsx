@@ -1,11 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
-import React from 'react';
-import { Trash2, Pencil, Check, X, Filter, History, Loader2, Search, Circle } from 'lucide-react';
-import { Subject, StudyLog, StudyType } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
-import Button from '../components/Button';
-import FloatingBackButton from '../components/FloatingBackButton';
-import { FADE_UP_ANIMATION, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/animations';
+import { useState, useEffect, useRef } from "react";
+import React from "react";
+import {
+  Trash2,
+  Pencil,
+  Check,
+  X,
+  Filter,
+  History,
+  Loader2,
+  Search,
+  Circle,
+} from "lucide-react";
+import { Subject, StudyLog, StudyType } from "../types";
+import { motion, AnimatePresence } from "framer-motion";
+import Button from "../components/Button";
+import FloatingBackButton from "../components/FloatingBackButton";
+import {
+  FADE_UP_ANIMATION,
+  STAGGER_CONTAINER,
+  STAGGER_ITEM,
+} from "../utils/animations";
 
 interface HistoryPageProps {
   logs: StudyLog[];
@@ -32,11 +46,11 @@ export default function HistoryPage({
   loadingMoreLogs = false,
   onLoadMore,
   onSearch,
-  searchTerm = '',
+  searchTerm = "",
   daysFilter = 30,
   onDaysFilterChange,
 }: HistoryPageProps) {
-  const [filterSubject, setFilterSubject] = useState<string>('all');
+  const [filterSubject, setFilterSubject] = useState<string>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<StudyLog>>({});
   const [localSearchTerm, setLocalSearchTerm] = useState<string>(searchTerm);
@@ -46,7 +60,7 @@ export default function HistoryPage({
   useEffect(() => {
     // Não fazer nada se o termo local já está sincronizado com o externo
     if (localSearchTerm === searchTerm) return;
-    
+
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
@@ -66,34 +80,43 @@ export default function HistoryPage({
 
   // Sincronizar localSearchTerm com searchTerm externo (quando busca é limpa externamente)
   useEffect(() => {
-    if (searchTerm === '' && localSearchTerm !== '') {
-      setLocalSearchTerm('');
+    if (searchTerm === "" && localSearchTerm !== "") {
+      setLocalSearchTerm("");
     }
   }, [searchTerm]);
 
   const filteredLogs = [...logs]
     .sort((a, b) => b.timestamp - a.timestamp)
     .filter((log) => {
-      const subjectMatch = filterSubject === 'all' || log.subjectId === filterSubject;
+      const subjectMatch =
+        filterSubject === "all" || log.subjectId === filterSubject;
       return subjectMatch;
     });
 
   const getSubjectName = (subjectId: string) => {
-    return subjects.find((s) => s.id === subjectId)?.name || 'Matéria Excluída';
+    return subjects.find((s) => s.id === subjectId)?.name || "Matéria Excluída";
   };
 
   const getSubjectColor = (subjectId: string) => {
-    return subjects.find((s) => s.id === subjectId)?.color || '#6b7280';
+    return subjects.find((s) => s.id === subjectId)?.color || "#6b7280";
   };
 
   const getTypeLabel = (type: StudyType) => {
-    const labels = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão' };
+    const labels = {
+      teoria: "Teoria",
+      questoes: "Questões",
+      revisao: "Revisão",
+    };
     return labels[type];
   };
 
   // Função para sanitizar input numérico
-  const sanitizeNumericInput = (value: string, max?: number, min: number = 0): number => {
-    if (value === '') return min;
+  const sanitizeNumericInput = (
+    value: string,
+    max?: number,
+    min: number = 0
+  ): number => {
+    if (value === "") return min;
     const num = parseInt(value);
     if (isNaN(num) || num < min) return min;
     if (max !== undefined && num > max) return max;
@@ -105,7 +128,7 @@ export default function HistoryPage({
     if (hours > 0) parts.push(`${hours}h`);
     if (minutes > 0) parts.push(`${minutes}min`);
     if (seconds && seconds > 0) parts.push(`${seconds}s`);
-    return parts.join(' ') || '0min';
+    return parts.join(" ") || "0min";
   };
 
   const startEditing = (log: StudyLog) => {
@@ -118,7 +141,7 @@ export default function HistoryPage({
       correct: log.correct || 0,
       wrong: log.wrong || 0,
       blank: log.blank || 0,
-      notes: log.notes || '',
+      notes: log.notes || "",
     });
   };
 
@@ -143,14 +166,14 @@ export default function HistoryPage({
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Cabeçalho da Página */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2 pl-14 md:pl-0">
-            <History className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <History className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600 dark:text-emerald-400" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
               Histórico
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 pl-14 md:pl-0">
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             Seus registros de estudo
           </p>
         </div>
@@ -158,7 +181,10 @@ export default function HistoryPage({
         {/* Campo de Busca */}
         <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+              size={20}
+            />
             <input
               type="text"
               value={localSearchTerm}
@@ -168,7 +194,7 @@ export default function HistoryPage({
             />
             {localSearchTerm && (
               <Button
-                onClick={() => setLocalSearchTerm('')}
+                onClick={() => setLocalSearchTerm("")}
                 variant="ghost"
                 size="sm"
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 h-auto min-w-0"
@@ -183,7 +209,10 @@ export default function HistoryPage({
         <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Filtro de Matéria */}
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+            <Filter
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+              size={18}
+            />
             <select
               value={filterSubject}
               onChange={(e) => setFilterSubject(e.target.value)}
@@ -191,21 +220,23 @@ export default function HistoryPage({
             >
               <option value="all">Todas as matérias</option>
               {subjects.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </div>
 
           {/* Filtros de Data (Chips) */}
-          <div className="flex flex-wrap gap-2 md:flex-nowrap md:justify-between md:gap-0 md:space-x-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2 md:flex-nowrap md:justify-between md:gap-0 md:space-x-2">
             {[
-              { label: 'Hoje', days: 1 },
-              { label: '7D', days: 7 },
-              { label: '15D', days: 15 },
-              { label: '30D', days: 30 },
-              { label: '90D', days: 90 },
-              { label: '365D', days: 365 },
-              { label: 'Todos', days: null },
+              { label: "Hoje", days: 1 },
+              { label: "7D", days: 7 },
+              { label: "15D", days: 15 },
+              { label: "30D", days: 30 },
+              { label: "90D", days: 90 },
+              { label: "365D", days: 365 },
+              { label: "Todos", days: null },
             ].map(({ label, days }) => {
               const isActive = daysFilter === days;
               return (
@@ -214,14 +245,18 @@ export default function HistoryPage({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (!loadingMoreLogs && onDaysFilterChange && daysFilter !== days) {
+                    if (
+                      !loadingMoreLogs &&
+                      onDaysFilterChange &&
+                      daysFilter !== days
+                    ) {
                       onDaysFilterChange(days);
                     }
                   }}
                   disabled={loadingMoreLogs}
-                  variant={isActive ? 'primary' : 'secondary'}
+                  variant={isActive ? "primary" : "secondary"}
                   size="sm"
-                  className="whitespace-nowrap flex-shrink-0 md:flex-1 md:max-w-none text-xs md:text-sm"
+                  className="whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-full text-xs md:text-sm"
                 >
                   {label}
                 </Button>
@@ -270,7 +305,7 @@ export default function HistoryPage({
                     </th>
                   </tr>
                 </thead>
-                <motion.tbody 
+                <motion.tbody
                   className="divide-y divide-gray-200 dark:divide-gray-700"
                   variants={STAGGER_CONTAINER}
                   initial="hidden"
@@ -284,14 +319,22 @@ export default function HistoryPage({
                       <React.Fragment key={log.id}>
                         <motion.tr
                           variants={STAGGER_ITEM}
-                          className={isEven ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}
+                          className={
+                            isEven
+                              ? "bg-white dark:bg-gray-800"
+                              : "bg-gray-50 dark:bg-gray-700/50"
+                          }
                         >
                           {/* Matéria */}
                           <td className="px-4 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <div
                                 className="w-3 h-3 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: getSubjectColor(log.subjectId) }}
+                                style={{
+                                  backgroundColor: getSubjectColor(
+                                    log.subjectId
+                                  ),
+                                }}
                               />
                               <span className="font-semibold text-gray-900 dark:text-white">
                                 {getSubjectName(log.subjectId)}
@@ -302,7 +345,9 @@ export default function HistoryPage({
                           {/* Data */}
                           <td className="px-4 py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {new Date(log.timestamp).toLocaleDateString('pt-BR')}
+                              {new Date(log.timestamp).toLocaleDateString(
+                                "pt-BR"
+                              )}
                             </span>
                           </td>
 
@@ -323,10 +368,10 @@ export default function HistoryPage({
                           {/* Detalhes */}
                           <td className="px-4 py-4">
                             <div className="text-sm text-gray-600 dark:text-gray-400">
-                              {log.type === 'teoria' && log.pages && (
+                              {log.type === "teoria" && log.pages && (
                                 <span>{log.pages} págs</span>
                               )}
-                              {log.type === 'questoes' && (
+                              {log.type === "questoes" && (
                                 <div className="flex gap-2">
                                   <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                     {log.correct || 0}
@@ -361,10 +406,16 @@ export default function HistoryPage({
                                     startEditing(log);
                                   }
                                 }}
-                                variant={editingId === log.id ? "secondary" : "primary"}
+                                variant={
+                                  editingId === log.id ? "secondary" : "primary"
+                                }
                                 size="sm"
                                 className="p-2 h-auto min-w-0"
-                                title={editingId === log.id ? "Cancelar edição" : "Editar"}
+                                title={
+                                  editingId === log.id
+                                    ? "Cancelar edição"
+                                    : "Editar"
+                                }
                               >
                                 <Pencil size={16} />
                               </Button>
@@ -388,19 +439,31 @@ export default function HistoryPage({
                               initial={{ opacity: 0, y: -20 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -20 }}
-                              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-                              className={isEven ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}
+                              transition={{
+                                duration: 0.3,
+                                ease: [0.25, 0.1, 0.25, 1],
+                              }}
+                              className={
+                                isEven
+                                  ? "bg-white dark:bg-gray-800"
+                                  : "bg-gray-50 dark:bg-gray-700/50"
+                              }
                             >
-                              <td colSpan={6} className="px-2 md:px-4 py-3 md:py-4">
+                              <td
+                                colSpan={6}
+                                className="px-2 md:px-4 py-3 md:py-4"
+                              >
                                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 md:p-4 border border-gray-200 dark:border-gray-600">
                                   <div className="space-y-3 md:space-y-4">
                                     {/* Layout Mobile e Desktop - 3 colunas */}
                                     <div className="grid grid-cols-3 gap-2 md:gap-4">
-                                      
                                       {/* Tempo */}
                                       <div>
                                         <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
-                                          Tempo <span className="text-red-500">*</span>
+                                          Tempo{" "}
+                                          <span className="text-red-500">
+                                            *
+                                          </span>
                                         </label>
                                         <div className="flex gap-1 md:gap-2">
                                           <div className="flex-1">
@@ -411,13 +474,24 @@ export default function HistoryPage({
                                               min="0"
                                               max="23"
                                               value={editForm.hours || 0}
-                                              onChange={(e) => setEditForm({ ...editForm, hours: sanitizeNumericInput(e.target.value, 23, 0) })}
+                                              onChange={(e) =>
+                                                setEditForm({
+                                                  ...editForm,
+                                                  hours: sanitizeNumericInput(
+                                                    e.target.value,
+                                                    23,
+                                                    0
+                                                  ),
+                                                })
+                                              }
                                               className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
-                                            <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">h</span>
+                                            <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
+                                              h
+                                            </span>
                                           </div>
-                                          
+
                                           <div className="flex-1">
                                             <input
                                               type="number"
@@ -426,15 +500,26 @@ export default function HistoryPage({
                                               min="0"
                                               max="59"
                                               value={editForm.minutes || 0}
-                                              onChange={(e) => setEditForm({ ...editForm, minutes: sanitizeNumericInput(e.target.value, 59, 0) })}
+                                              onChange={(e) =>
+                                                setEditForm({
+                                                  ...editForm,
+                                                  minutes: sanitizeNumericInput(
+                                                    e.target.value,
+                                                    59,
+                                                    0
+                                                  ),
+                                                })
+                                              }
                                               className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
-                                            <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">m</span>
+                                            <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
+                                              m
+                                            </span>
                                           </div>
                                         </div>
                                       </div>
-                                      
+
                                       {/* Questões */}
                                       <div>
                                         <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
@@ -448,15 +533,25 @@ export default function HistoryPage({
                                               pattern="[0-9]*"
                                               min="0"
                                               value={editForm.correct || 0}
-                                              onChange={(e) => setEditForm({ ...editForm, correct: sanitizeNumericInput(e.target.value) })}
+                                              onChange={(e) =>
+                                                setEditForm({
+                                                  ...editForm,
+                                                  correct: sanitizeNumericInput(
+                                                    e.target.value
+                                                  ),
+                                                })
+                                              }
                                               className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
                                             <div className="flex justify-center mt-0.5">
-                                              <Check size={10} className="text-emerald-600 dark:text-emerald-400 md:w-3 md:h-3" />
+                                              <Check
+                                                size={10}
+                                                className="text-emerald-600 dark:text-emerald-400 md:w-3 md:h-3"
+                                              />
                                             </div>
                                           </div>
-                                          
+
                                           <div className="flex-1">
                                             <input
                                               type="number"
@@ -464,17 +559,27 @@ export default function HistoryPage({
                                               pattern="[0-9]*"
                                               min="0"
                                               value={editForm.wrong || 0}
-                                              onChange={(e) => setEditForm({ ...editForm, wrong: sanitizeNumericInput(e.target.value) })}
+                                              onChange={(e) =>
+                                                setEditForm({
+                                                  ...editForm,
+                                                  wrong: sanitizeNumericInput(
+                                                    e.target.value
+                                                  ),
+                                                })
+                                              }
                                               className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-red-500 dark:border-red-400 bg-white dark:bg-gray-800 text-red-700 dark:text-red-300 focus:border-red-500 outline-none text-center"
                                               placeholder="0"
                                             />
                                             <div className="flex justify-center mt-0.5">
-                                              <X size={10} className="text-red-600 dark:text-red-400 md:w-3 md:h-3" />
+                                              <X
+                                                size={10}
+                                                className="text-red-600 dark:text-red-400 md:w-3 md:h-3"
+                                              />
                                             </div>
                                           </div>
                                         </div>
                                       </div>
-                                      
+
                                       {/* Páginas */}
                                       <div>
                                         <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
@@ -486,13 +591,21 @@ export default function HistoryPage({
                                           pattern="[0-9]*"
                                           min="0"
                                           value={editForm.pages || 0}
-                                          onChange={(e) => setEditForm({ ...editForm, pages: sanitizeNumericInput(e.target.value) })}
+                                          onChange={(e) =>
+                                            setEditForm({
+                                              ...editForm,
+                                              pages: sanitizeNumericInput(
+                                                e.target.value
+                                              ),
+                                            })
+                                          }
                                           className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
                                           placeholder="0"
                                         />
-                                        <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">págs</span>
+                                        <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
+                                          págs
+                                        </span>
                                       </div>
-                                      
                                     </div>
 
                                     {/* Observações */}
@@ -501,8 +614,13 @@ export default function HistoryPage({
                                         Observações
                                       </label>
                                       <textarea
-                                        value={editForm.notes || ''}
-                                        onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                                        value={editForm.notes || ""}
+                                        onChange={(e) =>
+                                          setEditForm({
+                                            ...editForm,
+                                            notes: e.target.value,
+                                          })
+                                        }
                                         rows={2}
                                         className="w-full px-2 md:px-4 py-1.5 md:py-3 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 outline-none resize-none"
                                         placeholder="Observações (opcional)"
@@ -554,9 +672,13 @@ export default function HistoryPage({
               variant="outline"
               size="md"
               isLoading={loadingMoreLogs}
-              leftIcon={!loadingMoreLogs ? undefined : <Loader2 className="w-5 h-5 animate-spin" />}
+              leftIcon={
+                !loadingMoreLogs ? undefined : (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                )
+              }
             >
-              {loadingMoreLogs ? 'Carregando...' : 'Carregar mais histórico'}
+              {loadingMoreLogs ? "Carregando..." : "Carregar mais histórico"}
             </Button>
           </div>
         )}

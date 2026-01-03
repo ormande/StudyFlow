@@ -1,9 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Timer, Hourglass, Zap, Info } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import ConfirmModal from '../components/ConfirmModal';
-import Button from '../components/Button';
-import { FADE_UP_ANIMATION, SCALE_ANIMATION, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/animations';
+import { useState, useEffect } from "react";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Timer,
+  Hourglass,
+  Zap,
+  Info,
+  Target,
+  Flame,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import ConfirmModal from "../components/ConfirmModal";
+import Button from "../components/Button";
+import {
+  FADE_UP_ANIMATION,
+  SCALE_ANIMATION,
+  STAGGER_CONTAINER,
+  STAGGER_ITEM,
+} from "../utils/animations";
 
 interface TimerPageProps {
   onTimerStop: (hours: number, minutes: number, seconds: number) => void;
@@ -11,8 +26,10 @@ interface TimerPageProps {
   setTimerSeconds: (seconds: number) => void;
   isTimerRunning: boolean;
   setIsTimerRunning: (running: boolean) => void;
-  timerMode: 'cronometro' | 'temporizador' | 'pomodoro';
-  setTimerMode: (mode: 'cronometro' | 'temporizador' | 'pomodoro') => void;
+  timerMode: "cronometro" | "temporizador" | "pomodoro";
+  setTimerMode: (mode: "cronometro" | "temporizador" | "pomodoro") => void;
+  logs?: any[];
+  dailyGoal?: number;
 }
 
 type PomodoroPreset = {
@@ -21,10 +38,19 @@ type PomodoroPreset = {
 };
 
 const POMODORO_PRESETS: PomodoroPreset[] = [
-  { label: 'Foco', minutes: 25 },
-  { label: 'Pausa Curta', minutes: 5 },
-  { label: 'Pausa Longa', minutes: 15 },
+  { label: "Foco", minutes: 25 },
+  { label: "Pausa Curta", minutes: 5 },
+  { label: "Pausa Longa", minutes: 15 },
 ];
+
+// Função auxiliar para formatar minutos em texto legível
+const formatMinutesDisplay = (minutes: number) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins}min`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}min`;
+};
 
 export default function TimerPage({
   onTimerStop,
@@ -33,60 +59,131 @@ export default function TimerPage({
   isTimerRunning,
   setIsTimerRunning,
   timerMode,
-  setTimerMode
+  setTimerMode,
+  logs = [],
+  dailyGoal = 0,
 }: TimerPageProps) {
   const mode = timerMode;
-  
+
   // Estados para Temporizador
-  const [timerHours, setTimerHours] = useState('');
-  const [timerMinutes, setTimerMinutes] = useState('');
+  const [timerHours, setTimerHours] = useState("");
+  const [timerMinutes, setTimerMinutes] = useState("");
   const [initialTimerSeconds, setInitialTimerSeconds] = useState(0);
-  
+
   // Estados para Pomodoro
-  const [selectedPreset, setSelectedPreset] = useState<PomodoroPreset | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<PomodoroPreset | null>(
+    null
+  );
   const [pomodoroInitialSeconds, setPomodoroInitialSeconds] = useState(0);
   const [pomodoroStarted, setPomodoroStarted] = useState(false);
-  
+
   // Estado para modal de confirmação de mudança de modo
   const [showModeChangeConfirm, setShowModeChangeConfirm] = useState(false);
-  const [pendingMode, setPendingMode] = useState<'cronometro' | 'temporizador' | 'pomodoro' | null>(null);
-  
+  const [pendingMode, setPendingMode] = useState<
+    "cronometro" | "temporizador" | "pomodoro" | null
+  >(null);
+
+  // ✅ CORREÇÃO: Ler metas do localStorage (sincronizado com GoalsPage)
+  const [localDailyGoal, setLocalDailyGoal] = useState<number>(0);
+  const [localWeeklyGoal, setLocalWeeklyGoal] = useState<number>(0);
+
+  useEffect(() => {
+    const dailyTime = localStorage.getItem("studyflow_daily_time_goal");
+    const weeklyTime = localStorage.getItem("studyflow_weekly_time_goal");
+
+    // GoalsPage salva em HORAS, converter para MINUTOS
+    setLocalDailyGoal(dailyTime ? parseFloat(dailyTime) * 60 : 180); // default 3h
+    setLocalWeeklyGoal(weeklyTime ? parseFloat(weeklyTime) * 60 : 1260); // default 21h
+  }, []);
+
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
     return {
-      display: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
+      display: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )}:${String(secs).padStart(2, "0")}`,
       hours,
       minutes,
       seconds: secs,
     };
   };
 
+  // Calcular minutos estudados hoje
+  const getTodayMinutes = () => {
+    const today = new Date();
+    const todayString = `${today.getFullYear()}-${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    const todayLogs = logs.filter((log) => log.date === todayString) || [];
+    const totalMinutes = todayLogs.reduce(
+      (sum, log) =>
+        sum +
+        (log.hours || 0) * 60 +
+        (log.minutes || 0) +
+        Math.floor((log.seconds || 0) / 60),
+      0
+    );
+    return totalMinutes;
+  };
+
+  // Calcular minutos estudados na semana (últimos 7 dias)
+  const getWeekMinutes = () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+    const weekLogs = (logs || []).filter((log) => {
+      if (!log.date) return false;
+      const logDate = new Date(log.date);
+      return logDate >= sevenDaysAgo && logDate <= today;
+    });
+
+    const totalMinutes = weekLogs.reduce(
+      (sum, log) =>
+        sum +
+        (log.hours || 0) * 60 +
+        (log.minutes || 0) +
+        Math.floor((log.seconds || 0) / 60),
+      0
+    );
+    return totalMinutes;
+  };
+
+  const todayMinutes = getTodayMinutes();
+  const weekMinutes = getWeekMinutes();
+
+  // ✅ CORREÇÃO: Usar metas do localStorage (sincronizado com GoalsPage)
+  const dailyGoalMinutes = localDailyGoal || dailyGoal * 60 || 180;
+  const weeklyGoalMinutes = localWeeklyGoal || 1260;
+
   // Resetar estados ao mudar de modo (reiniciar timer quando troca de aba dentro do timer)
   useEffect(() => {
     setIsTimerRunning(false);
     setTimerSeconds(0);
-    
-    if (mode === 'cronometro') {
-      setTimerHours('');
-      setTimerMinutes('');
+
+    if (mode === "cronometro") {
+      setTimerHours("");
+      setTimerMinutes("");
       setInitialTimerSeconds(0);
       setSelectedPreset(null);
       setPomodoroInitialSeconds(0);
-    } else if (mode === 'temporizador') {
+    } else if (mode === "temporizador") {
       setSelectedPreset(null);
       setPomodoroInitialSeconds(0);
-    } else if (mode === 'pomodoro') {
-      setTimerHours('');
-      setTimerMinutes('');
+    } else if (mode === "pomodoro") {
+      setTimerHours("");
+      setTimerMinutes("");
       setInitialTimerSeconds(0);
       setPomodoroStarted(false);
     }
   }, [mode, setIsTimerRunning, setTimerSeconds]);
 
   const handlePlayPause = () => {
-    if (mode === 'temporizador') {
+    if (mode === "temporizador") {
       if (timerSeconds === 0 && initialTimerSeconds === 0) {
         // Configurar tempo inicial
         const hours = parseInt(timerHours) || 0;
@@ -96,7 +193,7 @@ export default function TimerPage({
         setInitialTimerSeconds(total);
         setTimerSeconds(total);
       }
-    } else if (mode === 'pomodoro') {
+    } else if (mode === "pomodoro") {
       if (!selectedPreset) return;
       if (!pomodoroStarted) {
         // Primeira vez iniciando - configurar tempo inicial
@@ -111,14 +208,14 @@ export default function TimerPage({
   };
 
   const handleStop = () => {
-    if (mode === 'cronometro') {
+    if (mode === "cronometro") {
       if (timerSeconds > 0) {
         const { hours, minutes, seconds } = formatTime(timerSeconds);
         setIsTimerRunning(false);
         setTimerSeconds(0);
         onTimerStop(hours, minutes, seconds);
       }
-    } else if (mode === 'temporizador') {
+    } else if (mode === "temporizador") {
       if (initialTimerSeconds > 0) {
         // Registrar o tempo decorrido (inicial - atual)
         const elapsedSeconds = initialTimerSeconds - timerSeconds;
@@ -128,7 +225,7 @@ export default function TimerPage({
         setInitialTimerSeconds(0);
         onTimerStop(hours, minutes, seconds);
       }
-    } else if (mode === 'pomodoro') {
+    } else if (mode === "pomodoro") {
       if (pomodoroInitialSeconds > 0 && selectedPreset) {
         // Registrar o tempo decorrido (inicial - atual)
         const elapsedSeconds = pomodoroInitialSeconds - timerSeconds;
@@ -145,12 +242,12 @@ export default function TimerPage({
 
   const handleReset = () => {
     setIsTimerRunning(false);
-    if (mode === 'cronometro') {
+    if (mode === "cronometro") {
       setTimerSeconds(0);
-    } else if (mode === 'temporizador') {
+    } else if (mode === "temporizador") {
       setTimerSeconds(0);
       setInitialTimerSeconds(0);
-    } else if (mode === 'pomodoro') {
+    } else if (mode === "pomodoro") {
       setTimerSeconds(0);
       setPomodoroInitialSeconds(0);
       setPomodoroStarted(false);
@@ -158,7 +255,9 @@ export default function TimerPage({
     }
   };
 
-  const handleModeChangeRequest = (newMode: 'cronometro' | 'temporizador' | 'pomodoro') => {
+  const handleModeChangeRequest = (
+    newMode: "cronometro" | "temporizador" | "pomodoro"
+  ) => {
     if (isTimerRunning) {
       setPendingMode(newMode);
       setShowModeChangeConfirm(true);
@@ -171,7 +270,7 @@ export default function TimerPage({
     if (pendingMode) {
       setIsTimerRunning(false);
       setTimerMode(pendingMode);
-      if (pendingMode === 'cronometro' && mode === 'cronometro') {
+      if (pendingMode === "cronometro" && mode === "cronometro") {
         setTimerSeconds(0);
       }
       setPendingMode(null);
@@ -195,17 +294,19 @@ export default function TimerPage({
   };
 
   const { display } = formatTime(timerSeconds);
-  
+
   // Calcular progresso para a barra (0-100%)
   const getProgress = () => {
-    if (mode === 'cronometro') {
+    if (mode === "cronometro") {
       return 0;
-    } else if (mode === 'temporizador') {
+    } else if (mode === "temporizador") {
       if (initialTimerSeconds === 0) return 0;
       return ((initialTimerSeconds - timerSeconds) / initialTimerSeconds) * 100;
-    } else if (mode === 'pomodoro') {
+    } else if (mode === "pomodoro") {
       if (pomodoroInitialSeconds === 0) return 0;
-      return ((pomodoroInitialSeconds - timerSeconds) / pomodoroInitialSeconds) * 100;
+      return (
+        ((pomodoroInitialSeconds - timerSeconds) / pomodoroInitialSeconds) * 100
+      );
     }
     return 0;
   };
@@ -214,26 +315,36 @@ export default function TimerPage({
 
   const getModeTitle = () => {
     switch (mode) {
-      case 'cronometro': return 'Cronômetro';
-      case 'temporizador': return 'Temporizador';
-      case 'pomodoro': return 'Pomodoro';
+      case "cronometro":
+        return "Cronômetro";
+      case "temporizador":
+        return "Temporizador";
+      case "pomodoro":
+        return "Pomodoro";
     }
   };
 
   const getModeDescription = () => {
     switch (mode) {
-      case 'cronometro': return 'Acompanhe seu tempo de estudo';
-      case 'temporizador': return 'Defina um tempo e foque';
-      case 'pomodoro': return 'Técnica de produtividade';
+      case "cronometro":
+        return "Acompanhe seu tempo de estudo";
+      case "temporizador":
+        return "Defina um tempo e foque";
+      case "pomodoro":
+        return "Técnica de produtividade";
     }
   };
 
   const getModeLabel = (modeOption: string) => {
     switch (modeOption) {
-      case 'cronometro': return 'Cronômetro';
-      case 'temporizador': return 'Temporizador';
-      case 'pomodoro': return 'Pomodoro';
-      default: return '';
+      case "cronometro":
+        return "Cronômetro";
+      case "temporizador":
+        return "Temporizador";
+      case "pomodoro":
+        return "Pomodoro";
+      default:
+        return "";
     }
   };
 
@@ -246,54 +357,68 @@ export default function TimerPage({
       <div className="mb-6 mt-2 md:mt-4 pt-20 md:pt-4 relative z-10">
         {/* Mobile - Botões de Modo com Stagger Animation */}
         <div className="md:hidden flex flex-col gap-3 items-center">
-          <motion.div 
+          <motion.div
             className="flex gap-3 justify-center w-full px-4"
             variants={STAGGER_CONTAINER}
             initial="hidden"
             animate="show"
           >
-            {(['cronometro', 'temporizador', 'pomodoro'] as const).map((modeOption) => {
-              const Icon = modeOption === 'cronometro' ? Timer : modeOption === 'temporizador' ? Hourglass : Zap;
-              return (
-                <motion.div key={modeOption} variants={STAGGER_ITEM}>
-                  <Button
-                    onClick={() => handleModeChangeRequest(modeOption)}
-                    variant={mode === modeOption ? 'primary' : 'secondary'}
-                    size="sm"
-                    className="flex flex-col items-center gap-1.5 px-3 py-2.5 flex-1"
-                  >
-                    <Icon size={18} />
-                    <span>{getModeLabel(modeOption)}</span>
-                  </Button>
-                </motion.div>
-              );
-            })}
+            {(["cronometro", "temporizador", "pomodoro"] as const).map(
+              (modeOption) => {
+                const Icon =
+                  modeOption === "cronometro"
+                    ? Timer
+                    : modeOption === "temporizador"
+                    ? Hourglass
+                    : Zap;
+                return (
+                  <motion.div key={modeOption} variants={STAGGER_ITEM}>
+                    <Button
+                      onClick={() => handleModeChangeRequest(modeOption)}
+                      variant={mode === modeOption ? "primary" : "secondary"}
+                      size="sm"
+                      className="flex flex-col items-center gap-1.5 px-3 py-2.5 flex-1"
+                    >
+                      <Icon size={18} />
+                      <span>{getModeLabel(modeOption)}</span>
+                    </Button>
+                  </motion.div>
+                );
+              }
+            )}
           </motion.div>
         </div>
 
         {/* Botões de Modo Desktop - Stagger Animation */}
-        <motion.div 
+        <motion.div
           className="hidden md:flex gap-4 justify-center mb-8"
           variants={STAGGER_CONTAINER}
           initial="hidden"
           animate="show"
         >
-          {(['cronometro', 'temporizador', 'pomodoro'] as const).map((modeOption) => {
-            const Icon = modeOption === 'cronometro' ? Timer : modeOption === 'temporizador' ? Hourglass : Zap;
-            return (
-              <motion.div key={modeOption} variants={STAGGER_ITEM}>
-                <Button
-                  onClick={() => handleModeChangeRequest(modeOption)}
-                  variant={mode === modeOption ? 'primary' : 'secondary'}
-                  size="md"
-                  leftIcon={<Icon size={22} />}
-                  className="px-6 py-3"
-                >
-                  {getModeLabel(modeOption)}
-                </Button>
-              </motion.div>
-            );
-          })}
+          {(["cronometro", "temporizador", "pomodoro"] as const).map(
+            (modeOption) => {
+              const Icon =
+                modeOption === "cronometro"
+                  ? Timer
+                  : modeOption === "temporizador"
+                  ? Hourglass
+                  : Zap;
+              return (
+                <motion.div key={modeOption} variants={STAGGER_ITEM}>
+                  <Button
+                    onClick={() => handleModeChangeRequest(modeOption)}
+                    variant={mode === modeOption ? "primary" : "secondary"}
+                    size="md"
+                    leftIcon={<Icon size={22} />}
+                    className="px-6 py-3"
+                  >
+                    {getModeLabel(modeOption)}
+                  </Button>
+                </motion.div>
+              );
+            }
+          )}
         </motion.div>
       </div>
 
@@ -305,12 +430,15 @@ export default function TimerPage({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="text-center mb-4 md:mb-8"
+          className="text-center mb-6 sm:mb-8"
         >
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 transition-colors">
-            {getModeTitle()}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base transition-colors">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Timer className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white transition-colors">
+              {getModeTitle()}
+            </h1>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base transition-colors">
             {getModeDescription()}
           </p>
         </motion.div>
@@ -320,7 +448,7 @@ export default function TimerPage({
       <div className="md:hidden">
         {/* Configuração de Temporizador - Mobile */}
         <AnimatePresence mode="wait">
-          {mode === 'temporizador' && !isTimerRunning && timerSeconds === 0 && (
+          {mode === "temporizador" && !isTimerRunning && timerSeconds === 0 && (
             <motion.div
               key="timer-config-mobile"
               {...SCALE_ANIMATION}
@@ -331,7 +459,9 @@ export default function TimerPage({
               </p>
               <div className="flex gap-3 items-center justify-center">
                 <div className="flex flex-col items-center">
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-2">Horas</label>
+                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    Horas
+                  </label>
                   <input
                     type="number"
                     inputMode="numeric"
@@ -342,8 +472,14 @@ export default function TimerPage({
                     value={timerHours}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (val === '' || /^\d{1,2}$/.test(val)) {
-                        const num = val === '' ? '' : Math.max(0, Math.min(23, parseInt(val) || 0)).toString();
+                      if (val === "" || /^\d{1,2}$/.test(val)) {
+                        const num =
+                          val === ""
+                            ? ""
+                            : Math.max(
+                                0,
+                                Math.min(23, parseInt(val) || 0)
+                              ).toString();
                         setTimerHours(num);
                       }
                     }}
@@ -353,7 +489,9 @@ export default function TimerPage({
                 </div>
                 <span className="text-3xl font-bold text-gray-400 mt-6">:</span>
                 <div className="flex flex-col items-center">
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-2">Minutos</label>
+                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    Minutos
+                  </label>
                   <input
                     type="number"
                     inputMode="numeric"
@@ -364,8 +502,14 @@ export default function TimerPage({
                     value={timerMinutes}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (val === '' || /^\d{1,2}$/.test(val)) {
-                        const num = val === '' ? '' : Math.max(0, Math.min(59, parseInt(val) || 0)).toString();
+                      if (val === "" || /^\d{1,2}$/.test(val)) {
+                        const num =
+                          val === ""
+                            ? ""
+                            : Math.max(
+                                0,
+                                Math.min(59, parseInt(val) || 0)
+                              ).toString();
                         setTimerMinutes(num);
                       }
                     }}
@@ -380,7 +524,7 @@ export default function TimerPage({
 
         {/* Presets de Pomodoro Mobile */}
         <AnimatePresence mode="wait">
-          {mode === 'pomodoro' && !isTimerRunning && (
+          {mode === "pomodoro" && !isTimerRunning && (
             <motion.div
               key="pomodoro-presets-mobile"
               {...FADE_UP_ANIMATION}
@@ -390,7 +534,11 @@ export default function TimerPage({
                 <Button
                   key={preset.label}
                   onClick={() => handlePresetSelect(preset)}
-                  variant={selectedPreset?.label === preset.label ? "primary" : "secondary"}
+                  variant={
+                    selectedPreset?.label === preset.label
+                      ? "primary"
+                      : "secondary"
+                  }
                   size="sm"
                   className="px-2 py-1.5 flex flex-col items-center"
                   aria-label={`Selecionar preset Pomodoro: ${preset.label} (${preset.minutes} minutos)`}
@@ -398,7 +546,9 @@ export default function TimerPage({
                 >
                   {preset.label}
                   <br />
-                  <span className="text-xs opacity-90">({preset.minutes} min)</span>
+                  <span className="text-xs opacity-90">
+                    ({preset.minutes} min)
+                  </span>
                 </Button>
               ))}
             </motion.div>
@@ -409,8 +559,8 @@ export default function TimerPage({
         <div className="flex-1 flex flex-col items-center justify-center mb-6">
           <div className="w-full max-w-xs mx-auto">
             {/* 🎬 PARTE 3: Barra de Progresso Mobile - Spring Animation */}
-            {(mode === 'temporizador' || mode === 'pomodoro') && (
-              <motion.div 
+            {(mode === "temporizador" || mode === "pomodoro") && (
+              <motion.div
                 className="w-full max-w-xs mx-auto mb-4"
                 initial={{ opacity: 0, scaleX: 0.8 }}
                 animate={{ opacity: 1, scaleX: 1 }}
@@ -421,26 +571,26 @@ export default function TimerPage({
                     className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full relative"
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
-                    transition={{ 
+                    transition={{
                       type: "spring",
                       stiffness: 50,
-                      damping: 20
+                      damping: 20,
                     }}
                   >
                     {/* Shimmer effect (brilho passando) */}
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      animate={{ x: ['-100%', '200%'] }}
-                      transition={{ 
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{
                         duration: 2,
                         repeat: Infinity,
-                        ease: "linear"
+                        ease: "linear",
                       }}
                     />
                   </motion.div>
                 </div>
                 {/* Porcentagem com counter animation */}
-                <motion.p 
+                <motion.p
                   className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2"
                   key={Math.floor(progress)} // Re-anima a cada 1%
                   initial={{ opacity: 0, y: -5 }}
@@ -451,23 +601,29 @@ export default function TimerPage({
                 </motion.p>
               </motion.div>
             )}
-            
+
             {/* Display Digital Mobile */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`display-mobile-${mode}`}
                 {...SCALE_ANIMATION}
-                animate={{ 
+                animate={{
                   ...SCALE_ANIMATION.animate,
-                  boxShadow: isTimerRunning ? [
-                    "0 10px 40px rgba(16, 185, 129, 0.1)",
-                    "0 10px 40px rgba(16, 185, 129, 0.25)",
-                    "0 10px 40px rgba(16, 185, 129, 0.1)"
-                  ] : "0 10px 40px rgba(0, 0, 0, 0.1)"
+                  boxShadow: isTimerRunning
+                    ? [
+                        "0 10px 40px rgba(16, 185, 129, 0.1)",
+                        "0 10px 40px rgba(16, 185, 129, 0.25)",
+                        "0 10px 40px rgba(16, 185, 129, 0.1)",
+                      ]
+                    : "0 10px 40px rgba(0, 0, 0, 0.1)",
                 }}
-                transition={{ 
+                transition={{
                   ...SCALE_ANIMATION.transition,
-                  boxShadow: { duration: 2, repeat: isTimerRunning ? Infinity : 0, ease: "easeInOut" }
+                  boxShadow: {
+                    duration: 2,
+                    repeat: isTimerRunning ? Infinity : 0,
+                    ease: "easeInOut",
+                  },
                 }}
                 className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-4 w-full max-w-xs mx-auto relative overflow-hidden"
               >
@@ -475,11 +631,15 @@ export default function TimerPage({
                 {isTimerRunning && (
                   <motion.div
                     className="absolute inset-0 border-2 border-emerald-500/30 rounded-3xl pointer-events-none"
-                    animate={{ 
+                    animate={{
                       scale: [1, 1.01, 1],
-                      opacity: [0.3, 0.6, 0.3] 
+                      opacity: [0.3, 0.6, 0.3],
                     }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
                   />
                 )}
                 {/* Display estático (sem animação individual) */}
@@ -492,8 +652,8 @@ export default function TimerPage({
         </div>
 
         {/* 🔧 CORREÇÃO 1: Botões de Controle Mobile - Animações completas */}
-        <motion.div 
-          className="flex gap-4 w-full max-w-md mx-auto mb-8"
+        <motion.div
+          className="flex gap-4 w-full max-w-md mx-auto mb-6"
           layout // Anima quando muda de Play pra Pause
         >
           {isTimerRunning ? (
@@ -510,7 +670,7 @@ export default function TimerPage({
               >
                 Pause
               </Button>
-              
+
               {/* Botão Reset Mobile */}
               {timerSeconds > 0 && (
                 <Button
@@ -529,7 +689,13 @@ export default function TimerPage({
             /* Botão Play Mobile */
             <Button
               onClick={handlePlayPause}
-              disabled={(mode === 'temporizador' && (timerHours === '' || timerHours === '0') && (timerMinutes === '' || timerMinutes === '0') && timerSeconds === 0) || (mode === 'pomodoro' && !selectedPreset)}
+              disabled={
+                (mode === "temporizador" &&
+                  (timerHours === "" || timerHours === "0") &&
+                  (timerMinutes === "" || timerMinutes === "0") &&
+                  timerSeconds === 0) ||
+                (mode === "pomodoro" && !selectedPreset)
+              }
               variant="primary"
               fullWidth
               size="lg"
@@ -542,9 +708,85 @@ export default function TimerPage({
           )}
         </motion.div>
 
+        {/* Cards de Progresso das Metas - Mobile */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="w-full max-w-md mx-auto mb-6 space-y-3 px-2"
+        >
+          {/* Meta Diária */}
+          <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Target size={16} className="text-emerald-400" />
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Meta Diária
+                </span>
+              </div>
+              <span className="text-xs font-bold text-emerald-400">
+                {formatMinutesDisplay(todayMinutes)} /{" "}
+                {formatMinutesDisplay(dailyGoalMinutes)}
+              </span>
+            </div>
+            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(
+                    (todayMinutes / (dailyGoalMinutes || 1)) * 100,
+                    100
+                  )}%`,
+                }}
+              />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              {todayMinutes >= dailyGoalMinutes
+                ? "🎉 Meta concluída!"
+                : `Faltam ${formatMinutesDisplay(
+                    Math.max(0, dailyGoalMinutes - todayMinutes)
+                  )}`}
+            </p>
+          </div>
+
+          {/* Meta Semanal */}
+          <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Flame size={16} className="text-orange-400" />
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Meta Semanal
+                </span>
+              </div>
+              <span className="text-xs font-bold text-orange-400">
+                {formatMinutesDisplay(weekMinutes)} /{" "}
+                {formatMinutesDisplay(weeklyGoalMinutes)}
+              </span>
+            </div>
+            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(
+                    (weekMinutes / (weeklyGoalMinutes || 1)) * 100,
+                    100
+                  )}%`,
+                }}
+              />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              {weekMinutes >= weeklyGoalMinutes
+                ? "🔥 Meta concluída!"
+                : `Faltam ${formatMinutesDisplay(
+                    Math.max(0, weeklyGoalMinutes - weekMinutes)
+                  )}`}
+            </p>
+          </div>
+        </motion.div>
+
         {/* Botão Parar e Registrar - Mobile */}
         <AnimatePresence mode="wait">
-          {(mode === 'cronometro' && timerSeconds > 0 && !isTimerRunning) && (
+          {mode === "cronometro" && timerSeconds > 0 && !isTimerRunning && (
             <Button
               key="stop-cronometro-mobile"
               onClick={handleStop}
@@ -557,31 +799,37 @@ export default function TimerPage({
             </Button>
           )}
 
-          {(mode === 'temporizador' && initialTimerSeconds > 0 && !isTimerRunning) && (
-            <Button
-              key="stop-temporizador-mobile"
-              onClick={handleStop}
-              variant="danger"
-              fullWidth
-              size="lg"
-              className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
-            >
-              Parar e Registrar
-            </Button>
-          )}
+          {mode === "temporizador" &&
+            initialTimerSeconds > 0 &&
+            !isTimerRunning && (
+              <Button
+                key="stop-temporizador-mobile"
+                onClick={handleStop}
+                variant="danger"
+                fullWidth
+                size="lg"
+                className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
+              >
+                Parar e Registrar
+              </Button>
+            )}
 
-          {(mode === 'pomodoro' && pomodoroStarted && pomodoroInitialSeconds > 0 && !isTimerRunning && selectedPreset?.label === 'Foco') && (
-            <Button
-              key="stop-pomodoro-mobile"
-              onClick={handleStop}
-              variant="danger"
-              fullWidth
-              size="lg"
-              className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
-            >
-              Parar e Registrar
-            </Button>
-          )}
+          {mode === "pomodoro" &&
+            pomodoroStarted &&
+            pomodoroInitialSeconds > 0 &&
+            !isTimerRunning &&
+            selectedPreset?.label === "Foco" && (
+              <Button
+                key="stop-pomodoro-mobile"
+                onClick={handleStop}
+                variant="danger"
+                fullWidth
+                size="lg"
+                className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
+              >
+                Parar e Registrar
+              </Button>
+            )}
         </AnimatePresence>
       </div>
 
@@ -590,8 +838,8 @@ export default function TimerPage({
         {/* COLUNA ESQUERDA: Timer + Controles */}
         <div className="col-span-3 flex flex-col items-center justify-center space-y-6">
           {/* 🎬 PARTE 3: Barra de Progresso Desktop - Spring + Shimmer */}
-          {(mode === 'temporizador' || mode === 'pomodoro') && (
-            <motion.div 
+          {(mode === "temporizador" || mode === "pomodoro") && (
+            <motion.div
               className="w-full max-w-md"
               initial={{ opacity: 0, scaleX: 0.8 }}
               animate={{ opacity: 1, scaleX: 1 }}
@@ -602,26 +850,26 @@ export default function TimerPage({
                   className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full relative"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
-                  transition={{ 
+                  transition={{
                     type: "spring",
                     stiffness: 50,
-                    damping: 20
+                    damping: 20,
                   }}
                 >
                   {/* Shimmer effect (brilho passando) */}
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                    animate={{ x: ['-100%', '200%'] }}
-                    transition={{ 
+                    animate={{ x: ["-100%", "200%"] }}
+                    transition={{
                       duration: 2,
                       repeat: Infinity,
-                      ease: "linear"
+                      ease: "linear",
                     }}
                   />
                 </motion.div>
               </div>
               {/* Porcentagem com counter animation */}
-              <motion.p 
+              <motion.p
                 className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2"
                 key={Math.floor(progress)} // Re-anima a cada 1%
                 initial={{ opacity: 0, y: -5 }}
@@ -638,17 +886,23 @@ export default function TimerPage({
             <motion.div
               key={`display-desktop-${mode}`}
               {...SCALE_ANIMATION}
-              animate={{ 
+              animate={{
                 ...SCALE_ANIMATION.animate,
-                boxShadow: isTimerRunning ? [
-                  "0 10px 40px rgba(16, 185, 129, 0.1)",
-                  "0 10px 40px rgba(16, 185, 129, 0.25)",
-                  "0 10px 40px rgba(16, 185, 129, 0.1)"
-                ] : "0 10px 40px rgba(0, 0, 0, 0.1)"
+                boxShadow: isTimerRunning
+                  ? [
+                      "0 10px 40px rgba(16, 185, 129, 0.1)",
+                      "0 10px 40px rgba(16, 185, 129, 0.25)",
+                      "0 10px 40px rgba(16, 185, 129, 0.1)",
+                    ]
+                  : "0 10px 40px rgba(0, 0, 0, 0.1)",
               }}
-              transition={{ 
+              transition={{
                 ...SCALE_ANIMATION.transition,
-                boxShadow: { duration: 2, repeat: isTimerRunning ? Infinity : 0, ease: "easeInOut" }
+                boxShadow: {
+                  duration: 2,
+                  repeat: isTimerRunning ? Infinity : 0,
+                  ease: "easeInOut",
+                },
               }}
               className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-10 lg:p-12 w-full max-w-lg relative overflow-hidden"
             >
@@ -656,14 +910,18 @@ export default function TimerPage({
               {isTimerRunning && (
                 <motion.div
                   className="absolute inset-0 border-2 border-emerald-500/30 rounded-3xl pointer-events-none"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.01, 1],
-                    opacity: [0.3, 0.6, 0.3] 
+                    opacity: [0.3, 0.6, 0.3],
                   }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                 />
               )}
-              
+
               {/* 🔧 CORREÇÃO 2: Display estático (sem animação individual - remove pisca-pisca) */}
               <div className="text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white tracking-tight text-center font-mono relative z-10">
                 {display}
@@ -672,7 +930,7 @@ export default function TimerPage({
           </AnimatePresence>
 
           {/* 🎬 PARTE 5: Botões de Controle Desktop - Feedback Tátil */}
-          <motion.div 
+          <motion.div
             className="flex items-center gap-4"
             layout // Anima quando muda de Play pra Pause
           >
@@ -688,7 +946,7 @@ export default function TimerPage({
                 >
                   <Pause size={32} />
                 </Button>
-                
+
                 {/* Botão Reset */}
                 {timerSeconds > 0 && (
                   <Button
@@ -706,7 +964,13 @@ export default function TimerPage({
               /* Botão Play */
               <Button
                 onClick={handlePlayPause}
-                disabled={(mode === 'temporizador' && (timerHours === '' || timerHours === '0') && (timerMinutes === '' || timerMinutes === '0') && timerSeconds === 0) || (mode === 'pomodoro' && !selectedPreset)}
+                disabled={
+                  (mode === "temporizador" &&
+                    (timerHours === "" || timerHours === "0") &&
+                    (timerMinutes === "" || timerMinutes === "0") &&
+                    timerSeconds === 0) ||
+                  (mode === "pomodoro" && !selectedPreset)
+                }
                 variant="primary"
                 size="lg"
                 leftIcon={<Play size={28} />}
@@ -718,9 +982,85 @@ export default function TimerPage({
             )}
           </motion.div>
 
+          {/* Cards de Progresso das Metas - Desktop */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="w-full max-w-md mx-auto mt-6 space-y-4"
+          >
+            {/* Meta Diária */}
+            <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Target size={18} className="text-emerald-400" />
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Meta Diária
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-emerald-400">
+                  {formatMinutesDisplay(todayMinutes)} /{" "}
+                  {formatMinutesDisplay(dailyGoalMinutes)}
+                </span>
+              </div>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(
+                      (todayMinutes / (dailyGoalMinutes || 1)) * 100,
+                      100
+                    )}%`,
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                {todayMinutes >= dailyGoalMinutes
+                  ? "🎉 Meta diária concluída!"
+                  : `Faltam ${formatMinutesDisplay(
+                      Math.max(0, dailyGoalMinutes - todayMinutes)
+                    )} para bater a meta`}
+              </p>
+            </div>
+
+            {/* Meta Semanal */}
+            <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Flame size={18} className="text-orange-400" />
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Meta Semanal
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-orange-400">
+                  {formatMinutesDisplay(weekMinutes)} /{" "}
+                  {formatMinutesDisplay(weeklyGoalMinutes)}
+                </span>
+              </div>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(
+                      (weekMinutes / (weeklyGoalMinutes || 1)) * 100,
+                      100
+                    )}%`,
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                {weekMinutes >= weeklyGoalMinutes
+                  ? "🔥 Meta semanal concluída!"
+                  : `Faltam ${formatMinutesDisplay(
+                      Math.max(0, weeklyGoalMinutes - weekMinutes)
+                    )} para a meta`}
+              </p>
+            </div>
+          </motion.div>
+
           {/* Botão Parar e Registrar - Desktop */}
           <AnimatePresence mode="wait">
-            {(mode === 'cronometro' && timerSeconds > 0 && !isTimerRunning) && (
+            {mode === "cronometro" && timerSeconds > 0 && !isTimerRunning && (
               <Button
                 key="stop-cronometro-desktop"
                 onClick={handleStop}
@@ -733,31 +1073,37 @@ export default function TimerPage({
               </Button>
             )}
 
-            {(mode === 'temporizador' && initialTimerSeconds > 0 && !isTimerRunning) && (
-              <Button
-                key="stop-temporizador-desktop"
-                onClick={handleStop}
-                variant="danger"
-                fullWidth
-                size="lg"
-                className="w-full max-w-sm py-5 shadow-lg text-base"
-              >
-                Parar e Registrar
-              </Button>
-            )}
+            {mode === "temporizador" &&
+              initialTimerSeconds > 0 &&
+              !isTimerRunning && (
+                <Button
+                  key="stop-temporizador-desktop"
+                  onClick={handleStop}
+                  variant="danger"
+                  fullWidth
+                  size="lg"
+                  className="w-full max-w-sm py-5 shadow-lg text-base"
+                >
+                  Parar e Registrar
+                </Button>
+              )}
 
-            {(mode === 'pomodoro' && pomodoroStarted && pomodoroInitialSeconds > 0 && !isTimerRunning && selectedPreset?.label === 'Foco') && (
-              <Button
-                key="stop-pomodoro-desktop"
-                onClick={handleStop}
-                variant="danger"
-                fullWidth
-                size="lg"
-                className="w-full max-w-sm py-5 shadow-lg text-base"
-              >
-                Parar e Registrar
-              </Button>
-            )}
+            {mode === "pomodoro" &&
+              pomodoroStarted &&
+              pomodoroInitialSeconds > 0 &&
+              !isTimerRunning &&
+              selectedPreset?.label === "Foco" && (
+                <Button
+                  key="stop-pomodoro-desktop"
+                  onClick={handleStop}
+                  variant="danger"
+                  fullWidth
+                  size="lg"
+                  className="w-full max-w-sm py-5 shadow-lg text-base"
+                >
+                  Parar e Registrar
+                </Button>
+              )}
           </AnimatePresence>
         </div>
 
@@ -769,9 +1115,9 @@ export default function TimerPage({
               key={`info-desktop-${mode}`}
               {...FADE_UP_ANIMATION}
               transition={{ ...FADE_UP_ANIMATION.transition, delay: 0.1 }}
-              whileHover={{ 
+              whileHover={{
                 y: -5,
-                boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)"
+                boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
               }}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5"
             >
@@ -780,9 +1126,15 @@ export default function TimerPage({
                   whileHover={{ rotate: 360, scale: 1.2 }}
                   transition={{ duration: 0.6 }}
                 >
-                  {mode === 'cronometro' && <Timer className="text-emerald-500" size={24} />}
-                  {mode === 'temporizador' && <Hourglass className="text-emerald-500" size={24} />}
-                  {mode === 'pomodoro' && <Zap className="text-emerald-500" size={24} />}
+                  {mode === "cronometro" && (
+                    <Timer className="text-emerald-500" size={24} />
+                  )}
+                  {mode === "temporizador" && (
+                    <Hourglass className="text-emerald-500" size={24} />
+                  )}
+                  {mode === "pomodoro" && (
+                    <Zap className="text-emerald-500" size={24} />
+                  )}
                 </motion.div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                   {getModeTitle()}
@@ -791,28 +1143,34 @@ export default function TimerPage({
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 {getModeDescription()}
               </p>
-              {mode === 'temporizador' && initialTimerSeconds > 0 && (
+              {mode === "temporizador" && initialTimerSeconds > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Tempo inicial:</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Tempo inicial:
+                  </p>
                   <p className="text-xl font-bold text-emerald-500">
                     {formatTime(initialTimerSeconds).display}
                   </p>
                 </div>
               )}
-              {mode === 'pomodoro' && pomodoroInitialSeconds > 0 && selectedPreset && (
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Sessão:</p>
-                  <p className="text-xl font-bold text-emerald-500">
-                    {selectedPreset.label} ({selectedPreset.minutes} min)
-                  </p>
-                </div>
-              )}
+              {mode === "pomodoro" &&
+                pomodoroInitialSeconds > 0 &&
+                selectedPreset && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Sessão:
+                    </p>
+                    <p className="text-xl font-bold text-emerald-500">
+                      {selectedPreset.label} ({selectedPreset.minutes} min)
+                    </p>
+                  </div>
+                )}
             </motion.div>
           </AnimatePresence>
 
           {/* Presets do Pomodoro Desktop */}
           <AnimatePresence mode="wait">
-            {mode === 'pomodoro' && !isTimerRunning && (
+            {mode === "pomodoro" && !isTimerRunning && (
               <motion.div
                 key="pomodoro-presets-desktop"
                 {...FADE_UP_ANIMATION}
@@ -822,8 +1180,8 @@ export default function TimerPage({
                 <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
                   Presets Rápidos
                 </h4>
-                
-                <motion.div 
+
+                <motion.div
                   className="grid grid-cols-3 gap-3"
                   variants={STAGGER_CONTAINER}
                   initial="hidden"
@@ -835,21 +1193,27 @@ export default function TimerPage({
                       <motion.button
                         key={preset.minutes}
                         variants={STAGGER_ITEM}
-                        whileHover={{ 
+                        whileHover={{
                           scale: 1.05,
-                          transition: { duration: 0.2 }
+                          transition: { duration: 0.2 },
                         }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handlePresetSelect(preset)}
                         className={`px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
-                          isSelected 
-                            ? 'bg-emerald-500 text-white shadow-lg' 
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-emerald-500 hover:text-white'
+                          isSelected
+                            ? "bg-emerald-500 text-white shadow-lg"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-emerald-500 hover:text-white"
                         }`}
                       >
                         {preset.label}
                         <br />
-                        <span className={`text-xs ${isSelected ? 'opacity-90' : 'opacity-80'}`}>({preset.minutes} min)</span>
+                        <span
+                          className={`text-xs ${
+                            isSelected ? "opacity-90" : "opacity-80"
+                          }`}
+                        >
+                          ({preset.minutes} min)
+                        </span>
                       </motion.button>
                     );
                   })}
@@ -860,53 +1224,75 @@ export default function TimerPage({
 
           {/* Input de Tempo Desktop */}
           <AnimatePresence mode="wait">
-            {mode === 'temporizador' && !isTimerRunning && timerSeconds === 0 && (
-              <motion.div
-                key="timer-config-desktop"
-                {...FADE_UP_ANIMATION}
-                transition={{ ...FADE_UP_ANIMATION.transition, delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4"
-              >
-                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-                  Defina o tempo inicial
-                </h4>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { label: 'Horas', value: timerHours, setter: setTimerHours, max: 23 },
-                    { label: 'Minutos', value: timerMinutes, setter: setTimerMinutes, max: 59 }
-                  ].map((field) => (
-                    <motion.div key={field.label}>
-                      <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">
-                        {field.label}
-                      </label>
-                      <motion.input
-                        type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        min="0"
-                        max={field.max}
-                        value={field.value}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === '' || /^\d{1,2}$/.test(val)) {
-                            const num = val === '' ? '' : Math.max(0, Math.min(field.max, parseInt(val) || 0)).toString();
-                            field.setter(num);
-                          }
-                        }}
-                        whileFocus={{ 
-                          scale: 1.05,
-                          boxShadow: "0 0 0 4px rgba(16, 185, 129, 0.1)"
-                        }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        className="w-full bg-gray-100 dark:bg-gray-700 text-center text-3xl font-bold p-3 rounded-xl text-gray-900 dark:text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 timer-display"
-                        placeholder="0"
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
+            {mode === "temporizador" &&
+              !isTimerRunning &&
+              timerSeconds === 0 && (
+                <motion.div
+                  key="timer-config-desktop"
+                  {...FADE_UP_ANIMATION}
+                  transition={{ ...FADE_UP_ANIMATION.transition, delay: 0.2 }}
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4"
+                >
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+                    Defina o tempo inicial
+                  </h4>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      {
+                        label: "Horas",
+                        value: timerHours,
+                        setter: setTimerHours,
+                        max: 23,
+                      },
+                      {
+                        label: "Minutos",
+                        value: timerMinutes,
+                        setter: setTimerMinutes,
+                        max: 59,
+                      },
+                    ].map((field) => (
+                      <motion.div key={field.label}>
+                        <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">
+                          {field.label}
+                        </label>
+                        <motion.input
+                          type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          min="0"
+                          max={field.max}
+                          value={field.value}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || /^\d{1,2}$/.test(val)) {
+                              const num =
+                                val === ""
+                                  ? ""
+                                  : Math.max(
+                                      0,
+                                      Math.min(field.max, parseInt(val) || 0)
+                                    ).toString();
+                              field.setter(num);
+                            }
+                          }}
+                          whileFocus={{
+                            scale: 1.05,
+                            boxShadow: "0 0 0 4px rgba(16, 185, 129, 0.1)",
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 20,
+                          }}
+                          className="w-full bg-gray-100 dark:bg-gray-700 text-center text-3xl font-bold p-3 rounded-xl text-gray-900 dark:text-white border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 timer-display"
+                          placeholder="0"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
           </AnimatePresence>
 
           {/* Card de Dica/Info Adicional */}
@@ -920,7 +1306,10 @@ export default function TimerPage({
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.6 }}
               >
-                <Info className="text-emerald-500 flex-shrink-0 mt-1" size={20} />
+                <Info
+                  className="text-emerald-500 flex-shrink-0 mt-1"
+                  size={20}
+                />
               </motion.div>
               <div>
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
@@ -928,9 +1317,12 @@ export default function TimerPage({
                   Dica
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {mode === 'cronometro' && 'Use o cronômetro para sessões de estudo sem limite de tempo.'}
-                  {mode === 'temporizador' && 'Defina um tempo e mantenha o foco até o alarme tocar.'}
-                  {mode === 'pomodoro' && 'A técnica Pomodoro alterna períodos de foco intenso com pausas curtas.'}
+                  {mode === "cronometro" &&
+                    "Use o cronômetro para sessões de estudo sem limite de tempo."}
+                  {mode === "temporizador" &&
+                    "Defina um tempo e mantenha o foco até o alarme tocar."}
+                  {mode === "pomodoro" &&
+                    "A técnica Pomodoro alterna períodos de foco intenso com pausas curtas."}
                 </p>
               </div>
             </div>

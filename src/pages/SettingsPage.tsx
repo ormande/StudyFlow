@@ -1,18 +1,33 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, Volume2, VolumeX, Database, Settings, FileSpreadsheet, FileDown, AlertTriangle, Trash2, Play, Bell, BellOff, Loader2, MessageCircle } from 'lucide-react';
-import { Subject, StudyLog } from '../types';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../contexts/ToastContext';
-import { useAchievementsContext } from '../contexts/AchievementsContext';
-import { useNotification } from '../hooks/useNotification';
-import IOSSwitch from '../components/IOSSwitch';
-import ConfirmModal from '../components/ConfirmModal';
-import Button from '../components/Button';
-import FloatingBackButton from '../components/FloatingBackButton';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { registerPoppinsFontSimple } from '../utils/pdfFonts';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Eye,
+  Volume2,
+  VolumeX,
+  Database,
+  Settings,
+  FileSpreadsheet,
+  FileDown,
+  AlertTriangle,
+  Trash2,
+  Play,
+  Bell,
+  BellOff,
+  Loader2,
+  MessageCircle,
+} from "lucide-react";
+import { Subject, StudyLog } from "../types";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../contexts/ToastContext";
+import { useAchievementsContext } from "../contexts/AchievementsContext";
+import { useNotification } from "../hooks/useNotification";
+import IOSSwitch from "../components/IOSSwitch";
+import ConfirmModal from "../components/ConfirmModal";
+import Button from "../components/Button";
+import FloatingBackButton from "../components/FloatingBackButton";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { registerPoppinsFontSimple } from "../utils/pdfFonts";
 
 interface SettingsPageProps {
   onNavigateBack?: () => void;
@@ -42,18 +57,20 @@ export default function SettingsPage({
 
   // Carregar preferências do localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('timer_sound_enabled');
+    const saved = localStorage.getItem("timer_sound_enabled");
     if (saved !== null) {
-      setTimerSoundEnabled(saved === 'true');
+      setTimerSoundEnabled(saved === "true");
     }
-    
-    const notificationsSaved = localStorage.getItem('settings_notifications_enabled');
+
+    const notificationsSaved = localStorage.getItem(
+      "settings_notifications_enabled"
+    );
     if (notificationsSaved !== null) {
-      setNotificationsEnabled(notificationsSaved === 'true');
+      setNotificationsEnabled(notificationsSaved === "true");
     } else {
       // Se não existe, verificar se já tem permissão concedida
       // Mas só atualizar se a permissão realmente mudou para 'granted'
-      if (permission === 'granted') {
+      if (permission === "granted") {
         setNotificationsEnabled(true);
       }
     }
@@ -62,12 +79,13 @@ export default function SettingsPage({
   // Salvar preferência de som do timer
   const handleToggleTimerSound = (enabled: boolean) => {
     setTimerSoundEnabled(enabled);
-    localStorage.setItem('timer_sound_enabled', enabled.toString());
+    localStorage.setItem("timer_sound_enabled", enabled.toString());
   };
 
   // Testar som do timer
   const handleTestSound = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
@@ -75,10 +93,13 @@ export default function SettingsPage({
     gainNode.connect(audioContext.destination);
 
     oscillator.frequency.value = 800; // Frequência do beep
-    oscillator.type = 'sine';
+    oscillator.type = "sine";
 
     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioContext.currentTime + 0.3
+    );
 
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.3);
@@ -90,76 +111,91 @@ export default function SettingsPage({
       if (enabled) {
         // Se está ativando, pedir permissão
         const result = await requestPermission();
-        if (result === 'granted') {
+        if (result === "granted") {
           setNotificationsEnabled(true);
-          localStorage.setItem('settings_notifications_enabled', 'true');
-          addToast('Notificações habilitadas!', 'success');
-        } else if (result === 'denied') {
+          localStorage.setItem("settings_notifications_enabled", "true");
+          addToast("Notificações habilitadas!", "success");
+        } else if (result === "denied") {
           setNotificationsEnabled(false);
-          localStorage.setItem('settings_notifications_enabled', 'false');
-          addToast('Permissão negada no navegador', 'error');
+          localStorage.setItem("settings_notifications_enabled", "false");
+          addToast("Permissão negada no navegador", "error");
         }
       } else {
         // Se está desativando, apenas salvar preferência
         setNotificationsEnabled(false);
-        localStorage.setItem('settings_notifications_enabled', 'false');
-        addToast('Notificações desabilitadas', 'success');
+        localStorage.setItem("settings_notifications_enabled", "false");
+        addToast("Notificações desabilitadas", "success");
       }
     } catch (error: any) {
-      console.error('Erro ao alternar notificações:', error);
+      console.error("Erro ao alternar notificações:", error);
       // Reverter o estado em caso de erro
       setNotificationsEnabled(!enabled);
-      addToast('Erro ao alterar configuração de notificações. Tente novamente.', 'error');
+      addToast(
+        "Erro ao alterar configuração de notificações. Tente novamente.",
+        "error"
+      );
     }
   };
 
   // Testar notificação
   const handleTestNotification = async () => {
-    if (permission !== 'granted') {
-      addToast('Permissão de notificação não concedida. Ative as notificações primeiro.', 'error');
+    if (permission !== "granted") {
+      addToast(
+        "Permissão de notificação não concedida. Ative as notificações primeiro.",
+        "error"
+      );
       return;
     }
 
     if (!notificationsEnabled) {
-      addToast('Notificações estão desabilitadas. Ative-as primeiro.', 'error');
+      addToast("Notificações estão desabilitadas. Ative-as primeiro.", "error");
       return;
     }
 
     try {
-      await sendNotification('StudyFlow Funcionando! ✅', {
-        body: 'As notificações do sistema estão configuradas corretamente.',
-        tag: 'test-notification',
-        requireInteraction: false
+      await sendNotification("StudyFlow Funcionando! ✅", {
+        body: "As notificações do sistema estão configuradas corretamente.",
+        tag: "test-notification",
+        requireInteraction: false,
       });
     } catch (error) {
-      console.error('Erro ao testar notificação:', error);
-      addToast('Erro ao enviar notificação de teste', 'error');
+      console.error("Erro ao testar notificação:", error);
+      addToast("Erro ao enviar notificação de teste", "error");
     }
   };
 
   // Função para Exportar CSV (Compatível com Excel Brasil)
   const handleExportCSV = () => {
     // Cabeçalhos do CSV
-    const headers = ['Data', 'Matéria', 'Tipo', 'Tempo (min)', 'Páginas', 'Acertos', 'Erros', 'Notas'];
-    
+    const headers = [
+      "Data",
+      "Matéria",
+      "Tipo",
+      "Tempo (min)",
+      "Páginas",
+      "Acertos",
+      "Erros",
+      "Notas",
+    ];
+
     // Separador para Excel brasileiro (ponto e vírgula)
-    const SEPARATOR = ';';
-    
+    const SEPARATOR = ";";
+
     // Função para sanitizar notas: remove quebras de linha e pontos e vírgula
     const sanitizeNotes = (notes: string | undefined | null): string => {
-      if (!notes) return '';
+      if (!notes) return "";
       return notes
-        .replace(/\n/g, ' ') // Substitui quebras de linha por espaço
-        .replace(/;/g, ',')  // Substitui ponto e vírgula por vírgula
+        .replace(/\n/g, " ") // Substitui quebras de linha por espaço
+        .replace(/;/g, ",") // Substitui ponto e vírgula por vírgula
         .trim();
     };
-    
+
     // Função para escapar campos CSV (agora trata ponto e vírgula)
     const escapeCSV = (value: any): string => {
-      if (value === null || value === undefined) return '';
+      if (value === null || value === undefined) return "";
       const str = String(value);
       // Se contém ponto e vírgula, aspas ou quebra de linha, envolve em aspas e duplica aspas internas
-      if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+      if (str.includes(";") || str.includes('"') || str.includes("\n")) {
         return `"${str.replace(/"/g, '""')}"`;
       }
       return str;
@@ -167,54 +203,59 @@ export default function SettingsPage({
 
     // Função para formatar números no padrão brasileiro (vírgula como separador decimal)
     const formatNumberBR = (num: number): string => {
-      return num.toFixed(2).replace('.', ',');
+      return num.toFixed(2).replace(".", ",");
     };
 
     // Mapear logs para linhas CSV
-    const rows = logs.map(log => {
+    const rows = logs.map((log) => {
       // Encontrar o nome da matéria
-      const subject = subjects.find(s => s.id === log.subjectId);
-      const subjectName = subject?.name || 'Desconhecida';
-      
+      const subject = subjects.find((s) => s.id === log.subjectId);
+      const subjectName = subject?.name || "Desconhecida";
+
       // Calcular tempo total em minutos
-      const totalMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
-      
+      const totalMinutes =
+        (log.hours || 0) * 60 + (log.minutes || 0) + (log.seconds || 0) / 60;
+
       // Formatar data (assumindo que log.date está no formato ISO ou similar)
-      const date = log.date ? new Date(log.date).toLocaleDateString('pt-BR') : '';
-      
+      const date = log.date
+        ? new Date(log.date).toLocaleDateString("pt-BR")
+        : "";
+
       // Sanitizar notas antes de processar
       const sanitizedNotes = sanitizeNotes(log.notes);
-      
+
       return [
         escapeCSV(date),
         escapeCSV(subjectName),
         escapeCSV(log.type),
         escapeCSV(formatNumberBR(totalMinutes)), // Formato brasileiro com vírgula
-        escapeCSV(log.pages || ''),
-        escapeCSV(log.correct || ''),
-        escapeCSV(log.wrong || ''),
-        escapeCSV(sanitizedNotes)
+        escapeCSV(log.pages || ""),
+        escapeCSV(log.correct || ""),
+        escapeCSV(log.wrong || ""),
+        escapeCSV(sanitizedNotes),
       ].join(SEPARATOR);
     });
 
     // Combinar cabeçalhos e linhas com separador ponto e vírgula
-    const csvContent = [headers.join(SEPARATOR), ...rows].join('\n');
-    
+    const csvContent = [headers.join(SEPARATOR), ...rows].join("\n");
+
     // Criar Blob com BOM para Excel reconhecer UTF-8 corretamente (acentos)
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-    
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
     // Criar link temporário e disparar download
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.download = 'studyflow_backup.csv';
+    link.download = "studyflow_backup.csv";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
-    addToast('CSV exportado com sucesso!', 'success');
+
+    addToast("CSV exportado com sucesso!", "success");
   };
 
   // ============================================
@@ -224,7 +265,9 @@ export default function SettingsPage({
   /**
    * Calcula estatísticas agregadas dos logs de estudo
    */
-  const calculateStats = (logs: StudyLog[]): {
+  const calculateStats = (
+    logs: StudyLog[]
+  ): {
     totalMinutes: number;
     totalHours: number;
     totalQuestions: number;
@@ -245,7 +288,7 @@ export default function SettingsPage({
         accuracyRate: 0,
         averageDailyMinutes: 0,
         periodStart: null,
-        periodEnd: null
+        periodEnd: null,
       };
     }
 
@@ -255,9 +298,10 @@ export default function SettingsPage({
     let totalWrong = 0;
     const dates: Date[] = [];
 
-    logs.forEach(log => {
+    logs.forEach((log) => {
       // Calcular tempo total em minutos
-      const logMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
+      const logMinutes =
+        (log.hours || 0) * 60 + (log.minutes || 0) + (log.seconds || 0) / 60;
       totalMinutes += logMinutes;
 
       // Calcular questões
@@ -276,18 +320,20 @@ export default function SettingsPage({
     });
 
     const totalHours = Math.floor(totalMinutes / 60);
-    
+
     // Calcular taxa de acerto
-    const accuracyRate = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+    const accuracyRate =
+      totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
 
     // Calcular média diária
-    const uniqueDays = new Set(dates.map(d => d.toDateString())).size;
+    const uniqueDays = new Set(dates.map((d) => d.toDateString())).size;
     const averageDailyMinutes = uniqueDays > 0 ? totalMinutes / uniqueDays : 0;
 
     // Período do relatório
     const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime());
     const periodStart = sortedDates.length > 0 ? sortedDates[0] : null;
-    const periodEnd = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : null;
+    const periodEnd =
+      sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : null;
 
     return {
       totalMinutes,
@@ -298,7 +344,7 @@ export default function SettingsPage({
       accuracyRate,
       averageDailyMinutes,
       periodStart,
-      periodEnd
+      periodEnd,
     };
   };
 
@@ -307,9 +353,9 @@ export default function SettingsPage({
    */
   const loadLogoAsBase64 = async (): Promise<string | null> => {
     try {
-      const response = await fetch('/icon-192.png');
+      const response = await fetch("/icon-192.png");
       if (!response.ok) return null;
-      
+
       const blob = await response.blob();
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -321,7 +367,7 @@ export default function SettingsPage({
         reader.readAsDataURL(blob);
       });
     } catch (error) {
-      console.warn('Não foi possível carregar a logo:', error);
+      console.warn("Não foi possível carregar a logo:", error);
       return null;
     }
   };
@@ -329,9 +375,11 @@ export default function SettingsPage({
   /**
    * Extrai a cor verde dominante da logo do StudyFlow
    */
-  const extractLogoGreenColor = async (): Promise<[number, number, number] | null> => {
+  const extractLogoGreenColor = async (): Promise<
+    [number, number, number] | null
+  > => {
     try {
-      const response = await fetch('/icon-192.png');
+      const response = await fetch("/icon-192.png");
       if (!response.ok) return null;
 
       const blob = await response.blob();
@@ -339,14 +387,14 @@ export default function SettingsPage({
 
       return new Promise((resolve) => {
         const img = new Image();
-        img.crossOrigin = 'anonymous';
+        img.crossOrigin = "anonymous";
         img.onload = () => {
           try {
-            const canvas = document.createElement('canvas');
+            const canvas = document.createElement("canvas");
             canvas.width = img.width;
             canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            
+            const ctx = canvas.getContext("2d");
+
             if (!ctx) {
               URL.revokeObjectURL(imageUrl);
               resolve(null);
@@ -354,66 +402,82 @@ export default function SettingsPage({
             }
 
             ctx.drawImage(img, 0, 0);
-            
+
             // Analisar pixels para encontrar a cor verde dominante
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
             const pixels = imageData.data;
-            
-            const greenPixels: { r: number; g: number; b: number; count: number }[] = [];
-            
+
+            const greenPixels: {
+              r: number;
+              g: number;
+              b: number;
+              count: number;
+            }[] = [];
+
             for (let i = 0; i < pixels.length; i += 4) {
               const r = pixels[i];
               const g = pixels[i + 1];
               const b = pixels[i + 2];
-              
+
               if (g > r && g > b && g > 100) {
                 const existing = greenPixels.find(
-                  p => Math.abs(p.r - r) < 10 && Math.abs(p.g - g) < 10 && Math.abs(p.b - b) < 10
+                  (p) =>
+                    Math.abs(p.r - r) < 10 &&
+                    Math.abs(p.g - g) < 10 &&
+                    Math.abs(p.b - b) < 10
                 );
-                
+
                 if (existing) {
-                  existing.r = (existing.r * existing.count + r) / (existing.count + 1);
-                  existing.g = (existing.g * existing.count + g) / (existing.count + 1);
-                  existing.b = (existing.b * existing.count + b) / (existing.count + 1);
+                  existing.r =
+                    (existing.r * existing.count + r) / (existing.count + 1);
+                  existing.g =
+                    (existing.g * existing.count + g) / (existing.count + 1);
+                  existing.b =
+                    (existing.b * existing.count + b) / (existing.count + 1);
                   existing.count++;
                 } else {
                   greenPixels.push({ r, g, b, count: 1 });
                 }
               }
             }
-            
+
             URL.revokeObjectURL(imageUrl);
-            
+
             if (greenPixels.length === 0) {
               resolve(null);
               return;
             }
-            
-            const dominantGreen = greenPixels.reduce((prev, current) => 
+
+            const dominantGreen = greenPixels.reduce((prev, current) =>
               current.count > prev.count ? current : prev
             );
-            
+
             resolve([
               Math.round(dominantGreen.r),
               Math.round(dominantGreen.g),
-              Math.round(dominantGreen.b)
+              Math.round(dominantGreen.b),
             ]);
           } catch (error) {
-            console.warn('Erro ao extrair cor da logo:', error);
+            console.warn("Erro ao extrair cor da logo:", error);
             URL.revokeObjectURL(imageUrl);
             resolve(null);
           }
         };
-        
+
         img.onerror = () => {
           URL.revokeObjectURL(imageUrl);
           resolve(null);
         };
-        
+
         img.src = imageUrl;
       });
     } catch (error) {
-      console.warn('Erro ao carregar logo para extração de cor:', error);
+      console.warn("Erro ao carregar logo para extração de cor:", error);
       return null;
     }
   };
@@ -424,19 +488,22 @@ export default function SettingsPage({
   const getFont = (doc: jsPDF): string => {
     try {
       const currentFont = doc.getFont();
-      if (currentFont.fontName === 'Poppins') {
-        return 'Poppins';
+      if (currentFont.fontName === "Poppins") {
+        return "Poppins";
       }
     } catch (e) {
       // Ignorar erro
     }
-    return 'helvetica';
+    return "helvetica";
   };
 
   /**
    * Helper para definir fonte com fallback
    */
-  const setFontSafe = (doc: jsPDF, style: 'normal' | 'bold' = 'normal'): void => {
+  const setFontSafe = (
+    doc: jsPDF,
+    style: "normal" | "bold" = "normal"
+  ): void => {
     const fontFamily = getFont(doc);
     doc.setFont(fontFamily, style);
   };
@@ -444,57 +511,67 @@ export default function SettingsPage({
   /**
    * Desenha o cabeçalho profissional do relatório
    */
-  const drawHeader = async (doc: jsPDF, userEmail: string | undefined, periodStart: Date | null, periodEnd: Date | null, logoBase64: string | null, greenColor: [number, number, number]): Promise<number> => {
+  const drawHeader = async (
+    doc: jsPDF,
+    userEmail: string | undefined,
+    periodStart: Date | null,
+    periodEnd: Date | null,
+    logoBase64: string | null,
+    greenColor: [number, number, number]
+  ): Promise<number> => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const headerHeight = 45;
 
     doc.setFillColor(greenColor[0], greenColor[1], greenColor[2]);
-    doc.rect(0, 0, pageWidth, headerHeight, 'F');
+    doc.rect(0, 0, pageWidth, headerHeight, "F");
 
     if (logoBase64) {
       try {
         const logoSize = 20;
         const logoX = 15;
         const logoY = (headerHeight - logoSize) / 2;
-        doc.addImage(logoBase64, 'PNG', logoX, logoY, logoSize, logoSize);
+        doc.addImage(logoBase64, "PNG", logoX, logoY, logoSize, logoSize);
       } catch (error) {
-        console.warn('Erro ao adicionar logo ao PDF:', error);
+        console.warn("Erro ao adicionar logo ao PDF:", error);
       }
     }
 
     const textStartX = logoBase64 ? 40 : 15;
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
-    const fontFamily = doc.getFont().fontName === 'Poppins' ? 'Poppins' : 'helvetica';
-    doc.setFont(fontFamily, 'bold');
-    doc.text('StudyFlow', textStartX, 18);
+    const fontFamily =
+      doc.getFont().fontName === "Poppins" ? "Poppins" : "helvetica";
+    doc.setFont(fontFamily, "bold");
+    doc.text("StudyFlow", textStartX, 18);
 
     doc.setFontSize(12);
-    setFontSafe(doc, 'normal');
-    doc.text('Relatório Executivo de Estudos', textStartX, 28);
+    setFontSafe(doc, "normal");
+    doc.text("Relatório Executivo de Estudos", textStartX, 28);
 
     doc.setFontSize(9);
-    doc.text(`Aluno: ${userEmail || 'Não identificado'}`, textStartX, 36);
+    doc.text(`Aluno: ${userEmail || "Não identificado"}`, textStartX, 36);
 
-    let periodText = 'Período: ';
+    let periodText = "Período: ";
     if (periodStart && periodEnd) {
-      const startStr = periodStart.toLocaleDateString('pt-BR');
-      const endStr = periodEnd.toLocaleDateString('pt-BR');
+      const startStr = periodStart.toLocaleDateString("pt-BR");
+      const endStr = periodEnd.toLocaleDateString("pt-BR");
       periodText += `${startStr} a ${endStr}`;
     } else {
-      periodText += 'Todos os registros';
+      periodText += "Todos os registros";
     }
     doc.text(periodText, textStartX, 41);
 
-    const currentDate = new Date().toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const currentDate = new Date().toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
     doc.setFontSize(8);
-    doc.text(`Gerado em: ${currentDate}`, pageWidth - 15, 15, { align: 'right' });
+    doc.text(`Gerado em: ${currentDate}`, pageWidth - 15, 15, {
+      align: "right",
+    });
 
     return headerHeight;
   };
@@ -502,7 +579,12 @@ export default function SettingsPage({
   /**
    * Desenha cards de KPIs (Resumo Executivo)
    */
-  const drawKPICards = (doc: jsPDF, stats: ReturnType<typeof calculateStats>, startY: number, greenColor: [number, number, number]): number => {
+  const drawKPICards = (
+    doc: jsPDF,
+    stats: ReturnType<typeof calculateStats>,
+    startY: number,
+    greenColor: [number, number, number]
+  ): number => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
     const cardWidth = (pageWidth - margin * 3) / 2;
@@ -512,24 +594,65 @@ export default function SettingsPage({
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
-    setFontSafe(doc, 'bold');
-    doc.text('Resumo Executivo', margin, currentY);
+    setFontSafe(doc, "bold");
+    doc.text("Resumo Executivo", margin, currentY);
     currentY += 8;
 
     // Card 1: Tempo Total
-    drawKPICard(doc, margin, currentY, cardWidth, cardHeight, 'Tempo Total', `${stats.totalHours}h ${Math.round(stats.totalMinutes % 60)}min`, 'Estudado', greenColor);
+    drawKPICard(
+      doc,
+      margin,
+      currentY,
+      cardWidth,
+      cardHeight,
+      "Tempo Total",
+      `${stats.totalHours}h ${Math.round(stats.totalMinutes % 60)}min`,
+      "Estudado",
+      greenColor
+    );
 
     // Card 2: Desempenho
-    drawKPICard(doc, margin * 2 + cardWidth, currentY, cardWidth, cardHeight, 'Desempenho', `${stats.totalQuestions} questões`, `${stats.accuracyRate.toFixed(1)}% de acerto`, greenColor);
+    drawKPICard(
+      doc,
+      margin * 2 + cardWidth,
+      currentY,
+      cardWidth,
+      cardHeight,
+      "Desempenho",
+      `${stats.totalQuestions} questões`,
+      `${stats.accuracyRate.toFixed(1)}% de acerto`,
+      greenColor
+    );
 
     currentY += cardHeight + cardGap;
 
     // Card 3: Média Diária
-    drawKPICard(doc, margin, currentY, cardWidth, cardHeight, 'Média Diária', `${Math.round(stats.averageDailyMinutes)} min/dia`, 'Tempo médio de estudo', greenColor);
+    drawKPICard(
+      doc,
+      margin,
+      currentY,
+      cardWidth,
+      cardHeight,
+      "Média Diária",
+      `${Math.round(stats.averageDailyMinutes)} min/dia`,
+      "Tempo médio de estudo",
+      greenColor
+    );
 
     // Card 4: Detalhes
-    const acertosText = stats.totalCorrect > 0 ? `${stats.totalCorrect} acertos` : 'N/A';
-    drawKPICard(doc, margin * 2 + cardWidth, currentY, cardWidth, cardHeight, 'Detalhes', acertosText, stats.totalWrong > 0 ? `${stats.totalWrong} erros` : 'Sem erros', greenColor);
+    const acertosText =
+      stats.totalCorrect > 0 ? `${stats.totalCorrect} acertos` : "N/A";
+    drawKPICard(
+      doc,
+      margin * 2 + cardWidth,
+      currentY,
+      cardWidth,
+      cardHeight,
+      "Detalhes",
+      acertosText,
+      stats.totalWrong > 0 ? `${stats.totalWrong} erros` : "Sem erros",
+      greenColor
+    );
 
     return currentY + cardHeight + 15;
   };
@@ -550,31 +673,36 @@ export default function SettingsPage({
   ): void => {
     doc.setFillColor(245, 247, 250);
     doc.setDrawColor(200, 200, 200);
-    doc.roundedRect(x, y, width, height, 3, 3, 'FD');
+    doc.roundedRect(x, y, width, height, 3, 3, "FD");
 
     doc.setFillColor(greenColor[0], greenColor[1], greenColor[2]);
-    doc.rect(x, y, width, 5, 'F');
+    doc.rect(x, y, width, 5, "F");
 
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(9);
-    setFontSafe(doc, 'normal');
+    setFontSafe(doc, "normal");
     doc.text(title, x + 8, y + 12);
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(16);
-    setFontSafe(doc, 'bold');
+    setFontSafe(doc, "bold");
     doc.text(value, x + 8, y + 22);
 
     doc.setTextColor(120, 120, 120);
     doc.setFontSize(8);
-    setFontSafe(doc, 'normal');
+    setFontSafe(doc, "normal");
     doc.text(subtitle, x + 8, y + 30);
   };
 
   /**
    * Desenha gráfico de barras semanal (últimos 7 dias)
    */
-  const drawWeeklyChart = (doc: jsPDF, logs: StudyLog[], startY: number, greenColor: [number, number, number]): number => {
+  const drawWeeklyChart = (
+    doc: jsPDF,
+    logs: StudyLog[],
+    startY: number,
+    greenColor: [number, number, number]
+  ): number => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
     const chartWidth = pageWidth - margin * 2;
@@ -584,8 +712,8 @@ export default function SettingsPage({
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
-    setFontSafe(doc, 'bold');
-    doc.text('Atividade Semanal (Últimos 7 Dias)', chartX, chartY);
+    setFontSafe(doc, "bold");
+    doc.text("Atividade Semanal (Últimos 7 Dias)", chartX, chartY);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -599,63 +727,90 @@ export default function SettingsPage({
       dailyData.push({ date, minutes: 0 });
     }
 
-    logs.forEach(log => {
+    logs.forEach((log) => {
       if (log.date) {
         const logDate = new Date(log.date);
         logDate.setHours(0, 0, 0, 0);
-        
-        const dayIndex = dailyData.findIndex(d => 
-          d.date.getTime() === logDate.getTime()
+
+        const dayIndex = dailyData.findIndex(
+          (d) => d.date.getTime() === logDate.getTime()
         );
-        
+
         if (dayIndex !== -1) {
-          const logMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
+          const logMinutes =
+            (log.hours || 0) * 60 +
+            (log.minutes || 0) +
+            (log.seconds || 0) / 60;
           dailyData[dayIndex].minutes += logMinutes;
         }
       }
     });
 
-    const maxMinutes = Math.max(...dailyData.map(d => d.minutes), 1);
+    const maxMinutes = Math.max(...dailyData.map((d) => d.minutes), 1);
     const barWidth = (chartWidth - 20) / 7;
     const maxBarHeight = chartHeight - 25;
 
     doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.5);
-    doc.line(chartX, chartY + maxBarHeight + 15, chartX + chartWidth, chartY + maxBarHeight + 15);
+    doc.line(
+      chartX,
+      chartY + maxBarHeight + 15,
+      chartX + chartWidth,
+      chartY + maxBarHeight + 15
+    );
     doc.line(chartX, chartY + 5, chartX, chartY + maxBarHeight + 15);
 
     dailyData.forEach((day, index) => {
       const barX = chartX + 10 + index * barWidth;
-      const barHeight = maxMinutes > 0 ? (day.minutes / maxMinutes) * maxBarHeight : 0;
+      const barHeight =
+        maxMinutes > 0 ? (day.minutes / maxMinutes) * maxBarHeight : 0;
       const barY = chartY + maxBarHeight + 15 - barHeight;
 
-      const intensity = maxMinutes > 0 ? Math.min(day.minutes / maxMinutes, 1) : 0;
-      const r = Math.round(greenColor[0] + (255 - greenColor[0]) * (1 - intensity) * 0.3);
-      const g = Math.round(greenColor[1] + (255 - greenColor[1]) * (1 - intensity) * 0.3);
-      const b = Math.round(greenColor[2] + (255 - greenColor[2]) * (1 - intensity) * 0.3);
+      const intensity =
+        maxMinutes > 0 ? Math.min(day.minutes / maxMinutes, 1) : 0;
+      const r = Math.round(
+        greenColor[0] + (255 - greenColor[0]) * (1 - intensity) * 0.3
+      );
+      const g = Math.round(
+        greenColor[1] + (255 - greenColor[1]) * (1 - intensity) * 0.3
+      );
+      const b = Math.round(
+        greenColor[2] + (255 - greenColor[2]) * (1 - intensity) * 0.3
+      );
       doc.setFillColor(r, g, b);
 
-      doc.rect(barX, barY, barWidth - 2, barHeight, 'F');
+      doc.rect(barX, barY, barWidth - 2, barHeight, "F");
 
       doc.setTextColor(100, 100, 100);
       doc.setFontSize(7);
-      setFontSafe(doc, 'normal');
-      const dayLabel = day.date.toLocaleDateString('pt-BR', { weekday: 'short' }).substring(0, 3);
-      doc.text(dayLabel.toUpperCase(), barX + (barWidth - 2) / 2, chartY + maxBarHeight + 20, { align: 'center' });
+      setFontSafe(doc, "normal");
+      const dayLabel = day.date
+        .toLocaleDateString("pt-BR", { weekday: "short" })
+        .substring(0, 3);
+      doc.text(
+        dayLabel.toUpperCase(),
+        barX + (barWidth - 2) / 2,
+        chartY + maxBarHeight + 20,
+        { align: "center" }
+      );
 
       if (day.minutes > 0) {
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(7);
-        setFontSafe(doc, 'bold');
+        setFontSafe(doc, "bold");
         const minutesText = Math.round(day.minutes).toString();
-        doc.text(minutesText, barX + (barWidth - 2) / 2, barY - 3, { align: 'center' });
+        doc.text(minutesText, barX + (barWidth - 2) / 2, barY - 3, {
+          align: "center",
+        });
       }
     });
 
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(7);
-    setFontSafe(doc, 'normal');
-    doc.text(`${Math.round(maxMinutes)} min`, chartX - 5, chartY + 5, { align: 'right' });
+    setFontSafe(doc, "normal");
+    doc.text(`${Math.round(maxMinutes)} min`, chartX - 5, chartY + 5, {
+      align: "right",
+    });
 
     return chartY + chartHeight + 10;
   };
@@ -663,7 +818,11 @@ export default function SettingsPage({
   /**
    * Desenha rodapé com paginação
    */
-  const drawFooter = (doc: jsPDF, pageNumber: number, totalPages: number): void => {
+  const drawFooter = (
+    doc: jsPDF,
+    pageNumber: number,
+    totalPages: number
+  ): void => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const footerY = pageHeight - 15;
@@ -674,9 +833,11 @@ export default function SettingsPage({
 
     doc.setTextColor(120, 120, 120);
     doc.setFontSize(8);
-    setFontSafe(doc, 'normal');
-    doc.text('Gerado via StudyFlow', 15, footerY);
-    doc.text(`Página ${pageNumber} de ${totalPages}`, pageWidth - 15, footerY, { align: 'right' });
+    setFontSafe(doc, "normal");
+    doc.text("Gerado via StudyFlow", 15, footerY);
+    doc.text(`Página ${pageNumber} de ${totalPages}`, pageWidth - 15, footerY, {
+      align: "right",
+    });
   };
 
   /**
@@ -684,7 +845,10 @@ export default function SettingsPage({
    */
   const handleExportPDF = async () => {
     if (!logs || logs.length === 0) {
-      addToast('Não há registros para exportar. Adicione alguns estudos primeiro!', 'error');
+      addToast(
+        "Não há registros para exportar. Adicione alguns estudos primeiro!",
+        "error"
+      );
       return;
     }
 
@@ -694,23 +858,32 @@ export default function SettingsPage({
       try {
         const logoBase64 = await loadLogoAsBase64();
         const logoGreenColor = await extractLogoGreenColor();
-        const greenColor: [number, number, number] = logoGreenColor || [16, 185, 129];
+        const greenColor: [number, number, number] = logoGreenColor || [
+          16, 185, 129,
+        ];
 
         const doc = new jsPDF();
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 15;
 
         const poppinsRegistered = await registerPoppinsFontSimple(doc);
-        
+
         if (poppinsRegistered) {
-          doc.setFont('Poppins', 'normal');
+          doc.setFont("Poppins", "normal");
         } else {
-          setFontSafe(doc, 'normal');
+          setFontSafe(doc, "normal");
         }
         doc.setTextColor(0, 0, 0);
 
         const stats = calculateStats(logs);
-        const headerHeight = await drawHeader(doc, userEmail, stats.periodStart, stats.periodEnd, logoBase64, greenColor);
+        const headerHeight = await drawHeader(
+          doc,
+          userEmail,
+          stats.periodStart,
+          stats.periodEnd,
+          logoBase64,
+          greenColor
+        );
         let currentY = headerHeight + 5;
 
         const addFooter = () => {
@@ -743,79 +916,107 @@ export default function SettingsPage({
             const dateB = b.date ? new Date(b.date).getTime() : 0;
             return dateB - dateA;
           })
-          .map(log => {
-            const subject = subjects.find(s => s.id === log.subjectId);
-            const subjectName = subject?.name || 'Desconhecida';
-            const totalMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
-            const date = log.date ? new Date(log.date).toLocaleDateString('pt-BR') : '';
-            
+          .map((log) => {
+            const subject = subjects.find((s) => s.id === log.subjectId);
+            const subjectName = subject?.name || "Desconhecida";
+            const totalMinutes =
+              (log.hours || 0) * 60 +
+              (log.minutes || 0) +
+              (log.seconds || 0) / 60;
+            const date = log.date
+              ? new Date(log.date).toLocaleDateString("pt-BR")
+              : "";
+
             const totalQ = (log.correct || 0) + (log.wrong || 0);
-            const accuracy = totalQ > 0 ? ((log.correct || 0) / totalQ * 100).toFixed(1) : '-';
-            
+            const accuracy =
+              totalQ > 0
+                ? (((log.correct || 0) / totalQ) * 100).toFixed(1)
+                : "-";
+
             return [
               date,
               subjectName,
               log.type.charAt(0).toUpperCase() + log.type.slice(1),
-              totalMinutes.toFixed(1).replace('.', ','),
-              log.pages?.toString() || '-',
-              log.correct?.toString() || '-',
-              log.wrong?.toString() || '-',
-              accuracy !== '-' ? `${accuracy}%` : '-'
+              totalMinutes.toFixed(1).replace(".", ","),
+              log.pages?.toString() || "-",
+              log.correct?.toString() || "-",
+              log.wrong?.toString() || "-",
+              accuracy !== "-" ? `${accuracy}%` : "-",
             ];
           });
 
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(14);
-        setFontSafe(doc, 'bold');
-        doc.text('Registros Detalhados', margin, currentY);
+        setFontSafe(doc, "bold");
+        doc.text("Registros Detalhados", margin, currentY);
         currentY += 8;
 
         autoTable(doc, {
           startY: currentY,
-          head: [['Data', 'Matéria', 'Tipo', 'Tempo (min)', 'Páginas', 'Acertos', 'Erros', 'Taxa Acerto']],
-          body: tableData.length > 0 ? tableData : [['Nenhum registro encontrado', '', '', '', '', '', '', '']],
+          head: [
+            [
+              "Data",
+              "Matéria",
+              "Tipo",
+              "Tempo (min)",
+              "Páginas",
+              "Acertos",
+              "Erros",
+              "Taxa Acerto",
+            ],
+          ],
+          body:
+            tableData.length > 0
+              ? tableData
+              : [["Nenhum registro encontrado", "", "", "", "", "", "", ""]],
           headStyles: {
             fillColor: greenColor,
             textColor: [255, 255, 255],
-            fontStyle: 'bold',
+            fontStyle: "bold",
             fontSize: 9,
-            halign: 'center'
+            halign: "center",
           },
           alternateRowStyles: {
-            fillColor: [245, 247, 250]
+            fillColor: [245, 247, 250],
           },
           styles: {
             fontSize: 8,
             cellPadding: 2.5,
-            halign: 'center'
+            halign: "center",
           },
           columnStyles: {
-            0: { cellWidth: 25, halign: 'left' },
-            1: { cellWidth: 45, halign: 'left' },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 20, halign: 'center' },
-            4: { cellWidth: 18, halign: 'center' },
-            5: { cellWidth: 18, halign: 'center' },
-            6: { cellWidth: 18, halign: 'center' },
-            7: { cellWidth: 20, halign: 'center' }
+            0: { cellWidth: 25, halign: "left" },
+            1: { cellWidth: 45, halign: "left" },
+            2: { cellWidth: 20, halign: "center" },
+            3: { cellWidth: 20, halign: "center" },
+            4: { cellWidth: 18, halign: "center" },
+            5: { cellWidth: 18, halign: "center" },
+            6: { cellWidth: 18, halign: "center" },
+            7: { cellWidth: 20, halign: "center" },
           },
           margin: { left: margin, right: margin },
           didDrawPage: () => {
             addFooter();
-          }
+          },
         });
 
         addFooter();
 
-        const fileName = `studyflow_relatorio_${new Date().toISOString().split('T')[0]}.pdf`;
+        const fileName = `studyflow_relatorio_${
+          new Date().toISOString().split("T")[0]
+        }.pdf`;
         doc.save(fileName);
 
         setIsExportingPDF(false);
-        addToast('PDF gerado com sucesso!', 'success');
+        addToast("PDF gerado com sucesso!", "success");
       } catch (error: any) {
-        console.error('Erro ao gerar PDF:', error);
+        console.error("Erro ao gerar PDF:", error);
         setIsExportingPDF(false);
-        addToast('Erro ao gerar PDF. Detalhe: ' + (error?.message || 'Erro desconhecido'), 'error');
+        addToast(
+          "Erro ao gerar PDF. Detalhe: " +
+            (error?.message || "Erro desconhecido"),
+          "error"
+        );
       }
     }, 100);
   };
@@ -827,11 +1028,11 @@ export default function SettingsPage({
       // CRÍTICO: Limpar estado React de conquistas ANTES do factory_reset
       // Isso evita que o hook salve as conquistas de volta no Supabase após o reset
       await resetAchievements();
-      
+
       // Pequeno delay para garantir que o estado foi limpo
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const { error } = await supabase.rpc('factory_reset');
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const { error } = await supabase.rpc("factory_reset");
 
       if (error) {
         throw error;
@@ -839,36 +1040,37 @@ export default function SettingsPage({
 
       // Limpar dados do localStorage relacionados a gamificação
       const keysToClean = [
-        'studyflow_total_xp',
-        'studyflow_xp_history',
-        'studyflow_user_achievements',
-        'studyflow_achievements',
-        'studyflow_logs',
-        'studyflow_processed_logs',
-        'timer_sound_enabled'
+        "studyflow_total_xp",
+        "studyflow_xp_history",
+        "studyflow_user_achievements",
+        "studyflow_achievements",
+        "studyflow_logs",
+        "studyflow_processed_logs",
+        "timer_sound_enabled",
       ];
-      
-      keysToClean.forEach(key => {
+
+      keysToClean.forEach((key) => {
         localStorage.removeItem(key);
         localStorage.removeItem(`_${key}`);
         localStorage.removeItem(`${key}_`);
       });
-      
+
       // Limpar TODAS as flags de streak bonus e conquistas do localStorage
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && (
-          key.startsWith('studyflow_streak_bonus_') || 
-          key.includes('achievement') || 
-          key.includes('conquista') ||
-          key.startsWith('studyflow_xp') ||
-          key.startsWith('studyflow_elo')
-        )) {
+        if (
+          key &&
+          (key.startsWith("studyflow_streak_bonus_") ||
+            key.includes("achievement") ||
+            key.includes("conquista") ||
+            key.startsWith("studyflow_xp") ||
+            key.startsWith("studyflow_elo"))
+        ) {
           keysToRemove.push(key);
         }
       }
-      keysToRemove.forEach(key => {
+      keysToRemove.forEach((key) => {
         try {
           localStorage.removeItem(key);
         } catch (e) {
@@ -878,27 +1080,33 @@ export default function SettingsPage({
 
       // Limpar dados do sessionStorage
       const sessionKeysToClean = [
-        'studyflow_processed_logs',
-        'studyflow_xp_history',
-        'studyflow_user_achievements'
+        "studyflow_processed_logs",
+        "studyflow_xp_history",
+        "studyflow_user_achievements",
       ];
-      sessionKeysToClean.forEach(key => {
+      sessionKeysToClean.forEach((key) => {
         try {
           sessionStorage.removeItem(key);
         } catch (e) {
           console.warn(`Erro ao remover chave do sessionStorage ${key}:`, e);
         }
       });
-      
+
       setShowFactoryResetConfirm(false);
-      addToast('Todos os dados foram apagados com sucesso! A página será recarregada.', 'success');
-      
+      addToast(
+        "Todos os dados foram apagados com sucesso! A página será recarregada.",
+        "success"
+      );
+
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     } catch (error: any) {
-      console.error('Erro ao resetar dados:', error);
-      addToast('Erro ao apagar dados: ' + (error?.message || 'Erro desconhecido'), 'error');
+      console.error("Erro ao resetar dados:", error);
+      addToast(
+        "Erro ao apagar dados: " + (error?.message || "Erro desconhecido"),
+        "error"
+      );
     } finally {
       setIsResetting(false);
     }
@@ -916,12 +1124,14 @@ export default function SettingsPage({
         {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2 pl-14 md:pl-0">
-            <Settings className="text-emerald-500" size={28} />
-            Configurações
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              Configurações
+            </h1>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             Gerencie suas preferências e dados
           </p>
         </div>
@@ -932,107 +1142,108 @@ export default function SettingsPage({
           <div className="space-y-8">
             {/* Seção 1 - Privacidade */}
             <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Eye className="text-emerald-500" size={20} />
-            Privacidade
-          </h2>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                  Mostrar desempenho ao compartilhar
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Exibe suas estatísticas quando compartilha o progresso
-                </p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Eye className="text-emerald-500" size={20} />
+                Privacidade
+              </h2>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Mostrar desempenho ao compartilhar
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Exibe suas estatísticas quando compartilha o progresso
+                    </p>
+                  </div>
+                  <IOSSwitch
+                    checked={showPerformance}
+                    onChange={onTogglePerformance}
+                    aria-label="Mostrar desempenho"
+                  />
+                </div>
               </div>
-              <IOSSwitch
-                checked={showPerformance}
-                onChange={onTogglePerformance}
-                aria-label="Mostrar desempenho"
-              />
-            </div>
-          </div>
             </div>
 
             {/* Seção 2 - Notificações */}
             <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            {timerSoundEnabled ? (
-              <Volume2 className="text-emerald-500" size={20} />
-            ) : (
-              <VolumeX className="text-gray-500" size={20} />
-            )}
-            Notificações
-          </h2>
-          
-          {/* Sons do Timer */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                  Sons do Timer
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Reproduz um som quando o timer finaliza
-                </p>
-              </div>
-              <IOSSwitch
-                checked={timerSoundEnabled}
-                onChange={handleToggleTimerSound}
-                aria-label="Sons do Timer"
-              />
-            </div>
-            <Button
-              onClick={handleTestSound}
-              variant="primary"
-              fullWidth
-              size="md"
-              leftIcon={<Play size={18} />}
-            >
-              Testar Som
-            </Button>
-          </div>
-
-          {/* Notificações do Sistema */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-                  {notificationsEnabled && permission === 'granted' ? (
-                    <Bell className="text-emerald-500" size={18} />
-                  ) : (
-                    <BellOff className="text-gray-400" size={18} />
-                  )}
-                  Habilitar Notificações
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Receba notificações do sistema quando o timer finalizar
-                </p>
-                {permission === 'denied' && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                    Permissão negada no navegador. Ative nas configurações do navegador.
-                  </p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                {timerSoundEnabled ? (
+                  <Volume2 className="text-emerald-500" size={20} />
+                ) : (
+                  <VolumeX className="text-gray-500" size={20} />
                 )}
+                Notificações
+              </h2>
+
+              {/* Sons do Timer */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                      Sons do Timer
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Reproduz um som quando o timer finaliza
+                    </p>
+                  </div>
+                  <IOSSwitch
+                    checked={timerSoundEnabled}
+                    onChange={handleToggleTimerSound}
+                    aria-label="Sons do Timer"
+                  />
+                </div>
+                <Button
+                  onClick={handleTestSound}
+                  variant="primary"
+                  fullWidth
+                  size="md"
+                  leftIcon={<Play size={18} />}
+                >
+                  Testar Som
+                </Button>
               </div>
-              <IOSSwitch
-                checked={notificationsEnabled && permission === 'granted'}
-                onChange={handleToggleNotifications}
-                disabled={permission === 'denied'}
-                aria-label="Habilitar Notificações"
-              />
-            </div>
-            <Button
-              onClick={handleTestNotification}
-              disabled={permission !== 'granted' || !notificationsEnabled}
-              variant="primary"
-              fullWidth
-              size="md"
-              leftIcon={<Bell size={18} />}
-            >
-              Testar Notificação
-            </Button>
-          </div>
+
+              {/* Notificações do Sistema */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                      {notificationsEnabled && permission === "granted" ? (
+                        <Bell className="text-emerald-500" size={18} />
+                      ) : (
+                        <BellOff className="text-gray-400" size={18} />
+                      )}
+                      Habilitar Notificações
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Receba notificações do sistema quando o timer finalizar
+                    </p>
+                    {permission === "denied" && (
+                      <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                        Permissão negada no navegador. Ative nas configurações
+                        do navegador.
+                      </p>
+                    )}
+                  </div>
+                  <IOSSwitch
+                    checked={notificationsEnabled && permission === "granted"}
+                    onChange={handleToggleNotifications}
+                    disabled={permission === "denied"}
+                    aria-label="Habilitar Notificações"
+                  />
+                </div>
+                <Button
+                  onClick={handleTestNotification}
+                  disabled={permission !== "granted" || !notificationsEnabled}
+                  variant="primary"
+                  fullWidth
+                  size="md"
+                  leftIcon={<Bell size={18} />}
+                >
+                  Testar Notificação
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -1040,112 +1251,116 @@ export default function SettingsPage({
           <div className="space-y-8">
             {/* Seção 3 - Dados */}
             <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Database className="text-emerald-500" size={20} />
-            Dados
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Botão Export CSV */}
-            <button
-              onClick={handleExportCSV}
-              className="group bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl p-5 flex items-center gap-4 transition-all active:scale-95 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm"
-            >
-              {/* Ícone à esquerda */}
-              <div className="flex-shrink-0 p-3 bg-blue-500 rounded-xl text-white group-hover:bg-blue-600 transition-colors">
-                <FileSpreadsheet size={24} />
-              </div>
-              
-              {/* Textos à direita */}
-              <div className="flex-1 text-left">
-                <p className="text-base font-bold text-gray-900 dark:text-white mb-1">
-                  Exportar CSV
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Compatível com Excel
-                </p>
-              </div>
-            </button>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Database className="text-emerald-500" size={20} />
+                Dados
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Botão Export CSV */}
+                <button
+                  onClick={handleExportCSV}
+                  className="group bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl p-5 flex items-center gap-4 transition-all active:scale-95 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm"
+                >
+                  {/* Ícone à esquerda */}
+                  <div className="flex-shrink-0 p-3 bg-blue-500 rounded-xl text-white group-hover:bg-blue-600 transition-colors">
+                    <FileSpreadsheet size={24} />
+                  </div>
 
-            {/* Botão Export PDF */}
-            <button
-              onClick={handleExportPDF}
-              disabled={isExportingPDF}
-              className="group bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl p-5 flex items-center gap-4 transition-all active:scale-95 border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 dark:disabled:hover:border-gray-700"
-            >
-              {/* Ícone à esquerda */}
-              <div className="flex-shrink-0 p-3 bg-red-500 rounded-xl text-white group-hover:bg-red-600 transition-colors">
-                {isExportingPDF ? (
-                  <Loader2 size={24} className="animate-spin" />
-                ) : (
-                  <FileDown size={24} />
-                )}
+                  {/* Textos à direita */}
+                  <div className="flex-1 text-left">
+                    <p className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                      Exportar CSV
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Compatível com Excel
+                    </p>
+                  </div>
+                </button>
+
+                {/* Botão Export PDF */}
+                <button
+                  onClick={handleExportPDF}
+                  disabled={isExportingPDF}
+                  className="group bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl p-5 flex items-center gap-4 transition-all active:scale-95 border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 dark:disabled:hover:border-gray-700"
+                >
+                  {/* Ícone à esquerda */}
+                  <div className="flex-shrink-0 p-3 bg-red-500 rounded-xl text-white group-hover:bg-red-600 transition-colors">
+                    {isExportingPDF ? (
+                      <Loader2 size={24} className="animate-spin" />
+                    ) : (
+                      <FileDown size={24} />
+                    )}
+                  </div>
+
+                  {/* Textos à direita */}
+                  <div className="flex-1 text-left">
+                    <p className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                      {isExportingPDF ? "Gerando..." : "Exportar PDF"}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Relatório profissional
+                    </p>
+                  </div>
+                </button>
               </div>
-              
-              {/* Textos à direita */}
-              <div className="flex-1 text-left">
-                <p className="text-base font-bold text-gray-900 dark:text-white mb-1">
-                  {isExportingPDF ? 'Gerando...' : 'Exportar PDF'}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Relatório profissional
-                </p>
-              </div>
-            </button>
-          </div>
             </div>
 
             {/* Seção 4 - Ajuda & Suporte */}
             <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <MessageCircle className="text-emerald-500" size={20} />
-            Ajuda & Suporte
-          </h2>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-            <a
-              href="https://t.me/studyflow_suporte_bot"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
-            >
-              <Button
-                variant="primary"
-                fullWidth
-                leftIcon={<MessageCircle size={18} />}
-              >
-                Falar com Suporte
-              </Button>
-            </a>
-          </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <MessageCircle className="text-emerald-500" size={20} />
+                Ajuda & Suporte
+              </h2>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <a
+                  href="https://t.me/studyflow_suporte_bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <Button
+                    variant="primary"
+                    fullWidth
+                    leftIcon={<MessageCircle size={18} />}
+                  >
+                    Falar com Suporte
+                  </Button>
+                </a>
+              </div>
             </div>
 
             {/* Seção 5 - Zona de Perigo */}
             <div>
-          <h2 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
-            <AlertTriangle className="text-red-600 dark:text-red-400" size={20} />
-            Zona de Perigo
-          </h2>
-          <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-6 border-2 border-red-200 dark:border-red-800">
-            <div className="mb-4">
-              <h3 className="font-bold text-red-900 dark:text-red-200 mb-2">
-                Zerar Conta Completamente
-              </h3>
-              <p className="text-sm text-red-800 dark:text-red-300">
-                Esta ação é IRREVERSÍVEL. Todo o seu histórico, conquistas, elos e matérias serão apagados permanentemente.
-              </p>
-            </div>
-            <Button
-              onClick={() => setShowFactoryResetConfirm(true)}
-              disabled={isResetting}
-              variant="danger"
-              fullWidth
-              size="lg"
-              leftIcon={<Trash2 size={18} />}
-              isLoading={isResetting}
-              className="font-bold"
-            >
-              {isResetting ? 'Apagando...' : 'Zerar Conta'}
-            </Button>
-          </div>
+              <h2 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+                <AlertTriangle
+                  className="text-red-600 dark:text-red-400"
+                  size={20}
+                />
+                Zona de Perigo
+              </h2>
+              <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-6 border-2 border-red-200 dark:border-red-800">
+                <div className="mb-4">
+                  <h3 className="font-bold text-red-900 dark:text-red-200 mb-2">
+                    Zerar Conta Completamente
+                  </h3>
+                  <p className="text-sm text-red-800 dark:text-red-300">
+                    Esta ação é IRREVERSÍVEL. Todo o seu histórico, conquistas,
+                    elos e matérias serão apagados permanentemente.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setShowFactoryResetConfirm(true)}
+                  disabled={isResetting}
+                  variant="danger"
+                  fullWidth
+                  size="lg"
+                  leftIcon={<Trash2 size={18} />}
+                  isLoading={isResetting}
+                  className="font-bold"
+                >
+                  {isResetting ? "Apagando..." : "Zerar Conta"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -1165,4 +1380,3 @@ export default function SettingsPage({
     </>
   );
 }
-

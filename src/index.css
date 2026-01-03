@@ -7,7 +7,8 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  html, body {
+  html,
+  body {
     height: 100%;
     min-height: 100%;
     margin: 0;
@@ -29,16 +30,16 @@
 
   /* Acessibilidade: Foco Visual */
   *:focus-visible {
-    outline: 2px solid theme('colors.emerald.500') !important;
+    outline: 2px solid theme("colors.emerald.500") !important;
     outline-offset: 2px;
-    border-radius: theme('borderRadius.lg');
+    border-radius: theme("borderRadius.lg");
   }
 
   *:focus:not(:focus-visible) {
     outline: none;
   }
 
- input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
@@ -87,7 +88,8 @@
 
 /* Animação de bounce suave */
 @keyframes bounce-subtle {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -97,7 +99,8 @@
 
 /* Animação de pulso com escala */
 @keyframes pulse-scale {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -109,7 +112,8 @@
 
 /* Animação do troféu */
 @keyframes trophy-bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: rotate(-5deg) scale(1);
   }
   25% {
@@ -144,7 +148,7 @@
 }
 
 .animate-shine::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -172,7 +176,6 @@
   display: inline-block;
 }
 
-
 /* ============================================
    SISTEMA DE ESCALA DE FONTE NÃO-LINEAR
    Mantém hierarquia visual em todos os tamanhos
@@ -180,49 +183,65 @@
 
 /* Base sizes (Medium - 100% - Padrão do Tailwind) */
 :root {
-  --text-xs: 0.75rem;      /* 12px */
-  --text-sm: 0.875rem;     /* 14px */
-  --text-base: 1rem;       /* 16px */
-  --text-lg: 1.125rem;     /* 18px */
-  --text-xl: 1.25rem;      /* 20px */
-  --text-2xl: 1.5rem;      /* 24px */
-  --text-3xl: 1.875rem;    /* 30px */
-  --text-4xl: 2.25rem;     /* 36px - timer */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.875rem; /* 30px */
+  --text-4xl: 2.25rem; /* 36px - timer */
 }
 
 /* Small (87.5% base, títulos mantêm diferença) */
 html.font-size-sm {
-  --text-xs: 0.65rem;      /* 10.4px */
-  --text-sm: 0.75rem;      /* 12px */
-  --text-base: 0.875rem;   /* 14px - BASE */
-  --text-lg: 1rem;         /* 16px - +2px diff */
-  --text-xl: 1.125rem;     /* 18px - +2px diff */
-  --text-2xl: 1.375rem;    /* 22px - +4px diff */
-  --text-3xl: 1.75rem;     /* 28px */
-  --text-4xl: 2rem;        /* 32px - timer */
+  --text-xs: 0.65rem; /* 10.4px */
+  --text-sm: 0.75rem; /* 12px */
+  --text-base: 0.875rem; /* 14px - BASE */
+  --text-lg: 1rem; /* 16px - +2px diff */
+  --text-xl: 1.125rem; /* 18px - +2px diff */
+  --text-2xl: 1.375rem; /* 22px - +4px diff */
+  --text-3xl: 1.75rem; /* 28px */
+  --text-4xl: 2rem; /* 32px - timer */
 }
 
 /* Large (112.5% base, títulos crescem MENOS) */
 html.font-size-lg {
-  --text-xs: 0.8125rem;    /* 13px */
-  --text-sm: 0.9375rem;    /* 15px */
-  --text-base: 1.0625rem;  /* 17px - BASE (+1px, não +2) */
-  --text-lg: 1.1875rem;    /* 19px - +2px diff */
-  --text-xl: 1.3125rem;    /* 21px - +2px diff */
-  --text-2xl: 1.625rem;    /* 26px - +5px diff (não +6) */
-  --text-3xl: 2rem;        /* 32px */
-  --text-4xl: 2.375rem;    /* 38px - timer (+2px só) */
+  --text-xs: 0.8125rem; /* 13px */
+  --text-sm: 0.9375rem; /* 15px */
+  --text-base: 1.0625rem; /* 17px - BASE (+1px, não +2) */
+  --text-lg: 1.1875rem; /* 19px - +2px diff */
+  --text-xl: 1.3125rem; /* 21px - +2px diff */
+  --text-2xl: 1.625rem; /* 26px - +5px diff (não +6) */
+  --text-3xl: 2rem; /* 32px */
+  --text-4xl: 2.375rem; /* 38px - timer (+2px só) */
 }
 
 /* Sobrescrever classes Tailwind para usar CSS variables */
-.text-xs { font-size: var(--text-xs) !important; }
-.text-sm { font-size: var(--text-sm) !important; }
-.text-base { font-size: var(--text-base) !important; }
-.text-lg { font-size: var(--text-lg) !important; }
-.text-xl { font-size: var(--text-xl) !important; }
-.text-2xl { font-size: var(--text-2xl) !important; }
-.text-3xl { font-size: var(--text-3xl) !important; }
-.text-4xl { font-size: var(--text-4xl) !important; }
+.text-xs {
+  font-size: var(--text-xs) !important;
+}
+.text-sm {
+  font-size: var(--text-sm) !important;
+}
+.text-base {
+  font-size: var(--text-base) !important;
+}
+.text-lg {
+  font-size: var(--text-lg) !important;
+}
+.text-xl {
+  font-size: var(--text-xl) !important;
+}
+.text-2xl {
+  font-size: var(--text-2xl) !important;
+}
+.text-3xl {
+  font-size: var(--text-3xl) !important;
+}
+.text-4xl {
+  font-size: var(--text-4xl) !important;
+}
 
 /* Timer sempre mantém tamanho maior relativo */
 .timer-display {
@@ -260,29 +279,29 @@ html.high-contrast {
   --bg-secondary: #0a0a0a;
   --bg-tertiary: #1a1a1a;
   --bg-elevated: #2a2a2a;
-  
+
   /* Textos */
   --text-primary: #ffffff;
   --text-secondary: #e5e5e5;
   --text-tertiary: #cccccc;
   --text-disabled: #808080;
-  
+
   /* Bordas */
   --border-primary: #ffffff;
   --border-secondary: #cccccc;
   --border-subtle: #666666;
-  
+
   /* Cores de Estado */
   --color-success: #00ff00;
   --color-error: #ff0000;
   --color-warning: #ffff00;
   --color-info: #00ffff;
-  
+
   /* Interação */
   --color-hover: #ffffff;
   --color-focus: #00ffff;
   --color-active: #00ff00;
-  
+
   /* Sombras (brancas para contraste) */
   --shadow-sm: 0 2px 8px rgba(255, 255, 255, 0.2);
   --shadow-md: 0 4px 16px rgba(255, 255, 255, 0.3);
@@ -396,6 +415,15 @@ html.high-contrast .text-red-500,
 html.high-contrast .text-red-600 {
   background-color: var(--color-error) !important;
   color: #000000 !important;
+}
+
+/* Hide native scrollbars while keeping scroll functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 html.high-contrast .bg-yellow-500,
@@ -818,12 +846,12 @@ html.high-contrast [class*="heatmap"] cell:hover {
 .recharts-tooltip-wrapper,
 .recharts-tooltip-label,
 .recharts-tooltip-item {
-  font-family: 'Poppins', system-ui, -apple-system, sans-serif !important;
+  font-family: "Poppins", system-ui, -apple-system, sans-serif !important;
   font-weight: 500;
 }
 
 .recharts-tooltip-wrapper {
-  font-family: 'Poppins', system-ui, -apple-system, sans-serif !important;
+  font-family: "Poppins", system-ui, -apple-system, sans-serif !important;
 }
 
 /* Garantir que textos em elementos inline sejam legíveis */
@@ -906,25 +934,25 @@ html.high-contrast [class*="modal-backdrop"] {
   display: none;
 }
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Ajustes para Android com telas estreitas (Samsung A12, etc) */
 @media (max-width: 380px) {
-html {
-  font-size: 14px;
-}
+  html {
+    font-size: 14px;
+  }
 
-/* Garantir círculos perfeitos */
-.rounded-full {
-  aspect-ratio: 1;
-  flex-shrink: 0;
-}
+  /* Garantir círculos perfeitos */
+  .rounded-full {
+    aspect-ratio: 1;
+    flex-shrink: 0;
+  }
 
-/* Reduzir paddings em containers principais */
-.px-6 {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
+  /* Reduzir paddings em containers principais */
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }

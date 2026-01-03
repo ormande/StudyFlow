@@ -1,13 +1,25 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Zap, Crown, Star, Gift, CreditCard, Diamond, XCircle, AlertCircle, X, QrCode } from 'lucide-react';
-import Button from '../components/Button';
-import CheckoutMensal from '../components/CheckoutMensal';
-import CheckoutVitalicio from '../components/CheckoutVitalicio';
-import PixPaymentModal from '../components/PixPaymentModal';
-import FloatingBackButton from '../components/FloatingBackButton';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../contexts/ToastContext';
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Check,
+  Zap,
+  Crown,
+  Star,
+  Gift,
+  CreditCard,
+  Diamond,
+  XCircle,
+  AlertCircle,
+  X,
+  QrCode,
+} from "lucide-react";
+import Button from "../components/Button";
+import CheckoutMensal from "../components/CheckoutMensal";
+import CheckoutVitalicio from "../components/CheckoutVitalicio";
+import PixPaymentModal from "../components/PixPaymentModal";
+import FloatingBackButton from "../components/FloatingBackButton";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../contexts/ToastContext";
 
 interface PlanPageProps {
   subscriptionStatus: string | null;
@@ -15,63 +27,74 @@ interface PlanPageProps {
   onNavigateBack: () => void;
 }
 
-export default function PlanPage({ 
-  subscriptionStatus: initialStatus, 
+export default function PlanPage({
+  subscriptionStatus: initialStatus,
   subscriptionType: initialType,
-  onNavigateBack 
+  onNavigateBack,
 }: PlanPageProps) {
   const { addToast } = useToast();
   const [showCheckoutMensal, setShowCheckoutMensal] = useState(false);
   const [showCheckoutVitalicio, setShowCheckoutVitalicio] = useState(false);
   const [showPixModal, setShowPixModal] = useState(false);
-  const [pixPlan, setPixPlan] = useState<'lifetime' | 'monthly'>('monthly');
+  const [pixPlan, setPixPlan] = useState<"lifetime" | "monthly">("monthly");
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [coupon, setCoupon] = useState('');
+  const [coupon, setCoupon] = useState("");
   const [isCouponApplied, setIsCouponApplied] = useState(false);
 
   const [planStatus, setPlanStatus] = useState<{
-    type: 'trial' | 'monthly' | 'lifetime' | 'none';
+    type: "trial" | "monthly" | "lifetime" | "none";
     status: string;
     trialEndsAt?: string;
     nextBillingDate?: string;
-  }>({ 
-    type: (initialStatus === 'trial' ? 'trial' : (initialStatus === 'active' ? (initialType === 'lifetime' ? 'lifetime' : 'monthly') : 'none')), 
-    status: initialStatus || 'none' 
+  }>({
+    type:
+      initialStatus === "trial"
+        ? "trial"
+        : initialStatus === "active"
+        ? initialType === "lifetime"
+          ? "lifetime"
+          : "monthly"
+        : "none",
+    status: initialStatus || "none",
   });
 
   useEffect(() => {
     const fetchPlanStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
 
       const { data, error } = await supabase
-        .from('user_settings')
-        .select('subscription_status, subscription_type, trial_ends_at, next_billing_date')
-        .eq('user_id', session.user.id)
+        .from("user_settings")
+        .select(
+          "subscription_status, subscription_type, trial_ends_at, next_billing_date"
+        )
+        .eq("user_id", session.user.id)
         .single();
 
       if (error || !data) {
-        console.error('Erro ao buscar plano:', error);
+        console.error("Erro ao buscar plano:", error);
         return;
       }
 
-      if (data.subscription_status === 'trial') {
+      if (data.subscription_status === "trial") {
         setPlanStatus({
-          type: 'trial',
-          status: 'active',
+          type: "trial",
+          status: "active",
           trialEndsAt: data.trial_ends_at,
         });
-      } else if (data.subscription_status === 'active') {
+      } else if (data.subscription_status === "active") {
         setPlanStatus({
-          type: data.subscription_type === 'lifetime' ? 'lifetime' : 'monthly',
-          status: 'active',
+          type: data.subscription_type === "lifetime" ? "lifetime" : "monthly",
+          status: "active",
           nextBillingDate: data.next_billing_date,
         });
       } else {
         setPlanStatus({
-          type: 'none',
-          status: data.subscription_status || 'none',
+          type: "none",
+          status: data.subscription_status || "none",
         });
       }
     };
@@ -79,43 +102,49 @@ export default function PlanPage({
     fetchPlanStatus();
   }, []);
 
-  const isSubscribed = planStatus.type !== 'none' && planStatus.status === 'active';
+  const isSubscribed =
+    planStatus.type !== "none" && planStatus.status === "active";
 
   const handleCancelSubscription = async () => {
     setCancelling(true);
     try {
-      const { error } = await supabase.functions.invoke('efi-cancel-subscription');
-      
+      const { error } = await supabase.functions.invoke(
+        "efi-cancel-subscription"
+      );
+
       if (error) throw error;
 
-      addToast('Assinatura cancelada com sucesso.', 'success');
-      setPlanStatus(prev => ({ ...prev, status: 'cancelled' }));
+      addToast("Assinatura cancelada com sucesso.", "success");
+      setPlanStatus((prev) => ({ ...prev, status: "cancelled" }));
       setShowCancelModal(false);
     } catch (err: any) {
-      console.error('Erro ao cancelar:', err);
-      addToast('Erro ao cancelar assinatura. Tente novamente mais tarde.', 'error');
+      console.error("Erro ao cancelar:", err);
+      addToast(
+        "Erro ao cancelar assinatura. Tente novamente mais tarde.",
+        "error"
+      );
     } finally {
       setCancelling(false);
     }
   };
 
   const handleApplyCoupon = () => {
-    if (coupon.toUpperCase() === 'LANCA25') {
+    if (coupon.toUpperCase() === "LANCA25") {
       setIsCouponApplied(true);
-      addToast('Cupom LANCA25 aplicado! 25% de desconto', 'success');
+      addToast("Cupom LANCA25 aplicado! 25% de desconto", "success");
     } else {
-      addToast('Cupom inválido ou expirado', 'error');
+      addToast("Cupom inválido ou expirado", "error");
     }
   };
 
   const daysLeft = useMemo(() => {
-    if (planStatus.type === 'trial' && planStatus.trialEndsAt) {
+    if (planStatus.type === "trial" && planStatus.trialEndsAt) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const endDate = new Date(planStatus.trialEndsAt);
       endDate.setHours(0, 0, 0, 0);
-      
+
       const diffMs = endDate.getTime() - today.getTime();
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       return days;
@@ -128,28 +157,31 @@ export default function PlanPage({
       {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
 
       <div className="max-w-4xl mx-auto px-6 py-8 pt-12 md:pt-8">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-4">
-            Assinatura StudyFlow
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
-            {isSubscribed 
-              ? 'Você já possui um plano ativo. Aproveite todos os recursos!' 
-              : 'Escolha o plano ideal para sua rotina de estudos'}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              Assinatura StudyFlow
+            </h1>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+            {isSubscribed
+              ? "Você já possui um plano ativo. Aproveite todos os recursos!"
+              : "Escolha o plano ideal para sua rotina de estudos"}
           </p>
         </div>
 
         {/* Status da Assinatura Atual */}
         <div className="mb-12">
-          {planStatus.type === 'trial' && (
-            <motion.div 
+          {planStatus.type === "trial" && (
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-3xl p-6 shadow-lg shadow-yellow-400/10"
             >
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 min-w-[2.5rem] sm:min-w-[3rem] aspect-square bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
                     <Star size={24} fill="currentColor" />
                   </div>
                   <div>
@@ -164,79 +196,119 @@ export default function PlanPage({
                 <div className="text-center md:text-right">
                   <p className="text-sm text-yellow-600 dark:text-yellow-400 font-bold">
                     {daysLeft !== null && daysLeft <= 0 ? (
-                      <span className="text-red-600 dark:text-red-400">Trial expirado</span>
+                      <span className="text-red-600 dark:text-red-400">
+                        Trial expirado
+                      </span>
                     ) : (
-                      <span>{daysLeft} {daysLeft === 1 ? 'dia restante' : 'dias restantes'}</span>
+                      <span>
+                        {daysLeft}{" "}
+                        {daysLeft === 1 ? "dia restante" : "dias restantes"}
+                      </span>
                     )}
                   </p>
                   <p className="text-xs text-yellow-600/70 dark:text-yellow-400/70">
-                    Expira em: {planStatus.trialEndsAt ? new Date(planStatus.trialEndsAt).toLocaleDateString('pt-BR') : '-'}
+                    Expira em:{" "}
+                    {planStatus.trialEndsAt
+                      ? new Date(planStatus.trialEndsAt).toLocaleDateString(
+                          "pt-BR"
+                        )
+                      : "-"}
                   </p>
                 </div>
               </div>
             </motion.div>
           )}
 
-          {planStatus.type === 'monthly' && (planStatus.status === 'active' || planStatus.status === 'cancelled') && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className={`border-2 rounded-3xl p-6 shadow-lg ${
-                planStatus.status === 'active' 
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 shadow-emerald-400/10' 
-                  : 'bg-gray-50 dark:bg-gray-800 border-gray-300 shadow-gray-400/10'
-              }`}
-            >
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg ${
-                    planStatus.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400'
-                  }`}>
-                    <Star size={24} fill="currentColor" />
-                  </div>
-                  <div>
-                    <h3 className={`text-xl font-bold mb-1 flex items-center gap-2 ${
-                      planStatus.status === 'active' ? 'text-emerald-800 dark:text-emerald-200' : 'text-gray-800 dark:text-gray-200'
-                    }`}>
-                      <CreditCard size={20} /> 
-                      {planStatus.status === 'active' ? 'Plano Mensal Ativo' : 'Assinatura Cancelada'}
-                    </h3>
-                    <p className={planStatus.status === 'active' ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400'}>
-                      {planStatus.status === 'active' ? 'R$ 9,90/mês' : 'Acesso limitado até o fim do período'}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-center md:text-right flex flex-col items-center md:items-end gap-3">
-                  <p className={`text-sm font-medium ${
-                    planStatus.status === 'active' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    {planStatus.status === 'active' ? 'Próxima cobrança: ' : 'Acesso até: '}
-                    {planStatus.nextBillingDate ? new Date(planStatus.nextBillingDate).toLocaleDateString('pt-BR') : '-'}
-                  </p>
-                  
-                  {planStatus.status === 'active' && (
-                    <button
-                      onClick={() => setShowCancelModal(true)}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-red-500 hover:text-red-600 transition-colors p-1"
+          {planStatus.type === "monthly" &&
+            (planStatus.status === "active" ||
+              planStatus.status === "cancelled") && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`border-2 rounded-3xl p-6 shadow-lg ${
+                  planStatus.status === "active"
+                    ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 shadow-emerald-400/10"
+                    : "bg-gray-50 dark:bg-gray-800 border-gray-300 shadow-gray-400/10"
+                }`}
+              >
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-10 h-10 sm:w-12 sm:h-12 min-w-[2.5rem] sm:min-w-[3rem] aspect-square rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0 ${
+                        planStatus.status === "active"
+                          ? "bg-emerald-500"
+                          : "bg-gray-400"
+                      }`}
                     >
-                      <XCircle size={14} />
-                      Cancelar assinatura
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
+                      <Star size={24} fill="currentColor" />
+                    </div>
+                    <div>
+                      <h3
+                        className={`text-xl font-bold mb-1 flex items-center gap-2 ${
+                          planStatus.status === "active"
+                            ? "text-emerald-800 dark:text-emerald-200"
+                            : "text-gray-800 dark:text-gray-200"
+                        }`}
+                      >
+                        <CreditCard size={20} />
+                        {planStatus.status === "active"
+                          ? "Plano Mensal Ativo"
+                          : "Assinatura Cancelada"}
+                      </h3>
+                      <p
+                        className={
+                          planStatus.status === "active"
+                            ? "text-emerald-700 dark:text-emerald-300"
+                            : "text-gray-600 dark:text-gray-400"
+                        }
+                      >
+                        {planStatus.status === "active"
+                          ? "R$ 9,90/mês"
+                          : "Acesso limitado até o fim do período"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-center md:text-right flex flex-col items-center md:items-end gap-3">
+                    <p
+                      className={`text-sm font-medium ${
+                        planStatus.status === "active"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      {planStatus.status === "active"
+                        ? "Próxima cobrança: "
+                        : "Acesso até: "}
+                      {planStatus.nextBillingDate
+                        ? new Date(
+                            planStatus.nextBillingDate
+                          ).toLocaleDateString("pt-BR")
+                        : "-"}
+                    </p>
 
-          {planStatus.type === 'lifetime' && planStatus.status === 'active' && (
-            <motion.div 
+                    {planStatus.status === "active" && (
+                      <button
+                        onClick={() => setShowCancelModal(true)}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-red-500 hover:text-red-600 transition-colors p-1"
+                      >
+                        <XCircle size={14} />
+                        Cancelar assinatura
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+          {planStatus.type === "lifetime" && planStatus.status === "active" && (
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-400 rounded-3xl p-6 shadow-lg shadow-purple-400/10"
             >
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 min-w-[2.5rem] sm:min-w-[3rem] aspect-square bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
                     <Crown size={24} fill="currentColor" />
                   </div>
                   <div>
@@ -259,16 +331,28 @@ export default function PlanPage({
         </div>
 
         {/* Planos Disponíveis */}
-        <div className={`grid md:grid-cols-2 gap-8 ${planStatus.type === 'lifetime' ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div
+          className={`grid md:grid-cols-2 gap-8 ${
+            planStatus.type === "lifetime"
+              ? "opacity-50 pointer-events-none"
+              : ""
+          }`}
+        >
           {/* Plano Mensal */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border-2 transition-all flex flex-col ${planStatus.type === 'monthly' ? 'border-emerald-500' : 'border-transparent hover:border-emerald-500'}`}
+            className={`bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border-2 transition-all flex flex-col ${
+              planStatus.type === "monthly"
+                ? "border-emerald-500"
+                : "border-transparent hover:border-emerald-500"
+            }`}
           >
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Mensal</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Mensal
+                </h3>
                 <span className="inline-block bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-2 py-1 rounded-lg mt-1">
                   7 DIAS GRÁTIS
                 </span>
@@ -276,7 +360,9 @@ export default function PlanPage({
               <Zap className="text-emerald-500" size={32} />
             </div>
             <div className="mb-8">
-              <span className="text-4xl font-black text-gray-900 dark:text-white">R$ 9,90</span>
+              <span className="text-4xl font-black text-gray-900 dark:text-white">
+                R$ 9,90
+              </span>
               <span className="text-gray-500 dark:text-gray-400">/mês</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
@@ -297,27 +383,35 @@ export default function PlanPage({
               <Button
                 fullWidth
                 size="lg"
-                disabled={planStatus.type === 'monthly' || planStatus.type === 'lifetime'}
+                disabled={
+                  planStatus.type === "monthly" ||
+                  planStatus.type === "lifetime"
+                }
                 onClick={() => setShowCheckoutMensal(true)}
                 leftIcon={<CreditCard size={18} />}
               >
-                {planStatus.type === 'monthly' ? 'Plano Atual' : (planStatus.type === 'lifetime' ? 'Já Vitalício' : 'Cartão ou Boleto')}
+                {planStatus.type === "monthly"
+                  ? "Plano Atual"
+                  : planStatus.type === "lifetime"
+                  ? "Já Vitalício"
+                  : "Cartão ou Boleto"}
               </Button>
-              {planStatus.type !== 'monthly' && planStatus.type !== 'lifetime' && (
-                <Button
-                  fullWidth
-                  size="lg"
-                  variant="secondary"
-                  onClick={() => {
-                    setPixPlan('monthly');
-                    setShowPixModal(true);
-                  }}
-                  leftIcon={<QrCode size={18} />}
-                  className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
-                >
-                  Pagar com PIX
-                </Button>
-              )}
+              {planStatus.type !== "monthly" &&
+                planStatus.type !== "lifetime" && (
+                  <Button
+                    fullWidth
+                    size="lg"
+                    variant="secondary"
+                    onClick={() => {
+                      setPixPlan("monthly");
+                      setShowPixModal(true);
+                    }}
+                    leftIcon={<QrCode size={18} />}
+                    className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                  >
+                    Pagar com PIX
+                  </Button>
+                )}
             </div>
           </motion.div>
 
@@ -326,24 +420,32 @@ export default function PlanPage({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className={`bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border-2 border-emerald-500 relative overflow-hidden flex flex-col ${planStatus.type === 'lifetime' ? 'ring-4 ring-emerald-500/20' : ''}`}
+            className={`bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl border-2 border-emerald-500 relative overflow-hidden flex flex-col ${
+              planStatus.type === "lifetime" ? "ring-4 ring-emerald-500/20" : ""
+            }`}
           >
             <div className="absolute top-0 right-0 bg-emerald-500 text-white px-4 py-1 text-sm font-bold rounded-bl-xl">
               MELHOR VALOR
             </div>
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Vitalício</h3>
-                <p className="text-emerald-500 font-bold text-sm">Pagamento Único</p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Vitalício
+                </h3>
+                <p className="text-emerald-500 font-bold text-sm">
+                  Pagamento Único
+                </p>
               </div>
               <Crown className="text-emerald-500" size={32} />
             </div>
             <div className="mb-8">
               <span className="text-4xl font-black text-gray-900 dark:text-white">
-                R$ {isCouponApplied ? '72,75' : '97,00'}
+                R$ {isCouponApplied ? "72,75" : "97,00"}
               </span>
               {isCouponApplied && (
-                <span className="ml-2 text-lg text-gray-400 line-through">R$ 97,00</span>
+                <span className="ml-2 text-lg text-gray-400 line-through">
+                  R$ 97,00
+                </span>
               )}
             </div>
             <ul className="space-y-4 mb-8 flex-1">
@@ -362,7 +464,7 @@ export default function PlanPage({
             </ul>
 
             {/* Campo de cupom */}
-            {planStatus.type !== 'lifetime' && (
+            {planStatus.type !== "lifetime" && (
               <div className="mb-6">
                 <div className="flex gap-2">
                   <input
@@ -380,7 +482,9 @@ export default function PlanPage({
                   </button>
                 </div>
                 {isCouponApplied && (
-                  <p className="text-xs text-emerald-600 mt-2">✓ Cupom LANCA25 aplicado! 25% off</p>
+                  <p className="text-xs text-emerald-600 mt-2">
+                    ✓ Cupom LANCA25 aplicado! 25% off
+                  </p>
                 )}
               </div>
             )}
@@ -390,19 +494,21 @@ export default function PlanPage({
                 fullWidth
                 size="lg"
                 variant="primary"
-                disabled={planStatus.type === 'lifetime'}
+                disabled={planStatus.type === "lifetime"}
                 onClick={() => setShowCheckoutVitalicio(true)}
                 leftIcon={<CreditCard size={18} />}
               >
-                {planStatus.type === 'lifetime' ? 'Plano Atual' : 'Cartão ou Boleto'}
+                {planStatus.type === "lifetime"
+                  ? "Plano Atual"
+                  : "Cartão ou Boleto"}
               </Button>
-              {planStatus.type !== 'lifetime' && (
+              {planStatus.type !== "lifetime" && (
                 <Button
                   fullWidth
                   size="lg"
                   variant="secondary"
                   onClick={() => {
-                    setPixPlan('lifetime');
+                    setPixPlan("lifetime");
                     setShowPixModal(true);
                   }}
                   leftIcon={<QrCode size={18} />}
@@ -431,8 +537,12 @@ export default function PlanPage({
         plan={pixPlan}
         couponCode={isCouponApplied ? coupon : undefined}
         onPaymentConfirmed={() => {
-          setPlanStatus(prev => ({ ...prev, status: 'active', type: pixPlan }));
-          addToast('Pagamento confirmado! Seu plano foi ativado.', 'success');
+          setPlanStatus((prev) => ({
+            ...prev,
+            status: "active",
+            type: pixPlan,
+          }));
+          addToast("Pagamento confirmado! Seu plano foi ativado.", "success");
         }}
       />
 
@@ -451,7 +561,7 @@ export default function PlanPage({
                   <AlertCircle size={24} />
                   <h3 className="text-xl font-bold">Cancelar Assinatura</h3>
                 </div>
-                <button 
+                <button
                   onClick={() => setShowCancelModal(false)}
                   className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors"
                 >
@@ -463,10 +573,18 @@ export default function PlanPage({
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
                   Tem certeza que deseja cancelar sua assinatura mensal?
                 </p>
-                
+
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 mb-6">
                   <p className="text-sm text-amber-800 dark:text-amber-300">
-                    Você ainda terá acesso a todos os recursos PRO até o dia <strong>{planStatus.nextBillingDate ? new Date(planStatus.nextBillingDate).toLocaleDateString('pt-BR') : '-'}</strong>. Após essa data, sua conta voltará ao plano gratuito.
+                    Você ainda terá acesso a todos os recursos PRO até o dia{" "}
+                    <strong>
+                      {planStatus.nextBillingDate
+                        ? new Date(
+                            planStatus.nextBillingDate
+                          ).toLocaleDateString("pt-BR")
+                        : "-"}
+                    </strong>
+                    . Após essa data, sua conta voltará ao plano gratuito.
                   </p>
                 </div>
 
@@ -489,7 +607,7 @@ export default function PlanPage({
                         Cancelando...
                       </>
                     ) : (
-                      'Confirmar Cancelamento'
+                      "Confirmar Cancelamento"
                     )}
                   </button>
                 </div>

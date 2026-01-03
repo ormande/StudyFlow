@@ -1,20 +1,40 @@
-import { motion } from 'framer-motion';
-import { useAchievementsContext } from '../contexts/AchievementsContext';
-import { 
-  ACHIEVEMENTS, 
-  CATEGORY_ORDER, 
-  getLevelBadgeColor, 
-  getLevelRoman, 
-  getCategoryName, 
+import { motion } from "framer-motion";
+import { useAchievementsContext } from "../contexts/AchievementsContext";
+import {
+  ACHIEVEMENTS,
+  CATEGORY_ORDER,
+  getLevelBadgeColor,
+  getLevelRoman,
+  getCategoryName,
   getCategoryIcon,
   Achievement,
-  UserAchievement
-} from '../types/achievements';
-import { Sparkles, Trophy, Lock, CheckCircle2 } from 'lucide-react';
-import Skeleton from '../components/Skeleton';
-import Button from '../components/Button';
-import FloatingBackButton from '../components/FloatingBackButton';
-import { FADE_UP_ANIMATION, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/animations';
+  UserAchievement,
+} from "../types/achievements";
+import { Sparkles, Trophy, Lock, CheckCircle2 } from "lucide-react";
+import Skeleton from "../components/Skeleton";
+import Button from "../components/Button";
+import FloatingBackButton from "../components/FloatingBackButton";
+import {
+  FADE_UP_ANIMATION,
+  STAGGER_CONTAINER,
+  STAGGER_ITEM,
+} from "../utils/animations";
+
+// Helper para renderizar labels longas (ex: "matérias") de forma responsiva
+function renderResponsiveLabel(label: string) {
+  if (label.includes("matérias")) {
+    const parts = label.split("matérias");
+    return (
+      <>
+        {parts[0]}
+        <span className="hidden xs:inline">matérias</span>
+        <span className="xs:hidden">mat</span>
+        {parts[1]}
+      </>
+    );
+  }
+  return label;
+}
 
 interface AchievementsPageProps {
   isLoading: boolean;
@@ -28,16 +48,20 @@ interface AchievementCardProps {
   onClaim: (achievementId: string, level: number) => void;
 }
 
-function AchievementCard({ achievement, userProgress, onClaim }: AchievementCardProps) {
+function AchievementCard({
+  achievement,
+  userProgress,
+  onClaim,
+}: AchievementCardProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100 dark:border-gray-700 h-full">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100 dark:border-gray-700 h-full overflow-hidden min-w-0 w-full">
       {/* Header com ícone e nome */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
           <achievement.icon className={achievement.color} size={24} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-gray-900 dark:text-white text-sm">
+          <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate">
             {achievement.name}
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
@@ -45,57 +69,72 @@ function AchievementCard({ achievement, userProgress, onClaim }: AchievementCard
           </p>
         </div>
       </div>
-      
+
       {/* Níveis */}
       <div className="flex gap-2">
         {achievement.levels.map((level) => {
-          const userLevel = userProgress.find(up => up.level === level.level);
+          const userLevel = userProgress.find((up) => up.level === level.level);
           const isUnlocked = userLevel && userLevel.unlockedAt;
           const isClaimed = userLevel && userLevel.claimedAt;
-          
+
           return (
             <div
               key={level.level}
-              className={`flex-1 rounded-lg p-3 text-center relative transition-all ${
+              className={`flex-1 min-w-0 w-full rounded-lg p-3 text-center relative transition-all ${
                 isClaimed
-                  ? 'bg-emerald-100 dark:bg-emerald-900/30 border-2 border-emerald-500'
+                  ? "bg-emerald-100 dark:bg-emerald-900/30 border-2 border-emerald-500"
                   : isUnlocked
-                  ? 'bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500'
-                  : 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'
+                  ? "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500"
+                  : "bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600"
               }`}
             >
               {/* Badge de nível */}
-              <span className={`inline-block ${getLevelBadgeColor(level.level as 1 | 2 | 3)} text-white text-xs font-bold px-2 py-0.5 rounded mb-1`}>
+              <span
+                className={`inline-block ${getLevelBadgeColor(
+                  level.level as 1 | 2 | 3
+                )} text-white text-xs font-bold px-2 py-0.5 rounded mb-1`}
+              >
                 {getLevelRoman(level.level as 1 | 2 | 3)}
               </span>
-              
+
               {/* Ícone de status */}
               <div className="my-1">
                 {isClaimed ? (
-                  <CheckCircle2 className="text-emerald-500 mx-auto" size={20} />
+                  <CheckCircle2
+                    className="text-emerald-500 mx-auto"
+                    size={20}
+                  />
                 ) : isUnlocked ? (
-                  <Sparkles className="text-yellow-500 mx-auto animate-pulse" size={20} />
+                  <Sparkles
+                    className="text-yellow-500 mx-auto animate-pulse"
+                    size={20}
+                  />
                 ) : (
                   <Lock className="text-gray-400 mx-auto" size={20} />
                 )}
               </div>
-              
+
               {/* Requisito */}
-              <p className={`text-xs font-semibold mt-1 ${
-                isClaimed ? 'text-emerald-700 dark:text-emerald-300' : 
-                isUnlocked ? 'text-yellow-700 dark:text-yellow-300' :
-                'text-gray-600 dark:text-gray-400'
-              }`}>
-                {level.label}
+              <p
+                className={`text-xs sm:text-sm truncate font-semibold mt-1 ${
+                  isClaimed
+                    ? "text-emerald-700 dark:text-emerald-300"
+                    : isUnlocked
+                    ? "text-yellow-700 dark:text-yellow-300"
+                    : "text-gray-600 dark:text-gray-400"
+                }`}
+              >
+                {renderResponsiveLabel(level.label)}
               </p>
-              
+
               {/* Progresso (se não completo) */}
               {!isClaimed && userLevel && (
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
-                  {Math.min(userLevel.progress, level.requirement)}/{level.requirement}
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 truncate">
+                  {Math.min(userLevel.progress, level.requirement)}/
+                  {level.requirement}
                 </p>
               )}
-              
+
               {/* Botão de resgate (se desbloqueado mas não resgatado) */}
               {isUnlocked && !isClaimed && (
                 <Button
@@ -116,9 +155,9 @@ function AchievementCard({ achievement, userProgress, onClaim }: AchievementCard
   );
 }
 
-export default function AchievementsPage({ 
+export default function AchievementsPage({
   isLoading,
-  onNavigateToMore
+  onNavigateToMore,
 }: AchievementsPageProps) {
   const {
     pendingAchievements,
@@ -126,7 +165,7 @@ export default function AchievementsPage({
     claimedCount,
     totalCount,
     claimAchievement,
-    getUserProgress
+    getUserProgress,
   } = useAchievementsContext();
 
   if (isLoading) {
@@ -150,20 +189,25 @@ export default function AchievementsPage({
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="max-w-4xl xl:max-w-7xl mx-auto px-6 py-6 pb-24"
       {...FADE_UP_ANIMATION}
     >
       {/* Botão Voltar Flutuante */}
       {onNavigateToMore && <FloatingBackButton onClick={onNavigateToMore} />}
 
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2 pl-14 md:pl-0">
-          <Trophy className="text-emerald-500" size={28} />
-          Conquistas
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm pl-14 md:pl-0">
+      {/* Header (centralizado no mobile) */}
+      <div className="text-center mb-6 sm:mb-8">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Trophy
+            className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500"
+            size={28}
+          />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            Conquistas
+          </h1>
+        </div>
+        <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
           {claimedCount} de {totalCount} conquistas resgatadas
         </p>
       </div>
@@ -175,8 +219,8 @@ export default function AchievementsPage({
             <Sparkles size={20} />
             Conquistas Pendentes ({pendingAchievements.length})
           </h2>
-          
-          <motion.div 
+
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"
             variants={STAGGER_CONTAINER}
             initial="hidden"
@@ -188,36 +232,48 @@ export default function AchievementsPage({
                 variants={STAGGER_ITEM}
                 animate={{ scale: [1, 1.02, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
-                className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg"
+                className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg overflow-hidden min-w-0 w-full"
               >
                 <div className="flex items-center gap-4">
                   {/* Ícone */}
                   <div className="relative flex-shrink-0">
                     <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center shadow-md">
-                      <achievement.icon className={achievement.color} size={32} />
+                      <achievement.icon
+                        className={achievement.color}
+                        size={32}
+                      />
                     </div>
                     {/* Badge de nível */}
-                    <span className={`absolute -bottom-1 -right-1 ${getLevelBadgeColor(achievement.level as 1 | 2 | 3)} text-white text-xs font-bold px-2 py-0.5 rounded`}>
+                    <span
+                      className={`absolute -bottom-1 -right-1 ${getLevelBadgeColor(
+                        achievement.level as 1 | 2 | 3
+                      )} text-white text-xs font-bold px-2 py-0.5 rounded`}
+                    >
                       {getLevelRoman(achievement.level as 1 | 2 | 3)}
                     </span>
                   </div>
-                  
+
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                      {achievement.name} - Nível {getLevelRoman(achievement.level as 1 | 2 | 3)}
+                    <h3 className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white truncate">
+                      {achievement.name} - Nível{" "}
+                      {getLevelRoman(achievement.level as 1 | 2 | 3)}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                       {achievement.description}
                     </p>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                      {achievement.levels[achievement.level - 1].label}
+                    <p className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-semibold mt-1 truncate">
+                      {renderResponsiveLabel(
+                        achievement.levels[achievement.level - 1].label
+                      )}
                     </p>
                   </div>
-                  
+
                   {/* Botão Resgatar */}
                   <Button
-                    onClick={() => claimAchievement(achievement.id, achievement.level)}
+                    onClick={() =>
+                      claimAchievement(achievement.id, achievement.level)
+                    }
                     variant="primary"
                     size="md"
                     leftIcon={<Trophy size={20} />}
@@ -234,7 +290,9 @@ export default function AchievementsPage({
 
       {/* Conquistas por Categoria */}
       {CATEGORY_ORDER.map((category) => {
-        const categoryAchievements = ACHIEVEMENTS.filter(a => a.category === category);
+        const categoryAchievements = ACHIEVEMENTS.filter(
+          (a) => a.category === category
+        );
         if (categoryAchievements.length === 0) return null;
 
         return (
@@ -246,8 +304,8 @@ export default function AchievementsPage({
               })()}
               {getCategoryName(category)}
             </h2>
-            
-            <motion.div 
+
+            <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               variants={STAGGER_CONTAINER}
               initial="hidden"
@@ -269,4 +327,3 @@ export default function AchievementsPage({
     </motion.div>
   );
 }
-

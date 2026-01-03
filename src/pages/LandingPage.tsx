@@ -127,15 +127,17 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               >
                 Login
               </button>
+              {/* ADICIONADO: "hidden sm:block" para esconder no mobile */}
               <button
                 onClick={() => onNavigate("signup")}
-                className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                className="hidden sm:block px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
               >
                 Cadastrar
               </button>
               <button
                 onClick={() => onNavigate("pricing")}
-                className="px-3 sm:px-6 py-2 text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all whitespace-nowrap"
+                // ADICIONADO: "flex-shrink-0" para não espremer o botão
+                className="px-3 sm:px-6 py-2 text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all whitespace-nowrap flex-shrink-0"
               >
                 Assine já
               </button>

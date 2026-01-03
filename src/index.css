@@ -900,3 +900,31 @@ html.high-contrast [class*="modal-backdrop"] {
   background-color: rgba(0, 0, 0, 0.95) !important;
   border: 2px solid var(--border-primary) !important;
 }
+
+/* Utilitário para esconder scrollbar (mas manter funcionalidade) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Ajustes para Android com telas estreitas (Samsung A12, etc) */
+@media (max-width: 380px) {
+html {
+  font-size: 14px;
+}
+
+/* Garantir círculos perfeitos */
+.rounded-full {
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+/* Reduzir paddings em containers principais */
+.px-6 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+}

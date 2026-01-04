@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { X, Calendar, BarChart3, Flame, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StudyLog } from "../types";
-import { getLocalDateString } from "../utils/dateUtils";
 
 interface HeatmapModalProps {
   isOpen: boolean;

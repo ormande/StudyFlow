@@ -210,7 +210,7 @@ export default function RegisterPage({
       return;
     }
 
-    const daysDiff = getDaysDifference(newDate);
+    const daysDiff = getDaysDifference(newDate, getLocalDateString());
     if (daysDiff > 30) {
       const confirmMessage = `Este estudo foi há ${daysDiff} dias. Confirma?`;
       if (!window.confirm(confirmMessage)) {

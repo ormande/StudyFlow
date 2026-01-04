@@ -7,7 +7,6 @@ import LandingPage from "./pages/LandingPage";
 import LoginScreen from "./components/LoginScreen";
 import PricingPage from "./pages/PricingPage";
 import SignupPage from "./pages/SignupPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
 import { useAppearance } from "./hooks/useAppearance";
 
 const CHECKOUT_INTENT_KEY = "studyflow_checkout_intent";
@@ -238,13 +237,6 @@ function App() {
                 setIsRegistering(false);
               }}
               onStartSignup={() => setIsRegistering(true)}
-            />
-          )}
-          {authView === "verify-email" && (
-            <VerifyEmailPage
-              email={signupEmail}
-              onNavigateToLogin={() => setAuthView("login")}
-              onNavigateToSignup={() => setAuthView("signup")}
             />
           )}
           {(authView === "login" || authView === "forgot") && (

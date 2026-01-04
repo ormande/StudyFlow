@@ -17,7 +17,6 @@ function App() {
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
-  const [signupEmail, setSignupEmail] = useState("");
   const [authView, setAuthView] = useState<
     "landing" | "login" | "forgot" | "pricing" | "signup" | "verify-email"
   >(() => {
@@ -233,7 +232,7 @@ function App() {
                 setAuthView("login");
                 setIsRegistering(false);
               }}
-              onSuccess={(email) => {
+              onSuccess={() => {
                 // Após cadastro bem-sucedido, o usuário está autenticado
                 // Limpar o flag de registro para exibir o Dashboard
                 setIsRegistering(false);

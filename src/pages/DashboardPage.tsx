@@ -30,6 +30,7 @@ import Skeleton from "../components/Skeleton";
 import Button from "../components/Button";
 import { getQuoteOfTheDay } from "../data/motivationalQuotes";
 import { useGoals } from "../hooks/useGoals";
+import { getLocalDateString } from "../utils/dateUtils";
 
 interface DashboardPageProps {
   subjects: Subject[];
@@ -111,10 +112,7 @@ export default function DashboardPage({
   // --- LÓGICA ---
 
   const getTodayStats = () => {
-    const today = new Date();
-    const todayString = `${today.getFullYear()}-${String(
-      today.getMonth() + 1
-    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayString = getLocalDateString();
     const todayLogs = logs.filter((log) => log.date === todayString);
     const totalMinutes = todayLogs.reduce(
       (sum, log) =>
@@ -299,10 +297,7 @@ export default function DashboardPage({
       const d = new Date(today);
       d.setDate(d.getDate() - i);
 
-      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-        2,
-        "0"
-      )}-${String(d.getDate()).padStart(2, "0")}`;
+      const dateKey = getLocalDateString(d);
 
       const dayLogs = logs.filter((l) => l.date === dateKey);
       const minutes = dayLogs.reduce(

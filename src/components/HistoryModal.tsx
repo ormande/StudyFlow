@@ -1,7 +1,17 @@
-import { useState } from 'react';
-import { X, BookOpen, HelpCircle, RefreshCw, Filter, Check, XCircle, Circle } from 'lucide-react';
-import { Subject, StudyLog, StudyType } from '../types';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from "react";
+import {
+  X,
+  BookOpen,
+  HelpCircle,
+  RefreshCw,
+  Filter,
+  Check,
+  XCircle,
+  Circle,
+} from "lucide-react";
+import { Subject, StudyLog, StudyType } from "../types";
+import { motion, AnimatePresence } from "framer-motion";
+import { getLocalDateString } from "../utils/dateUtils";
 
 interface HistoryModalProps {
   isOpen: boolean;
@@ -18,36 +28,44 @@ export default function HistoryModal({
   logs,
   subjects,
 }: HistoryModalProps) {
-  const [filterSubject, setFilterSubject] = useState<string>('all');
+  const [filterSubject, setFilterSubject] = useState<string>("all");
 
   // Obter data de hoje no formato YYYY-MM-DD
-  const today = new Date();
-  const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todayString = getLocalDateString();
 
   // Filtrar apenas logs do dia atual
   const filteredLogs = [...logs]
     .sort((a, b) => b.timestamp - a.timestamp)
     .filter((log) => {
       const isToday = log.date === todayString;
-      const subjectMatch = filterSubject === 'all' || log.subjectId === filterSubject;
+      const subjectMatch =
+        filterSubject === "all" || log.subjectId === filterSubject;
       return isToday && subjectMatch;
     });
 
   const getSubjectName = (subjectId: string) => {
-    return subjects.find((s) => s.id === subjectId)?.name || 'Matéria Excluída';
+    return subjects.find((s) => s.id === subjectId)?.name || "Matéria Excluída";
   };
 
   const getSubjectColor = (subjectId: string) => {
-    return subjects.find((s) => s.id === subjectId)?.color || '#6b7280';
+    return subjects.find((s) => s.id === subjectId)?.color || "#6b7280";
   };
 
   const getTypeLabel = (type: StudyType) => {
-    const labels = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão' };
+    const labels = {
+      teoria: "Teoria",
+      questoes: "Questões",
+      revisao: "Revisão",
+    };
     return labels[type];
   };
 
   const getTypeIcon = (type: StudyType) => {
-    const icons = { teoria: BookOpen, questoes: HelpCircle, revisao: RefreshCw };
+    const icons = {
+      teoria: BookOpen,
+      questoes: HelpCircle,
+      revisao: RefreshCw,
+    };
     return icons[type];
   };
 
@@ -70,9 +88,11 @@ export default function HistoryModal({
           >
             {/* Header */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 flex-shrink-0">
-              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Histórico de Hoje</h3>
-              <button 
-                onClick={onClose} 
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">
+                Histórico de Hoje
+              </h3>
+              <button
+                onClick={onClose}
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 aria-label="Fechar Modal"
                 title="Fechar Modal"
@@ -84,7 +104,10 @@ export default function HistoryModal({
             {/* Filtro */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+                <Filter
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                  size={18}
+                />
                 <select
                   value={filterSubject}
                   onChange={(e) => setFilterSubject(e.target.value)}
@@ -92,7 +115,9 @@ export default function HistoryModal({
                 >
                   <option value="all">Todas as matérias</option>
                   {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -119,14 +144,19 @@ export default function HistoryModal({
                         <div className="flex items-center gap-2">
                           <div
                             className="w-3 h-3 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: getSubjectColor(log.subjectId) }}
+                            style={{
+                              backgroundColor: getSubjectColor(log.subjectId),
+                            }}
                           />
                           <span className="font-semibold text-gray-900 dark:text-white">
                             {getSubjectName(log.subjectId)}
                           </span>
                         </div>
                         <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                          {new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(log.timestamp).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </span>
                       </div>
 
@@ -136,18 +166,27 @@ export default function HistoryModal({
                         <span>{getTypeLabel(log.type)}</span>
                         <span>•</span>
                         <span>{logMinutes} min</span>
-                        {log.type === 'teoria' && log.pages && (
+                        {log.type === "teoria" && log.pages && (
                           <>
                             <span>•</span>
                             <span>{log.pages} págs</span>
                           </>
                         )}
-                        {log.type === 'questoes' && (
+                        {log.type === "questoes" && (
                           <>
                             <span>•</span>
-                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">{log.correct || 0}<Check size={12} /></span>
-                            <span className="text-red-600 dark:text-red-400 flex items-center gap-0.5">{log.wrong || 0}<XCircle size={12} /></span>
-                            <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">{log.blank || 0}<Circle size={12} /></span>
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                              {log.correct || 0}
+                              <Check size={12} />
+                            </span>
+                            <span className="text-red-600 dark:text-red-400 flex items-center gap-0.5">
+                              {log.wrong || 0}
+                              <XCircle size={12} />
+                            </span>
+                            <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
+                              {log.blank || 0}
+                              <Circle size={12} />
+                            </span>
                           </>
                         )}
                       </div>

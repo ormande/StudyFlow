@@ -16,6 +16,11 @@ import { useToast } from "../contexts/ToastContext";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "../components/Button";
 import { ACCORDION_ANIMATION } from "../utils/animations";
+import {
+  getLocalDateString,
+  getYesterdayDateString,
+  getDaysDifference,
+} from "../utils/dateUtils";
 
 interface RegisterPageProps {
   subjects: Subject[];
@@ -52,7 +57,7 @@ export default function RegisterPage({
   const [dateOption, setDateOption] = useState<"today" | "yesterday" | "other">(
     "today"
   );
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]); // Armazena sempre YYYY-MM-DD
+  const [date, setDate] = useState(getLocalDateString()); // Armazena sempre YYYY-MM-DD com timezone local
   const [maskedDate, setMaskedDate] = useState(""); // Armazena DD/MM/AAAA para o input desktop
   const [isDateValid, setIsDateValid] = useState(true);
   const [hours, setHours] = useState("");
@@ -150,8 +155,7 @@ export default function RegisterPage({
       setHours(h > 0 ? h.toString() : "");
       setMinutes(m > 0 ? m.toString() : "");
       setSeconds(s > 0 ? s.toString() : "");
-      const today = new Date().toISOString().split("T")[0];
-      setDate(today);
+      setDate(getLocalDateString());
       setDateOption("today");
     }
   }, [timerSeconds, isTimerRunning]);
@@ -164,23 +168,12 @@ export default function RegisterPage({
     return selectedDate <= today;
   };
 
-  // Função para calcular dias de diferença
-  const getDaysDifference = (dateString: string): number => {
-    const selectedDate = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    selectedDate.setHours(0, 0, 0, 0);
-    const diffTime = today.getTime() - selectedDate.getTime();
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  };
-
   // Handler para mudança de opção de data
   const handleDateOptionChange = (option: "today" | "yesterday" | "other") => {
     setDateOption(option);
 
     if (option === "today") {
-      const today = new Date().toISOString().split("T")[0];
-      setDate(today);
+      setDate(getLocalDateString());
     } else if (option === "yesterday") {
       const now = new Date();
       const currentHour = now.getHours();
@@ -197,14 +190,12 @@ export default function RegisterPage({
         if (!window.confirm(confirmMessage)) {
           // Se cancelar, volta para "Hoje"
           setDateOption("today");
-          setDate(now.toISOString().split("T")[0]);
+          setDate(getLocalDateString());
           return;
         }
       }
 
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      setDate(yesterday.toISOString().split("T")[0]);
+      setDate(getYesterdayDateString());
     }
     // Se for "other", mantém a data atual e mostra o date picker
   };
@@ -214,8 +205,7 @@ export default function RegisterPage({
     if (!isValidDate(newDate)) {
       addToast("Não é possível registrar estudo futuro", "error");
       // Reverter para data válida (hoje)
-      const today = new Date().toISOString().split("T")[0];
-      setDate(today);
+      setDate(getLocalDateString());
       setDateOption("today");
       return;
     }
@@ -225,9 +215,7 @@ export default function RegisterPage({
       const confirmMessage = `Este estudo foi há ${daysDiff} dias. Confirma?`;
       if (!window.confirm(confirmMessage)) {
         // Reverter para data anterior válida
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        setDate(yesterday.toISOString().split("T")[0]);
+        setDate(getYesterdayDateString());
         setDateOption("yesterday");
         return;
       }
@@ -312,8 +300,7 @@ export default function RegisterPage({
     setWrong("");
     setBlank("");
     setMarkSubtopicCompleted(false);
-    const today = new Date().toISOString().split("T")[0];
-    setDate(today);
+    setDate(getLocalDateString());
     setDateOption("today");
     onTimeClear();
 
@@ -468,7 +455,7 @@ export default function RegisterPage({
                   <input
                     type="date"
                     value={date}
-                    max={new Date().toISOString().split("T")[0]}
+                    max={getLocalDateString()}
                     onChange={(e) => handleDateChange(e.target.value)}
                     className="w-full md:hidden px-3 py-3 pr-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark] min-w-0 text-center cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     style={{

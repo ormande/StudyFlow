@@ -28,6 +28,7 @@ import FloatingBackButton from "../components/FloatingBackButton";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { registerPoppinsFontSimple } from "../utils/pdfFonts";
+import { getLocalDateString } from "../utils/dateUtils";
 
 interface SettingsPageProps {
   onNavigateBack?: () => void;
@@ -1002,9 +1003,7 @@ export default function SettingsPage({
 
         addFooter();
 
-        const fileName = `studyflow_relatorio_${
-          new Date().toISOString().split("T")[0]
-        }.pdf`;
+        const fileName = `studyflow_relatorio_${getLocalDateString()}.pdf`;
         doc.save(fileName);
 
         setIsExportingPDF(false);

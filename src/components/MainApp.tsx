@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { TabType } from "../types";
 import { FADE_UP_ANIMATION } from "../utils/animations";
+import { getLocalDateString, getPreviousDateString } from "../utils/dateUtils";
 import { useSupabaseData } from "../hooks/useSupabaseData";
 import BottomNav from "./BottomNav";
 import Sidebar from "./Sidebar";
@@ -180,36 +181,38 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
   );
 
   // useMemo para calcular streak (evita recálculo desnecessário) - DEVE VIR ANTES DE useAchievements
-  // ✅ OTIMIZADO: Usa allLogDates (apenas date + timestamp) ao invés de logs completos
-  // Isso permite calcular streak corretamente mesmo com apenas 100 logs carregados na UI
+  // ✅ CORRIGIDO: Usa log.date (YYYY-MM-DD) ao invés de timestamp com toLocaleDateString
+  // Timezone local é respeitado e formato é consistente
   const streak = useMemo(() => {
     if (allLogDates.length === 0) return 0;
-    const studyDates = new Set(
-      allLogDates.map((log) =>
-        new Date(log.timestamp).toLocaleDateString("pt-BR")
-      )
-    );
-    const today = new Date();
-    const todayStr = today.toLocaleDateString("pt-BR");
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toLocaleDateString("pt-BR");
+
+    // Criar Set com todas as datas em formato YYYY-MM-DD
+    const studyDates = new Set(allLogDates.map((log) => log.date));
+
+    const today = getLocalDateString();
+    const yesterday = getPreviousDateString(today);
+
+    // Se não estudou nem hoje nem ontem, streak = 0
+    if (!studyDates.has(today) && !studyDates.has(yesterday)) return 0;
+
     let streak = 0;
-    let currentCheckDate = new Date();
-    if (!studyDates.has(todayStr) && !studyDates.has(yesterdayStr)) return 0;
+    let currentCheckDate = today;
+
+    // Loop para contar dias consecutivos
     for (let i = 0; i < 365; i++) {
-      const dateString = currentCheckDate.toLocaleDateString("pt-BR");
-      if (studyDates.has(dateString)) {
+      if (studyDates.has(currentCheckDate)) {
         streak++;
       } else {
-        if (i === 0 && !studyDates.has(todayStr)) {
-          currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+        // Se é o primeiro dia (i === 0) e não estudou hoje, pula para ontem
+        if (i === 0 && !studyDates.has(today)) {
+          currentCheckDate = yesterday;
           continue;
         }
         break;
       }
-      currentCheckDate.setDate(currentCheckDate.getDate() - 1);
+      currentCheckDate = getPreviousDateString(currentCheckDate);
     }
+
     return streak;
   }, [allLogDates]);
 

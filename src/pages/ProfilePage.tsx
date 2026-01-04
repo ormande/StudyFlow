@@ -369,31 +369,32 @@ export default function ProfilePage({
             className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-2xl shadow-md p-3 xs:p-4 sm:p-6"
           >
             {/* Layout Mobile Compacto - AJUSTADO PARA XS */}
-            <div className="md:hidden flex items-start xs:items-center justify-between gap-2 xs:gap-3 mb-2">\n              <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">\n                <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">\n                  <Star size={18} fill="currentColor" />\n                </div>\n                <div className="flex-1 min-w-0">\n                  <h2 className="text-xs xs:text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-0.5 truncate">\n                    Plano Trial\n                  </h2>\n                  <p className="text-xs text-yellow-700 dark:text-yellow-300 font-semibold line-clamp-2">\n                    Teste gratuito!\n                    {daysLeft !== null && daysLeft >= 0 && (\n                      <span className=\"block mt-0.5\">\n                        {daysLeft === 0\n                          ? "Último dia!":\n                          : `${daysLeft} ${daysLeft === 1 ? "dia" : "dias"}`}\n                      </span>\n                    )}\n                  </p>\n                </div>\n              </div>\n              <Button\n                onClick={onNavigateToPlans}\n                variant="primary"\n                size="sm"\n                className="flex-shrink-0 text-xs px-2 py-1.5 h-auto"\n              >\n                Gerenciar\n              </Button>\n            </div>
-              <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="md:hidden flex items-start xs:items-center justify-between gap-2 xs:gap-3 mb-2">
+              <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
                 <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
                   <Star size={18} fill="currentColor" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-0.5 truncate">
+                  <h2 className="text-xs xs:text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-0.5 truncate">
                     Plano Trial
                   </h2>
-                  {daysLeft !== null && daysLeft >= 0 && (
-                    <p className="text-[10px] text-yellow-600 dark:text-yellow-400 font-semibold">
-                      {daysLeft === 0
-                        ? "Último dia!"
-                        : `${daysLeft} ${
-                            daysLeft === 1 ? "dia" : "dias"
-                          } restantes`}
-                    </p>
-                  )}
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300 font-semibold line-clamp-2">
+                    Teste gratuito!
+                    {daysLeft !== null && daysLeft >= 0 && (
+                      <span className="block mt-0.5">
+                        {daysLeft === 0
+                          ? "Último dia!"
+                          : `${daysLeft} ${daysLeft === 1 ? "dia" : "dias"}`}
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
               <Button
                 onClick={onNavigateToPlans}
                 variant="primary"
                 size="sm"
-                className="flex-shrink-0 text-xs px-3 py-2 h-auto"
+                className="flex-shrink-0 text-xs px-2 py-1.5 h-auto"
               >
                 Gerenciar
               </Button>
@@ -467,33 +468,6 @@ export default function ProfilePage({
                 variant="primary"
                 size="sm"
                 className="flex-shrink-0 text-xs px-2 py-1.5 h-auto"
-              >
-                Gerenciar
-              </Button>
-            </div>
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                  <Star size={18} fill="currentColor" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-sm font-bold text-emerald-800 dark:text-emerald-200 mb-0.5 truncate">
-                    Plano Mensal
-                  </h2>
-                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                    R$ 9,90/mês
-                    {nextBillingDate &&
-                      ` • Próx: ${new Date(nextBillingDate).toLocaleDateString(
-                        "pt-BR",
-                        { day: "2-digit", month: "2-digit" }
-                      )}`}
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={onNavigateToPlans}
-                variant="primary"
-                size="sm"
-                className="flex-shrink-0 text-xs px-3 py-2 h-auto"
               >
                 Gerenciar
               </Button>

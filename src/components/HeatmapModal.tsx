@@ -338,7 +338,7 @@ export default function HeatmapModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 w-full h-full z-[70] flex items-center justify-center p-4 overflow-hidden">
+      <div className="fixed inset-0 w-full h-full z-[70] flex items-center justify-center p-2 xs:p-3 sm:p-4 overflow-hidden">
         {/* Overlay */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -348,52 +348,55 @@ export default function HeatmapModal({
           className="absolute inset-0 w-full h-full bg-gray-900/50 dark:bg-black/60 backdrop-blur-sm"
         />
 
-        {/* Modal */}
+        {/* Modal - RESPONSIVO PARA XS */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.2 }}
-          className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col my-8"
+          className="relative bg-white dark:bg-gray-800 rounded-xl xs:rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col my-0 xs:my-4 sm:my-8"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-labelledby="heatmap-title"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div>
+          {/* Header - RESPONSIVO */}
+          <div className="flex items-start xs:items-center justify-between p-3 xs:p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 gap-2">
+            <div className="flex-1 min-w-0">
               <h2
                 id="heatmap-title"
-                className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
+                className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
               >
-                <Calendar size={24} className="text-emerald-500" />
-                Mapa de Calor - Seus Estudos
+                <Calendar
+                  size={20}
+                  className="text-emerald-500 flex-shrink-0"
+                />
+                <span className="truncate">Mapa de Calor</span>
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs xs:text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                 Visualize sua constância ao longo do tempo
               </p>
             </div>
             <button
               ref={closeButtonRef}
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
               aria-label="Fechar"
             >
               <X size={20} />
             </button>
           </div>
 
-          {/* Toggle de Período */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-3 flex-shrink-0">
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          {/* Toggle de Período - RESPONSIVO */}
+          <div className="px-3 xs:px-4 sm:px-6 py-3 xs:py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-2 xs:gap-2.5 sm:gap-3 flex-shrink-0">
+            <span className="text-xs xs:text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
               Período:
             </span>
             {([30, 90, 365] as Period[]).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-3 xs:px-3 sm:px-4 py-1.5 rounded-full text-xs xs:text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                   period === p
                     ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
                     : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
@@ -404,24 +407,24 @@ export default function HeatmapModal({
             ))}
           </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          {/* Content - RESPONSIVO */}
+          <div className="flex-1 overflow-y-auto p-3 xs:p-4 sm:p-6">
             {logs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="flex flex-col items-center justify-center py-10 xs:py-12 sm:py-20 text-center px-2">
                 <Calendar
-                  size={64}
-                  className="text-gray-300 dark:text-gray-600 mb-4"
+                  size={48}
+                  className="text-gray-300 dark:text-gray-600 mb-3 xs:mb-3 sm:mb-4"
                 />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Comece a estudar para preencher seu mapa de calor!
+                <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  Comece a estudar!
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-xs xs:text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                   Registre seus estudos e acompanhe sua evolução.
                 </p>
               </div>
             ) : (
               <>
-                {/* Heatmap - Grid de Meses */}
+                {/* Heatmap - Grid de Meses - RESPONSIVO PARA XS */}
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={period}
@@ -437,7 +440,7 @@ export default function HeatmapModal({
                       opacity: { duration: 0.25 },
                       y: { duration: 0.25 },
                     }}
-                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+                    className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 xs:gap-3 sm:gap-4 lg:gap-6"
                   >
                     {monthsToDisplay.map(({ year, month }, monthIndex) => {
                       const monthKey = `${year}-${month}`;
@@ -478,33 +481,33 @@ export default function HeatmapModal({
                             duration: 0.2,
                             delay: monthIndex * 0.05,
                           }}
-                          className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4"
+                          className="bg-gray-50 dark:bg-gray-800/50 rounded-lg xs:rounded-xl p-2 xs:p-3 sm:p-4"
                         >
-                          {/* Nome do Mês */}
-                          <h3 className="text-center text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                          {/* Nome do Mês - RESPONSIVO */}
+                          <h3 className="text-center text-xs xs:text-xs sm:text-sm font-semibold text-gray-900 dark:text-white mb-2 xs:mb-2.5 sm:mb-3 truncate">
                             {monthName}
                           </h3>
 
-                          {/* Labels dos Dias da Semana */}
-                          <div className="grid grid-cols-7 gap-1 mb-2">
+                          {/* Labels dos Dias da Semana - RESPONSIVO */}
+                          <div className="grid grid-cols-7 gap-0.5 xs:gap-0.5 sm:gap-1 mb-1 xs:mb-1.5 sm:mb-2">
                             {DAYS_OF_WEEK_SHORT.map((day, index) => (
                               <span
                                 key={index}
-                                className="text-[10px] text-center text-gray-500 dark:text-gray-400 font-medium"
+                                className="text-[10px] xs:text-[10px] sm:text-xs text-center text-gray-500 dark:text-gray-400 font-medium"
                               >
                                 {day}
                               </span>
                             ))}
                           </div>
 
-                          {/* Grid de Dias */}
-                          <div className="grid grid-cols-7 gap-0.5 md:gap-1">
+                          {/* Grid de Dias - RESPONSIVO */}
+                          <div className="grid grid-cols-7 gap-0.5 xs:gap-0.5 sm:gap-1">
                             {daysArray.map((day, index) => {
                               if (!day) {
                                 return (
                                   <div
                                     key={`empty-${index}`}
-                                    className="w-5 h-5 md:w-8 md:h-8"
+                                    className="w-4 h-4 xs:w-4 sm:w-5 md:w-8 md:h-8"
                                   />
                                 );
                               }
@@ -521,8 +524,8 @@ export default function HeatmapModal({
                                   tabIndex={0}
                                   aria-label={`${formatDateForTooltip(
                                     day
-                                  )}, ${hours}h ${minutes}min estudadas`}
-                                  className={`w-5 h-5 md:w-8 md:h-8 rounded-full cursor-pointer transition-all ${color} ${
+                                  )}, ${hours}h ${minutes}min`}
+                                  className={`w-4 h-4 xs:w-4 sm:w-5 md:w-8 md:h-8 rounded-full cursor-pointer transition-all ${color} ${
                                     intensity > 0
                                       ? "hover:ring-2 hover:ring-emerald-400 dark:hover:ring-emerald-500 hover:ring-offset-1"
                                       : ""
@@ -548,36 +551,35 @@ export default function HeatmapModal({
                   </motion.div>
                 </AnimatePresence>
 
-                {/* Tooltip */}
+                {/* Tooltip - RESPONSIVO */}
                 {tooltipData && (
                   <motion.div
                     ref={tooltipRef}
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="fixed bg-gray-900 text-white text-xs p-3 rounded-lg shadow-xl z-[80] pointer-events-none"
+                    className="fixed bg-gray-900 text-white text-xs p-2 xs:p-3 rounded-lg shadow-xl z-[80] pointer-events-none max-w-xs"
                     style={{
                       left: `${tooltipData.x}px`,
                       top: `${tooltipData.y}px`,
                       transform: "translateX(-50%) translateY(-100%)",
                     }}
                   >
-                    <div className="font-semibold mb-1">
+                    <div className="font-semibold mb-1 text-xs truncate">
                       {formatDateForTooltip(tooltipData.day)}
                     </div>
-                    <div className="space-y-1">
-                      <div>
+                    <div className="space-y-0.5 text-xs">
+                      <div className="truncate">
                         {Math.floor(tooltipData.day.totalMinutes / 60)}h{" "}
-                        {tooltipData.day.totalMinutes % 60}min estudadas
+                        {tooltipData.day.totalMinutes % 60}min
                       </div>
-                      <div>
+                      <div className="truncate">
                         {tooltipData.day.logs.length}{" "}
                         {tooltipData.day.logs.length === 1
                           ? "sessão"
-                          : "sessões"}{" "}
-                        registrada{tooltipData.day.logs.length === 1 ? "" : "s"}
+                          : "sessões"}
                       </div>
                       {dailyGoal > 0 && (
-                        <div>
+                        <div className="truncate">
                           {getGoalPercentage(tooltipData.day.totalMinutes)}% da
                           meta diária
                         </div>
@@ -586,73 +588,84 @@ export default function HeatmapModal({
                   </motion.div>
                 )}
 
-                {/* Legenda */}
-                <div className="flex items-center justify-center gap-3 mt-8 mb-6">
-                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                {/* Legenda - RESPONSIVA */}
+                <div className="flex items-center justify-center gap-2 xs:gap-2.5 sm:gap-3 mt-4 xs:mt-5 sm:mt-8 mb-4 xs:mb-5 sm:mb-6">
+                  <span className="text-xs xs:text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                     Menos
                   </span>
-                  <div className="flex gap-1">
+                  <div className="flex gap-0.5 xs:gap-1">
                     {[0, 1, 2, 3, 4].map((intensity) => (
                       <div
                         key={intensity}
-                        className={`w-5 h-5 md:w-8 md:h-8 rounded-full ${getIntensityColor(
+                        className={`w-4 h-4 xs:w-4 sm:w-5 md:w-8 md:h-8 rounded-full ${getIntensityColor(
                           intensity as IntensityLevel
                         )}`}
                       />
                     ))}
                   </div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  <span className="text-xs xs:text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                     Mais
                   </span>
                 </div>
 
-                {/* Estatísticas */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                {/* Estatísticas - GRID RESPONSIVO */}
+                <div className="grid grid-cols-1 xs:grid-cols-3 sm:grid-cols-3 gap-2 xs:gap-2.5 sm:gap-4 mt-4 xs:mt-5 sm:mt-6">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg xs:rounded-xl p-3 xs:p-3 sm:p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 size={18} className="text-emerald-500" />
-                      <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                        Dias Estudados
+                      <BarChart3
+                        size={16}
+                        className="text-emerald-500 flex-shrink-0"
+                      />
+                      <h3 className="text-xs xs:text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 truncate">
+                        Dias
                       </h3>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-xl xs:text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                       {stats.daysStudied}/{stats.totalDays}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {stats.percentage}% de constância
+                      {stats.percentage}%
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg xs:rounded-xl p-3 xs:p-3 sm:p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Flame size={18} className="text-orange-500" />
-                      <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                        Maior Sequência
+                      <Flame
+                        size={16}
+                        className="text-orange-500 flex-shrink-0"
+                      />
+                      <h3 className="text-xs xs:text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 truncate">
+                        Máximo
                       </h3>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.maxStreak} {stats.maxStreak === 1 ? "dia" : "dias"}
+                    <p className="text-xl xs:text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                      \n {stats.maxStreak}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Seu recorde de dias seguidos
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg xs:rounded-xl p-3 xs:p-3 sm:p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Zap size={18} className="text-yellow-500" />
-                      <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-                        Sequência Atual
+                      <Zap
+                        size={16}
+                        className="text-yellow-500 flex-shrink-0"
+                      />
+                      <h3 className="text-xs xs:text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 truncate">
+                        Atual
                       </h3>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.currentStreak}{" "}
-                      {stats.currentStreak === 1 ? "dia" : "dias"}
+                    <p className="text-xl xs:text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                      {stats.currentStreak}
                     </p>
                     {stats.currentStreak > 0 && (
                       <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-                        <Flame size={12} className="text-orange-500" />
-                        Mantenha o foco!
+                        <Flame
+                          size={12}
+                          className="text-orange-500 flex-shrink-0"
+                        />
+                        <span className="truncate">Mantenha!</span>
                       </p>
                     )}
                   </div>

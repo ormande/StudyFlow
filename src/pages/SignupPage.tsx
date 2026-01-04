@@ -1,11 +1,20 @@
-import { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Lock, CheckCircle, ArrowRight, User, Calendar, Camera, ArrowLeft } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../contexts/ToastContext';
-import Button from '../components/Button';
-import TermsModal from '../components/TermsModal';
-import PrivacyModal from '../components/PrivacyModal';
+import { useState, useRef } from "react";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  Lock,
+  CheckCircle,
+  ArrowRight,
+  User,
+  Calendar,
+  Camera,
+  ArrowLeft,
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../contexts/ToastContext";
+import Button from "../components/Button";
+import TermsModal from "../components/TermsModal";
+import PrivacyModal from "../components/PrivacyModal";
 
 interface SignupPageProps {
   onBack: () => void;
@@ -14,15 +23,20 @@ interface SignupPageProps {
   onStartSignup?: () => void;
 }
 
-export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onStartSignup }: SignupPageProps) {
+export default function SignupPage({
+  onBack,
+  onNavigateToLogin,
+  onSuccess,
+  onStartSignup,
+}: SignupPageProps) {
   const { addToast } = useToast();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [birthDate, setBirthDate] = useState(''); // Armazena no formato DD/MM/AAAA
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [birthDate, setBirthDate] = useState(""); // Armazena no formato DD/MM/AAAA
   const [isDateValid, setIsDateValid] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -33,31 +47,34 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
 
   const validateDate = (value: string): boolean => {
     if (value.length < 10) return true; // Ainda digitando
-    const [d, m, y] = value.split('/').map(Number);
+    const [d, m, y] = value.split("/").map(Number);
     const date = new Date(y, m - 1, d);
     const now = new Date();
-    
+
     // Verifica se os valores batem (evita 31/02 que o JS converte para 03/03)
-    const matches = date.getDate() === d && date.getMonth() === m - 1 && date.getFullYear() === y;
+    const matches =
+      date.getDate() === d &&
+      date.getMonth() === m - 1 &&
+      date.getFullYear() === y;
     // Não permite data futura ou ano muito antigo
     const isReasonable = y > 1900 && date <= now;
-    
+
     return matches && isReasonable;
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove não-numéricos
-    
+    let value = e.target.value.replace(/\D/g, ""); // Remove não-numéricos
+
     // Bloqueio imediato de valores impossíveis
     if (value.length >= 2) {
       const day = parseInt(value.slice(0, 2));
-      if (day > 31) value = '31' + value.slice(2);
-      if (day === 0 && value.length === 2) value = '01';
+      if (day > 31) value = "31" + value.slice(2);
+      if (day === 0 && value.length === 2) value = "01";
     }
     if (value.length >= 4) {
       const month = parseInt(value.slice(2, 4));
-      if (month > 12) value = value.slice(0, 2) + '12' + value.slice(4);
-      if (month === 0 && value.length === 4) value = value.slice(0, 2) + '01';
+      if (month > 12) value = value.slice(0, 2) + "12" + value.slice(4);
+      if (month === 0 && value.length === 4) value = value.slice(0, 2) + "01";
     }
 
     if (value.length > 8) value = value.slice(0, 8);
@@ -67,7 +84,7 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
     } else if (value.length >= 3) {
       value = `${value.slice(0, 2)}/${value.slice(2)}`;
     }
-    
+
     setBirthDate(value);
     setIsDateValid(validateDate(value));
   };
@@ -76,7 +93,7 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size > 2 * 1024 * 1024) {
-        addToast('A imagem deve ter no máximo 2MB', 'error');
+        addToast("A imagem deve ter no máximo 2MB", "error");
         return;
       }
       setAvatarFile(file);
@@ -92,44 +109,50 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!firstName.trim() || !lastName.trim()) {
-      addToast('Nome e sobrenome são obrigatórios.', 'warning');
+      addToast("Nome e sobrenome são obrigatórios.", "warning");
       return;
     }
 
     if (!birthDate || birthDate.length < 10) {
-      addToast('Data de nascimento inválida. Use DD/MM/AAAA.', 'warning');
+      addToast("Data de nascimento inválida. Use DD/MM/AAAA.", "warning");
       return;
     }
 
     // Converter DD/MM/AAAA -> AAAA-MM-DD
-    const [d, m, y] = birthDate.split('/');
+    const [d, m, y] = birthDate.split("/");
     const isoDate = `${y}-${m}-${d}`;
 
     if (calculateAge(isoDate) < 13) {
-      addToast('Você precisa ter pelo menos 13 anos para usar o StudyFlow.', 'warning');
+      addToast(
+        "Você precisa ter pelo menos 13 anos para usar o StudyFlow.",
+        "warning"
+      );
       return;
     }
 
     if (password.length < 8) {
-      addToast('A senha deve ter pelo menos 8 caracteres.', 'warning');
+      addToast("A senha deve ter pelo menos 8 caracteres.", "warning");
       return;
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(password)) {
-      addToast('A senha deve conter letras maiúsculas, minúsculas e números.', 'warning');
+      addToast(
+        "A senha deve conter letras maiúsculas, minúsculas e números.",
+        "warning"
+      );
       return;
     }
 
     if (password !== confirmPassword) {
-      addToast('As senhas não coincidem.', 'warning');
+      addToast("As senhas não coincidem.", "warning");
       return;
     }
 
     if (!acceptedTerms) {
-      addToast('Você precisa aceitar os termos de uso.', 'warning');
+      addToast("Você precisa aceitar os termos de uso.", "warning");
       return;
     }
 
@@ -137,10 +160,11 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
     if (onStartSignup) onStartSignup();
 
     try {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+        });
 
       if (signUpError) throw signUpError;
 
@@ -156,20 +180,20 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
 
       // Upload do avatar se houver
       if (avatarFile) {
-        const fileExt = avatarFile.name.split('.').pop();
+        const fileExt = avatarFile.name.split(".").pop();
         const fileName = `${session.user.id}/avatar.${fileExt}`;
-        
+
         const { error: uploadError } = await supabase.storage
-          .from('avatars')
+          .from("avatars")
           .upload(fileName, avatarFile, { upsert: true });
-        
+
         if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(fileName);
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("avatars").getPublicUrl(fileName);
           uploadedAvatarUrl = publicUrl;
         } else {
-          console.error('Erro upload avatar:', uploadError);
+          console.error("Erro upload avatar:", uploadError);
         }
       }
 
@@ -182,29 +206,39 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
         avatar_url: uploadedAvatarUrl,
         terms_accepted: true,
         terms_accepted_at: new Date().toISOString(),
-        subscription_status: 'trial',
-        trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        subscription_status: "trial",
+        trial_ends_at: new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000
+        ).toISOString(),
         cycle_start_date: Date.now(),
         daily_goal: 0,
         show_performance: true,
-        tutorial_completed: false
+        tutorial_completed: false,
       };
 
       // Usa upsert para garantir que as configurações sejam salvas mesmo se o trigger handle_new_user já as criou
       const { error: settingsError } = await supabase
-        .from('user_settings')
-        .upsert(settingsData, { onConflict: 'user_id' });
-      
+        .from("user_settings")
+        .upsert(settingsData, { onConflict: "user_id" });
+
       if (settingsError) {
-        console.error('Erro ao salvar configurações do usuário:', settingsError);
+        console.error(
+          "Erro ao salvar configurações do usuário:",
+          settingsError
+        );
       }
 
-      addToast('Conta criada com sucesso! Aproveite seus 7 dias grátis.', 'success');
+      addToast(
+        "Conta criada com sucesso! Aproveite seus 7 dias grátis.",
+        "success"
+      );
       setLoading(false);
+      // Após cadastro bem-sucedido, chamar onSuccess sem email
+      // para indicar que o usuário já está autenticado
       onSuccess();
     } catch (error: any) {
-      console.error('Erro no signup:', error);
-      addToast(error.message || 'Erro ao criar conta.', 'error');
+      console.error("Erro no signup:", error);
+      addToast(error.message || "Erro ao criar conta.", "error");
       setLoading(false);
     }
   };
@@ -219,24 +253,31 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-400 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
           className="relative z-10 text-white max-w-lg"
         >
-          <img src="/icon-512.png" alt="StudyFlow" className="w-24 h-24 mb-8 rounded-2xl shadow-2xl brightness-110" />
-          <h1 className="text-5xl font-black mb-6 leading-tight">Sua jornada rumo à aprovação começa agora.</h1>
+          <img
+            src="/icon-512.png"
+            alt="StudyFlow"
+            className="w-24 h-24 mb-8 rounded-2xl shadow-2xl brightness-110"
+          />
+          <h1 className="text-5xl font-black mb-6 leading-tight">
+            Sua jornada rumo à aprovação começa agora.
+          </h1>
           <p className="text-xl text-emerald-50 mb-12 opacity-90 leading-relaxed">
-            Junte-se a milhares de estudantes e organize sua rotina com ciclos de estudo, gamificação e métricas reais.
+            Junte-se a milhares de estudantes e organize sua rotina com ciclos
+            de estudo, gamificação e métricas reais.
           </p>
-          
+
           <div className="space-y-6">
             {[
               "7 dias de acesso total grátis",
               "Ciclos de estudo personalizados",
               "Ranking e conquistas",
-              "Sincronização em tempo real"
+              "Sincronização em tempo real",
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-4">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -272,8 +313,14 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
           className="w-full max-w-xl space-y-8 py-12 lg:py-0"
         >
           <div className="text-center lg:text-left">
-            <img src="/icon-512.png" alt="StudyFlow" className="w-16 h-16 mx-auto lg:mx-0 mb-4 rounded-2xl lg:hidden" />
-            <h2 className="text-3xl font-black tracking-tight mb-2 uppercase text-emerald-600 dark:text-emerald-500">Crie sua conta</h2>
+            <img
+              src="/icon-512.png"
+              alt="StudyFlow"
+              className="w-16 h-16 mx-auto lg:mx-0 mb-4 rounded-2xl lg:hidden"
+            />
+            <h2 className="text-3xl font-black tracking-tight mb-2 uppercase text-emerald-600 dark:text-emerald-500">
+              Crie sua conta
+            </h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               Preencha seus dados para começar sua jornada.
             </p>
@@ -285,13 +332,17 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
           >
             {/* Foto de Perfil - Estilo Profile Page */}
             <div className="flex flex-col md:flex-row items-center gap-8 mb-6 bg-gray-50 dark:bg-gray-700/30 p-6 rounded-2xl border border-dashed border-gray-200 dark:border-gray-600">
-              <div 
+              <div
                 className="relative w-24 h-24 md:w-28 md:h-28 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center border-2 border-emerald-500 shadow-md overflow-hidden group cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {avatarPreview ? (
                   <>
-                    <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={avatarPreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Camera className="text-white" size={24} />
                     </div>
@@ -299,29 +350,38 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
                 ) : (
                   <div className="flex flex-col items-center text-gray-400">
                     <Camera size={28} />
-                    <span className="text-[10px] font-bold mt-1 uppercase">Foto</span>
+                    <span className="text-[10px] font-bold mt-1 uppercase">
+                      Foto
+                    </span>
                   </div>
                 )}
               </div>
               <div className="flex-1 text-center md:text-left space-y-2">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white">Foto de Perfil</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Personalize seu perfil com uma foto (máx. 2MB)</p>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                  Foto de Perfil
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Personalize seu perfil com uma foto (máx. 2MB)
+                </p>
                 {avatarPreview && (
-                  <button 
-                    type="button" 
-                    onClick={() => { setAvatarFile(null); setAvatarPreview(null); }}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                    }}
                     className="text-xs text-red-500 font-bold hover:underline"
                   >
                     Remover foto
                   </button>
                 )}
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleFileChange} 
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
               />
             </div>
 
@@ -331,7 +391,10 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
                   Nome
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <User
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="text"
                     name="first_name"
@@ -369,7 +432,10 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
                   Nascimento
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Calendar
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="text"
                     inputMode="numeric"
@@ -377,11 +443,17 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
                     value={birthDate}
                     onChange={handleDateChange}
                     placeholder="DD/MM/AAAA"
-                    className={`w-full bg-gray-50 dark:bg-gray-700 border ${!isDateValid ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-emerald-500'} rounded-xl py-3 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none transition-all`}
+                    className={`w-full bg-gray-50 dark:bg-gray-700 border ${
+                      !isDateValid
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-200 dark:border-gray-600 focus:border-emerald-500"
+                    } rounded-xl py-3 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none transition-all`}
                   />
                 </div>
                 {!isDateValid && (
-                  <p className="text-[10px] text-red-500 mt-1 ml-1 font-bold">Data inválida ou no futuro</p>
+                  <p className="text-[10px] text-red-500 mt-1 ml-1 font-bold">
+                    Data inválida ou no futuro
+                  </p>
                 )}
               </div>
               <div>
@@ -389,7 +461,10 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
                   Seu E-mail
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Mail
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="email"
                     name="email"
@@ -410,7 +485,10 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
                   Senha (mín. 8)
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Lock
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="password"
                     name="password"
@@ -429,7 +507,10 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
                   Confirmar
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Lock
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="password"
                     name="confirm_password"
@@ -446,12 +527,45 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
             </div>
 
             <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setAcceptedTerms(!acceptedTerms)}>
-                <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${acceptedTerms ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-gray-600'}`}>
-                  {acceptedTerms && <CheckCircle size={14} className="text-white" />}
+              <div
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={() => setAcceptedTerms(!acceptedTerms)}
+              >
+                <div
+                  className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                    acceptedTerms
+                      ? "bg-emerald-500 border-emerald-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  }`}
+                >
+                  {acceptedTerms && (
+                    <CheckCircle size={14} className="text-white" />
+                  )}
                 </div>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug">
-                  Eu aceito os <button type="button" onClick={(e) => { e.stopPropagation(); setShowTermsModal(true); }} className="text-emerald-500 font-bold underline hover:text-emerald-600 transition-colors">Termos de Uso</button> e a <button type="button" onClick={(e) => { e.stopPropagation(); setShowPrivacyModal(true); }} className="text-emerald-500 font-bold underline hover:text-emerald-600 transition-colors">Política de Privacidade</button>.
+                  Eu aceito os{" "}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowTermsModal(true);
+                    }}
+                    className="text-emerald-500 font-bold underline hover:text-emerald-600 transition-colors"
+                  >
+                    Termos de Uso
+                  </button>{" "}
+                  e a{" "}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPrivacyModal(true);
+                    }}
+                    className="text-emerald-500 font-bold underline hover:text-emerald-600 transition-colors"
+                  >
+                    Política de Privacidade
+                  </button>
+                  .
                 </p>
               </div>
             </div>
@@ -475,7 +589,8 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
                 onClick={onNavigateToLogin}
                 className="text-sm text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
               >
-                Já tem conta? <span className="font-bold underline">Faça login</span>
+                Já tem conta?{" "}
+                <span className="font-bold underline">Faça login</span>
               </button>
             </div>
           </motion.form>
@@ -493,13 +608,13 @@ export default function SignupPage({ onBack, onNavigateToLogin, onSuccess, onSta
       </div>
 
       {/* Modais */}
-      <TermsModal 
-        isOpen={showTermsModal} 
-        onClose={() => setShowTermsModal(false)} 
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
       />
-      <PrivacyModal 
-        isOpen={showPrivacyModal} 
-        onClose={() => setShowPrivacyModal(false)} 
+      <PrivacyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
       />
     </div>
   );

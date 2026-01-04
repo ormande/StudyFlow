@@ -1,21 +1,25 @@
-import { useState } from 'react';
-import { Lock, Mail, ArrowRight, ArrowLeft, MessageCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useToast } from '../contexts/ToastContext';
-import { motion } from 'framer-motion';
-import Button from './Button';
+import { useState } from "react";
+import { Lock, Mail, ArrowRight, ArrowLeft, MessageCircle } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../contexts/ToastContext";
+import { motion } from "framer-motion";
+import Button from "./Button";
 
 interface LoginScreenProps {
   onBack?: () => void;
-  initialMode?: 'login' | 'forgot';
+  initialMode?: "login" | "forgot";
   onNavigateToSignup?: () => void;
 }
 
-export default function LoginScreen({ onBack, initialMode = 'login', onNavigateToSignup }: LoginScreenProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginScreen({
+  onBack,
+  initialMode = "login",
+  onNavigateToSignup,
+}: LoginScreenProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'login' | 'forgot'>(initialMode);
+  const [mode, setMode] = useState<"login" | "forgot">(initialMode);
   const { addToast } = useToast();
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -23,44 +27,41 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
     setLoading(true);
 
     try {
-      if (mode === 'login') {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (mode === "login") {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
         if (error) throw error;
-        
-        // Verificar se o e-mail está confirmado
-        if (data.user && !data.user.email_confirmed_at) {
-          await supabase.auth.signOut();
-          addToast('Por favor, confirme seu e-mail antes de acessar o app. Verifique sua caixa de entrada.', 'warning');
-          setLoading(false);
-          return;
-        }
 
-        // O listener em App.tsx cuidará do redirecionamento ao detectar a sessão.
-        // Adicionamos um pequeno log de sucesso no console para debug.
-        console.log('Login successful, session:', !!data.session);
-        addToast('Login realizado com sucesso!', 'success');
-      } 
-      else if (mode === 'forgot') {
+        // ✅ ALTERADO: Permitir que usuários façam login mesmo sem confirmar email
+        // O email pode ser confirmado depois, e a autenticação ainda funciona
+        // Se o usuário quiser confirmar seu email, um aviso será mostrado no app
+
+        console.log("Login successful, session:", !!data.session);
+        addToast("Login realizado com sucesso!", "success");
+      } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}`,
         });
         if (error) throw error;
-        addToast('Link de recuperação enviado para seu e-mail!', 'success');
-        setMode('login');
+        addToast("Link de recuperação enviado para seu e-mail!", "success");
+        setMode("login");
       }
     } catch (err: any) {
-      console.error('Erro na autenticação:', err);
+      console.error("Erro na autenticação:", err);
       let msg = err.message;
 
-      if (msg.includes('Invalid login credentials')) {
-        msg = 'E-mail não cadastrado ou senha incorreta.';
-      } else if (msg.includes('Email not confirmed')) {
-        msg = 'Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.';
-      } else if (msg.includes('Too many requests')) {
-        msg = 'Muitas tentativas seguidas. Tente novamente em alguns segundos.';
+      if (msg.includes("Invalid login credentials")) {
+        msg = "E-mail não cadastrado ou senha incorreta.";
+      } else if (msg.includes("Email not confirmed")) {
+        msg =
+          "Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.";
+      } else if (msg.includes("Too many requests")) {
+        msg = "Muitas tentativas seguidas. Tente novamente em alguns segundos.";
       }
 
-      addToast(msg, 'error');
+      addToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -94,7 +95,6 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
         transition={{ duration: 0.5 }}
         className="w-full max-w-md space-y-8"
       >
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,16 +102,18 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
           className="text-center"
         >
           <div className="flex justify-center mb-4">
-            <img 
-              src="/icon-512.png" 
-              alt="StudyFlow Logo" 
+            <img
+              src="/icon-512.png"
+              alt="StudyFlow Logo"
               className="w-20 h-20 rounded-lg mx-auto object-contain"
             />
           </div>
-          <h1 className="text-3xl font-black tracking-tight mb-2 text-gray-900 dark:text-white">STUDYFLOW</h1>
+          <h1 className="text-3xl font-black tracking-tight mb-2 text-gray-900 dark:text-white">
+            STUDYFLOW
+          </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {mode === 'login' && 'Entre para sincronizar seus estudos.'}
-            {mode === 'forgot' && 'Recupere seu acesso.'}
+            {mode === "login" && "Entre para sincronizar seus estudos."}
+            {mode === "forgot" && "Recupere seu acesso."}
           </p>
         </motion.div>
 
@@ -127,9 +129,12 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
               Seu E-mail
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-              <input 
-                type="email" 
+              <Mail
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="email"
                 name="email"
                 autoComplete="username email"
                 required
@@ -141,19 +146,22 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
             </div>
           </div>
 
-          {mode !== 'forgot' && (
+          {mode !== "forgot" && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              animate={{ opacity: 1, height: "auto" }}
               transition={{ duration: 0.3 }}
             >
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">
                 Senha
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input 
-                  type="password" 
+                <Lock
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
+                <input
+                  type="password"
                   name="password"
                   autoComplete="current-password"
                   required
@@ -167,38 +175,44 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
             </motion.div>
           )}
 
-          <Button 
+          <Button
             type="submit"
             disabled={loading}
             variant="primary"
             fullWidth
             size="lg"
             isLoading={loading}
-            leftIcon={!loading && (mode === 'login' ? <ArrowRight size={20} /> : <Mail size={20} />)}
+            leftIcon={
+              !loading &&
+              (mode === "login" ? <ArrowRight size={20} /> : <Mail size={20} />)
+            }
             className="py-4 shadow-lg shadow-emerald-600/20 font-bold"
           >
-            {mode === 'login' ? 'Entrar' : 'Enviar Link'}
+            {mode === "login" ? "Entrar" : "Enviar Link"}
           </Button>
 
           <Button
             type="button"
-            onClick={() => setMode(mode === 'login' ? 'forgot' : 'login')}
+            onClick={() => setMode(mode === "login" ? "forgot" : "login")}
             variant="ghost"
             size="sm"
             fullWidth
             className="text-sm text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline mt-6"
           >
-            {mode === 'login' ? 'Esqueceu sua senha?' : 'Voltar para o Login'}
+            {mode === "login" ? "Esqueceu sua senha?" : "Voltar para o Login"}
           </Button>
 
-          {mode === 'login' && onNavigateToSignup && (
+          {mode === "login" && onNavigateToSignup && (
             <div className="text-center pt-2">
               <button
                 type="button"
                 onClick={onNavigateToSignup}
                 className="text-sm text-gray-500 hover:text-emerald-600 transition-colors"
               >
-                Não tem conta? <span className="font-bold underline text-emerald-500">Criar conta grátis</span>
+                Não tem conta?{" "}
+                <span className="font-bold underline text-emerald-500">
+                  Criar conta grátis
+                </span>
               </button>
             </div>
           )}
@@ -231,4 +245,3 @@ export default function LoginScreen({ onBack, initialMode = 'login', onNavigateT
     </div>
   );
 }
-

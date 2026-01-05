@@ -54,7 +54,7 @@ function AchievementCard({
   onClaim,
 }: AchievementCardProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md border border-gray-100 dark:border-gray-700 h-full overflow-hidden min-w-0 w-full">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow-md border border-gray-100 dark:border-gray-700 h-full overflow-hidden min-w-0 w-full">
       {/* Header com ícone e nome */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -170,7 +170,7 @@ export default function AchievementsPage({
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl xl:max-w-7xl mx-auto px-6 py-6 pb-24">
+      <div className="max-w-4xl xl:max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24">
         <Skeleton className="h-8 w-48 mb-6" />
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
@@ -190,7 +190,7 @@ export default function AchievementsPage({
 
   return (
     <motion.div
-      className="max-w-4xl xl:max-w-7xl mx-auto px-6 py-6 pb-24"
+      className="max-w-4xl xl:max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24"
       {...FADE_UP_ANIMATION}
     >
       {/* Botão Voltar Flutuante */}
@@ -232,7 +232,7 @@ export default function AchievementsPage({
                 variants={STAGGER_ITEM}
                 animate={{ scale: [1, 1.02, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
-                className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg overflow-hidden min-w-0 w-full"
+                className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 sm:p-5 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg overflow-hidden min-w-0 w-full"
               >
                 <div className="flex items-center gap-4">
                   {/* Ícone */}

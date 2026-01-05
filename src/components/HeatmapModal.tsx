@@ -396,7 +396,7 @@ export default function HeatmapModal({
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-3 xs:px-3 sm:px-4 py-1.5 rounded-full text-xs xs:text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                className={`px-3 xs:px-3 sm:px-4 py-1.5 rounded-lg xs:rounded-lg sm:rounded-full text-xs xs:text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                   period === p
                     ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
                     : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
@@ -489,7 +489,7 @@ export default function HeatmapModal({
                           </h3>
 
                           {/* Labels dos Dias da Semana - RESPONSIVO */}
-                          <div className="grid grid-cols-7 gap-0.5 xs:gap-0.5 sm:gap-1 mb-1 xs:mb-1.5 sm:mb-2">
+                          <div className="grid grid-cols-7 gap-1 mb-1 xs:mb-1.5 sm:mb-2">
                             {DAYS_OF_WEEK_SHORT.map((day, index) => (
                               <span
                                 key={index}
@@ -501,13 +501,13 @@ export default function HeatmapModal({
                           </div>
 
                           {/* Grid de Dias - RESPONSIVO */}
-                          <div className="grid grid-cols-7 gap-0.5 xs:gap-0.5 sm:gap-1">
+                          <div className="grid grid-cols-7 gap-1">
                             {daysArray.map((day, index) => {
                               if (!day) {
                                 return (
                                   <div
                                     key={`empty-${index}`}
-                                    className="w-4 h-4 xs:w-4 sm:w-5 md:w-8 md:h-8"
+                                    className="w-5 h-5 xs:w-5 sm:w-6 md:w-8 md:h-8"
                                   />
                                 );
                               }
@@ -525,7 +525,7 @@ export default function HeatmapModal({
                                   aria-label={`${formatDateForTooltip(
                                     day
                                   )}, ${hours}h ${minutes}min`}
-                                  className={`w-4 h-4 xs:w-4 sm:w-5 md:w-8 md:h-8 rounded-full cursor-pointer transition-all ${color} ${
+                                  className={`w-5 h-5 xs:w-5 sm:w-6 md:w-8 md:h-8 rounded-full cursor-pointer transition-all ${color} ${
                                     intensity > 0
                                       ? "hover:ring-2 hover:ring-emerald-400 dark:hover:ring-emerald-500 hover:ring-offset-1"
                                       : ""
@@ -609,7 +609,7 @@ export default function HeatmapModal({
                 </div>
 
                 {/* Estatísticas - GRID RESPONSIVO */}
-                <div className="grid grid-cols-1 xs:grid-cols-3 sm:grid-cols-3 gap-2 xs:gap-2.5 sm:gap-4 mt-4 xs:mt-5 sm:mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 xs:gap-3 sm:gap-4 mt-4 xs:mt-5 sm:mt-6">
                   <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg xs:rounded-xl p-3 xs:p-3 sm:p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <BarChart3
@@ -639,7 +639,7 @@ export default function HeatmapModal({
                       </h3>
                     </div>
                     <p className="text-xl xs:text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                      \n {stats.maxStreak}
+                      {stats.maxStreak}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Seu recorde de dias seguidos

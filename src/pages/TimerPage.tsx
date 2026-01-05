@@ -351,14 +351,14 @@ export default function TimerPage({
   return (
     <motion.div
       {...FADE_UP_ANIMATION}
-      className="flex flex-col min-h-screen overflow-y-auto pb-24 md:pb-8 px-4 md:px-6"
+      className="flex flex-col min-h-screen overflow-y-auto pb-24 md:pb-8 px-4 sm:px-6 py-6 sm:py-8"
     >
       {/* Seletor de Modos (Abas) */}
-      <div className="mb-6 mt-2 md:mt-4 pt-20 md:pt-4 relative z-10">
+      <div className="mb-4 sm:mb-6 mt-2 md:mt-4 pt-20 md:pt-4 relative z-10">
         {/* Mobile - Botões de Modo com Stagger Animation */}
         <div className="md:hidden flex flex-col gap-3 items-center">
           <motion.div
-            className="flex gap-3 justify-center w-full px-4"
+            className="flex gap-2 sm:gap-3 justify-center w-full px-4"
             variants={STAGGER_CONTAINER}
             initial="hidden"
             animate="show"
@@ -371,16 +371,23 @@ export default function TimerPage({
                     : modeOption === "temporizador"
                     ? Hourglass
                     : Zap;
+                const isSelected = mode === modeOption;
                 return (
                   <motion.div key={modeOption} variants={STAGGER_ITEM}>
                     <Button
                       onClick={() => handleModeChangeRequest(modeOption)}
-                      variant={mode === modeOption ? "primary" : "secondary"}
-                      size="sm"
-                      className="flex flex-col items-center gap-1.5 px-3 py-2.5 flex-1"
+                      variant={isSelected ? "primary" : "secondary"}
+                      size="md"
+                      className={`flex flex-col items-center gap-1.5 px-3 sm:px-4 py-3 sm:py-3.5 flex-1 min-h-[44px] ${
+                        isSelected
+                          ? ""
+                          : "border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700"
+                      }`}
                     >
-                      <Icon size={18} />
-                      <span>{getModeLabel(modeOption)}</span>
+                      <Icon size={20} />
+                      {isSelected && (
+                        <span className="text-sm font-bold">{getModeLabel(modeOption)}</span>
+                      )}
                     </Button>
                   </motion.div>
                 );
@@ -391,7 +398,7 @@ export default function TimerPage({
 
         {/* Botões de Modo Desktop - Stagger Animation */}
         <motion.div
-          className="hidden md:flex gap-4 justify-center mb-8"
+          className="hidden md:flex gap-4 justify-center mb-6"
           variants={STAGGER_CONTAINER}
           initial="hidden"
           animate="show"
@@ -411,7 +418,11 @@ export default function TimerPage({
                     variant={mode === modeOption ? "primary" : "secondary"}
                     size="md"
                     leftIcon={<Icon size={22} />}
-                    className="px-6 py-3"
+                    className={`px-6 py-3 ${
+                      mode === modeOption
+                        ? ""
+                        : "border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700"
+                    }`}
                   >
                     {getModeLabel(modeOption)}
                   </Button>
@@ -430,7 +441,7 @@ export default function TimerPage({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="text-center mb-6 sm:mb-8"
+          className="text-center mb-4 sm:mb-6"
         >
           <div className="flex items-center justify-center gap-2 mb-2">
             <Timer className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
@@ -452,14 +463,14 @@ export default function TimerPage({
             <motion.div
               key="timer-config-mobile"
               {...SCALE_ANIMATION}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 mb-6 max-w-md mx-auto w-full"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 max-w-md mx-auto w-full"
             >
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-center">
+              <p className="text-base sm:text-lg font-bold text-gray-700 dark:text-gray-300 mb-4 text-center">
                 Defina o tempo inicial
               </p>
               <div className="flex gap-3 items-center justify-center">
                 <div className="flex flex-col items-center">
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 sm:mb-2">
                     Horas
                   </label>
                   <input
@@ -489,7 +500,7 @@ export default function TimerPage({
                 </div>
                 <span className="text-3xl font-bold text-gray-400 mt-6">:</span>
                 <div className="flex flex-col items-center">
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 sm:mb-2">
                     Minutos
                   </label>
                   <input
@@ -528,7 +539,7 @@ export default function TimerPage({
             <motion.div
               key="pomodoro-presets-mobile"
               {...FADE_UP_ANIMATION}
-              className="flex gap-2 mb-4 justify-center flex-wrap max-w-md mx-auto w-full"
+              className="flex gap-2 sm:gap-3 mb-4 justify-center flex-wrap max-w-md mx-auto w-full"
             >
               {POMODORO_PRESETS.map((preset) => (
                 <Button
@@ -539,15 +550,18 @@ export default function TimerPage({
                       ? "primary"
                       : "secondary"
                   }
-                  size="sm"
-                  className="px-2 py-1.5 flex flex-col items-center"
+                  size="md"
+                  className={`px-3 sm:px-4 py-3 sm:py-3.5 flex flex-col items-center min-h-[44px] ${
+                    selectedPreset?.label === preset.label
+                      ? ""
+                      : "border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700"
+                  }`}
                   aria-label={`Selecionar preset Pomodoro: ${preset.label} (${preset.minutes} minutos)`}
                   title={`${preset.label} (${preset.minutes} min)`}
                 >
-                  {preset.label}
-                  <br />
+                  <span className="text-sm font-bold">{preset.label}</span>
                   <span className="text-xs opacity-90">
-                    ({preset.minutes} min)
+                    {" "}({preset.minutes} min)
                   </span>
                 </Button>
               ))}
@@ -591,7 +605,7 @@ export default function TimerPage({
                 </div>
                 {/* Porcentagem com counter animation */}
                 <motion.p
-                  className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2"
+                  className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2"
                   key={Math.floor(progress)} // Re-anima a cada 1%
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -653,7 +667,7 @@ export default function TimerPage({
 
         {/* 🔧 CORREÇÃO 1: Botões de Controle Mobile - Animações completas */}
         <motion.div
-          className="flex gap-4 w-full max-w-md mx-auto mb-6"
+          className="flex gap-3 sm:gap-4 w-full max-w-xs mx-auto mb-4 sm:mb-6"
           layout // Anima quando muda de Play pra Pause
         >
           {isTimerRunning ? (
@@ -665,7 +679,7 @@ export default function TimerPage({
                 fullWidth
                 size="lg"
                 leftIcon={<Pause className="w-6 h-6" />}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 shadow-lg"
+                className="flex-1 bg-amber-500 hover:bg-amber-600 shadow-lg py-3 sm:py-4 text-sm sm:text-base"
                 aria-label="Pausar timer"
               >
                 Pause
@@ -677,7 +691,7 @@ export default function TimerPage({
                   onClick={handleReset}
                   variant="secondary"
                   size="lg"
-                  className="px-6 py-6 shadow-lg"
+                  className="px-5 sm:px-6 py-3 sm:py-4 shadow-lg min-h-[44px]"
                   aria-label="Resetar timer"
                   title="Resetar timer"
                 >
@@ -700,7 +714,7 @@ export default function TimerPage({
               fullWidth
               size="lg"
               leftIcon={<Play className="w-6 h-6" />}
-              className="flex-1 shadow-lg"
+              className="flex-1 shadow-lg py-3 sm:py-4 text-sm sm:text-base"
               aria-label="Iniciar timer"
             >
               Play
@@ -713,23 +727,23 @@ export default function TimerPage({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="w-full max-w-md mx-auto mb-6 space-y-3 px-2"
+          className="w-full max-w-xs mx-auto mb-4 sm:mb-6 space-y-3"
         >
           {/* Meta Diária */}
-          <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20 dark:border-gray-700">
+          <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-white/20 dark:border-gray-700">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Target size={16} className="text-emerald-400" />
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                <Target size={20} className="text-emerald-400" />
+                <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                   Meta Diária
                 </span>
               </div>
-              <span className="text-xs font-bold text-emerald-400">
+              <span className="text-sm sm:text-base font-bold text-emerald-400">
                 {formatMinutesDisplay(todayMinutes)} /{" "}
                 {formatMinutesDisplay(dailyGoalMinutes)}
               </span>
             </div>
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
                 style={{
@@ -740,7 +754,7 @@ export default function TimerPage({
                 }}
               />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               {todayMinutes >= dailyGoalMinutes
                 ? "🎉 Meta concluída!"
                 : `Faltam ${formatMinutesDisplay(
@@ -750,20 +764,20 @@ export default function TimerPage({
           </div>
 
           {/* Meta Semanal */}
-          <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20 dark:border-gray-700">
+          <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-white/20 dark:border-gray-700">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Flame size={16} className="text-orange-400" />
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                <Flame size={20} className="text-orange-400" />
+                <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                   Meta Semanal
                 </span>
               </div>
-              <span className="text-xs font-bold text-orange-400">
+              <span className="text-sm sm:text-base font-bold text-orange-400">
                 {formatMinutesDisplay(weekMinutes)} /{" "}
                 {formatMinutesDisplay(weeklyGoalMinutes)}
               </span>
             </div>
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-500"
                 style={{
@@ -774,7 +788,7 @@ export default function TimerPage({
                 }}
               />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               {weekMinutes >= weeklyGoalMinutes
                 ? "🔥 Meta concluída!"
                 : `Faltam ${formatMinutesDisplay(
@@ -793,7 +807,7 @@ export default function TimerPage({
               variant="danger"
               fullWidth
               size="lg"
-              className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
+              className="w-full max-w-xs mx-auto py-3 sm:py-4 mb-8 shadow-lg text-sm sm:text-base"
             >
               Parar e Registrar
             </Button>
@@ -808,7 +822,7 @@ export default function TimerPage({
                 variant="danger"
                 fullWidth
                 size="lg"
-                className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
+                className="w-full max-w-xs mx-auto py-3 sm:py-4 mb-8 shadow-lg text-sm sm:text-base"
               >
                 Parar e Registrar
               </Button>
@@ -825,7 +839,7 @@ export default function TimerPage({
                 variant="danger"
                 fullWidth
                 size="lg"
-                className="w-full max-w-md mx-auto py-5 mb-8 shadow-lg"
+                className="w-full max-w-xs mx-auto py-3 sm:py-4 mb-8 shadow-lg text-sm sm:text-base"
               >
                 Parar e Registrar
               </Button>
@@ -990,20 +1004,20 @@ export default function TimerPage({
             className="w-full max-w-md mx-auto mt-6 space-y-4"
           >
             {/* Meta Diária */}
-            <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20 dark:border-gray-700">
+            <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-5 border border-white/20 dark:border-gray-700">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Target size={18} className="text-emerald-400" />
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <Target size={20} className="text-emerald-400" />
+                  <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                     Meta Diária
                   </span>
                 </div>
-                <span className="text-sm font-bold text-emerald-400">
+                <span className="text-sm sm:text-base font-bold text-emerald-400">
                   {formatMinutesDisplay(todayMinutes)} /{" "}
                   {formatMinutesDisplay(dailyGoalMinutes)}
                 </span>
               </div>
-              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
                   style={{
@@ -1014,7 +1028,7 @@ export default function TimerPage({
                   }}
                 />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 {todayMinutes >= dailyGoalMinutes
                   ? "🎉 Meta diária concluída!"
                   : `Faltam ${formatMinutesDisplay(
@@ -1024,20 +1038,20 @@ export default function TimerPage({
             </div>
 
             {/* Meta Semanal */}
-            <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-white/20 dark:border-gray-700">
+            <div className="bg-white/10 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-5 border border-white/20 dark:border-gray-700">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Flame size={18} className="text-orange-400" />
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <Flame size={20} className="text-orange-400" />
+                  <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                     Meta Semanal
                   </span>
                 </div>
-                <span className="text-sm font-bold text-orange-400">
+                <span className="text-sm sm:text-base font-bold text-orange-400">
                   {formatMinutesDisplay(weekMinutes)} /{" "}
                   {formatMinutesDisplay(weeklyGoalMinutes)}
                 </span>
               </div>
-              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-500"
                   style={{
@@ -1048,7 +1062,7 @@ export default function TimerPage({
                   }}
                 />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 {weekMinutes >= weeklyGoalMinutes
                   ? "🔥 Meta semanal concluída!"
                   : `Faltam ${formatMinutesDisplay(
@@ -1067,7 +1081,7 @@ export default function TimerPage({
                 variant="danger"
                 fullWidth
                 size="lg"
-                className="w-full max-w-sm py-5 shadow-lg text-base"
+                className="w-full max-w-sm py-4 shadow-lg"
               >
                 Parar e Registrar
               </Button>
@@ -1082,7 +1096,7 @@ export default function TimerPage({
                   variant="danger"
                   fullWidth
                   size="lg"
-                  className="w-full max-w-sm py-5 shadow-lg text-base"
+                  className="w-full max-w-sm py-4 shadow-lg"
                 >
                   Parar e Registrar
                 </Button>
@@ -1099,7 +1113,7 @@ export default function TimerPage({
                   variant="danger"
                   fullWidth
                   size="lg"
-                  className="w-full max-w-sm py-5 shadow-lg text-base"
+                  className="w-full max-w-sm py-4 shadow-lg"
                 >
                   Parar e Registrar
                 </Button>
@@ -1119,7 +1133,7 @@ export default function TimerPage({
                 y: -5,
                 boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)",
               }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 sm:p-6"
             >
               <div className="flex items-center gap-3 mb-3">
                 <motion.div
@@ -1136,19 +1150,19 @@ export default function TimerPage({
                     <Zap className="text-emerald-500" size={24} />
                   )}
                 </motion.div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                   {getModeTitle()}
                 </h3>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-base text-gray-600 dark:text-gray-400 mb-4">
                 {getModeDescription()}
               </p>
               {mode === "temporizador" && initialTimerSeconds > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Tempo inicial:
                   </p>
-                  <p className="text-xl font-bold text-emerald-500">
+                  <p className="text-xl sm:text-2xl font-bold text-emerald-500">
                     {formatTime(initialTimerSeconds).display}
                   </p>
                 </div>
@@ -1157,10 +1171,10 @@ export default function TimerPage({
                 pomodoroInitialSeconds > 0 &&
                 selectedPreset && (
                   <div className="space-y-2">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Sessão:
                     </p>
-                    <p className="text-xl font-bold text-emerald-500">
+                    <p className="text-xl sm:text-2xl font-bold text-emerald-500">
                       {selectedPreset.label} ({selectedPreset.minutes} min)
                     </p>
                   </div>
@@ -1175,9 +1189,9 @@ export default function TimerPage({
                 key="pomodoro-presets-desktop"
                 {...FADE_UP_ANIMATION}
                 transition={{ ...FADE_UP_ANIMATION.transition, delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4"
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 sm:p-6"
               >
-                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">
                   Presets Rápidos
                 </h4>
 
@@ -1199,7 +1213,7 @@ export default function TimerPage({
                         }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handlePresetSelect(preset)}
-                        className={`px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
+                        className={`px-4 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-bold transition-colors ${
                           isSelected
                             ? "bg-emerald-500 text-white shadow-lg"
                             : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-emerald-500 hover:text-white"
@@ -1208,7 +1222,7 @@ export default function TimerPage({
                         {preset.label}
                         <br />
                         <span
-                          className={`text-xs ${
+                          className={`text-xs sm:text-sm ${
                             isSelected ? "opacity-90" : "opacity-80"
                           }`}
                         >
@@ -1231,9 +1245,9 @@ export default function TimerPage({
                   key="timer-config-desktop"
                   {...FADE_UP_ANIMATION}
                   transition={{ ...FADE_UP_ANIMATION.transition, delay: 0.2 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4"
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 sm:p-6"
                 >
-                  <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+                  <h4 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">
                     Defina o tempo inicial
                   </h4>
 
@@ -1253,7 +1267,7 @@ export default function TimerPage({
                       },
                     ].map((field) => (
                       <motion.div key={field.label}>
-                        <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 sm:mb-2 block">
                           {field.label}
                         </label>
                         <motion.input
@@ -1299,7 +1313,7 @@ export default function TimerPage({
           <motion.div
             {...FADE_UP_ANIMATION}
             whileHover={{ y: -2 }}
-            className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-2xl p-4 border border-emerald-500/20"
+            className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-2xl p-5 sm:p-6 border border-emerald-500/20"
           >
             <div className="flex items-start gap-3">
               <motion.div
@@ -1308,15 +1322,14 @@ export default function TimerPage({
               >
                 <Info
                   className="text-emerald-500 flex-shrink-0 mt-1"
-                  size={20}
+                  size={24}
                 />
               </motion.div>
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-                  <Info size={16} className="text-emerald-500" />
+                <h4 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                   Dica
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   {mode === "cronometro" &&
                     "Use o cronômetro para sessões de estudo sem limite de tempo."}
                   {mode === "temporizador" &&

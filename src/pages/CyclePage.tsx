@@ -79,17 +79,17 @@ const SortableSubjectCard = ({
       dragControls={controls}
       className="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden transition-colors duration-300 border border-gray-100 dark:border-gray-700"
     >
-      <div className="p-5 lg:p-6">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-1">
+      <div className="p-4 sm:p-5 lg:p-6">
+        <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
               {/* ALÇA DE DRAG */}
               <GripVertical
-                className="w-5 h-5 text-gray-300 hover:text-emerald-500 cursor-grab active:cursor-grabbing touch-none transition-colors"
+                className="w-5 h-5 text-gray-300 hover:text-emerald-500 cursor-grab active:cursor-grabbing touch-none transition-colors flex-shrink-0"
                 onPointerDown={(e) => controls.start(e)}
               />
               {/* CONTROLES DE ORDEM */}
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-0.5 flex-shrink-0">
                 <Button
                   onClick={() => {
                     const newSubjects = [...subjects];
@@ -135,17 +135,17 @@ const SortableSubjectCard = ({
                 className="w-3 h-3 rounded-full flex-shrink-0"
                 style={{ backgroundColor: subject.color }}
               />
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">
                 {subject.name}
               </h3>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 pl-8">
-              Meta: {subject.goalMinutes} min • Ciclo Atual: {totalMinutes} min
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 pl-6 sm:pl-8 whitespace-nowrap overflow-hidden text-ellipsis">
+              Meta: {subject.goalMinutes} min • Ciclo: {totalMinutes} min
             </p>
           </div>
 
-          {/* Botões de Ação: Editar e Excluir */}
-          <div className="flex items-center gap-1">
+          {/* Botões de Ação: Editar e Excluir - FIXOS À DIREITA */}
+          <div className="flex items-center gap-1 flex-shrink-0">
             <Button
               onClick={() => onEdit(subject)}
               variant="ghost"
@@ -169,13 +169,13 @@ const SortableSubjectCard = ({
           </div>
         </div>
 
-        <div className="mb-3">
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+        <div className="mb-2 sm:mb-3">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 sm:h-2 overflow-hidden">
             <div
               className="h-full transition-all duration-300 rounded-full"
               style={{
                 width: `${percentage}%`,
-                backgroundColor: percentage >= 100 ? "#10b981" : subject.color,
+                backgroundColor: subject.color,
               }}
             />
           </div>
@@ -211,12 +211,12 @@ const SortableSubjectCard = ({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="px-5 pb-5 lg:px-6 lg:pb-6 border-t border-gray-100 dark:border-gray-700 pt-4">
-            <div className="space-y-2 lg:space-y-3 mb-4">
+          <div className="px-4 sm:px-5 pb-4 sm:pb-5 lg:px-6 lg:pb-6 border-t border-gray-100 dark:border-gray-700 pt-3 sm:pt-4">
+            <div className="space-y-1.5 sm:space-y-2 lg:space-y-3 mb-3 sm:mb-4">
               {subject.subtopics.map((subtopic, subtopicIndex) => (
                 <div
                   key={subtopic.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 group"
+                  className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 group"
                 >
                   <div className="flex flex-col gap-0.5 opacity-50 hover:opacity-100 transition-opacity">
                     <Button
@@ -293,13 +293,13 @@ const SortableSubjectCard = ({
             </div>
 
             {/* Container do Input de Subtópico */}
-            <div className="flex gap-2 lg:gap-3 w-full pr-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 w-full pr-1">
               <input
                 type="text"
                 value={newSubtopic}
                 onChange={(e) => setNewSubtopic(e.target.value)}
                 placeholder="Novo subtópico..."
-                className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-base lg:text-base min-w-0"
+                className="flex-1 px-4 h-10 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none text-sm min-w-0"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") onAddSubtopic(subject.id);
                 }}
@@ -667,7 +667,7 @@ export default function CyclePage({
   const totalCycleProgress = getTotalCycleProgress();
 
   return (
-    <div className="max-w-lg md:max-w-7xl mx-auto px-6 py-6 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="max-w-lg md:max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8">
         <div className="flex items-center justify-center gap-2 mb-2">
@@ -699,7 +699,7 @@ export default function CyclePage({
         <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] lg:grid-cols-[380px_1fr] gap-8 items-start">
           {/* COLUNA ESQUERDA */}
           <div className="md:sticky md:top-6 lg:top-4 space-y-6">
-            <div className="bg-white dark:bg-gray-800 p-6 lg:p-8 rounded-3xl shadow-lg transition-colors duration-300 border border-gray-100 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 lg:p-8 rounded-3xl shadow-lg transition-colors duration-300 border border-gray-100 dark:border-gray-700">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -733,7 +733,7 @@ export default function CyclePage({
               </Button>
             </div>
 
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 lg:p-6 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 sm:p-4 lg:p-6 rounded-2xl border border-emerald-100 dark:border-emerald-800">
               <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-3 flex items-center gap-1">
                 <BarChart2 size={12} />
                 Este Ciclo
@@ -780,8 +780,8 @@ export default function CyclePage({
           </div>
 
           {/* COLUNA DIREITA: Lista de Matérias */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
               <Reorder.Group
                 axis="y"
                 values={cycleSubjects}
@@ -802,7 +802,7 @@ export default function CyclePage({
                     );
                   });
                 }}
-                className="space-y-4 xl:col-span-2"
+                className="space-y-3 sm:space-y-4 xl:col-span-2"
               >
                 {cycleSubjects.map((subject, index) => {
                   const { totalMinutes, percentage } = getSubjectProgress(
@@ -862,12 +862,12 @@ export default function CyclePage({
                 fullWidth
                 size="lg"
                 leftIcon={<Plus className="w-5 h-5" />}
-                className="border-dashed py-5 lg:py-6"
+                className="border-dashed py-4 sm:py-5 lg:py-6"
               >
                 Adicionar Matéria
               </Button>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 lg:p-6 space-y-4 lg:space-y-5 transition-colors border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-5 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-5 transition-colors border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Nome da Matéria

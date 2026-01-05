@@ -341,44 +341,44 @@ export default function ProfilePage({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-2xl lg:max-w-6xl mx-auto px-3 xs:px-4 sm:px-6 py-8 pb-24 md:pb-8"
+      className="max-w-2xl lg:max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 md:pb-8"
     >
       {/* Botão Voltar Flutuante */}
       {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
 
       {/* Header - RESPONSIVO */}
-      <div className="text-center mb-4 xs:mb-5 sm:mb-8">
-        <div className="flex items-center justify-center gap-2 mb-2 xs:gap-1">
-          <User className="w-5 h-5 xs:w-5 sm:w-8 lg:w-8 text-emerald-500" />
-          <h1 className="text-xl xs:text-xl sm:text-3xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <User className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Meu Perfil
           </h1>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 text-xs xs:text-xs sm:text-base line-clamp-2">
+        <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base line-clamp-2">
           Gerencie suas informações pessoais
         </p>
       </div>
 
       {/* Cards de Status da Assinatura - RESPONSIVO PARA XS */}
-      <div className="mb-4 xs:mb-5 sm:mb-6 lg:mb-8">
+      <div className="mb-4 sm:mb-6">
         {/* Card de Status da Assinatura */}
         {planType === "trial" && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-2xl shadow-md p-3 xs:p-4 sm:p-6"
+            className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-2xl shadow-md p-4 sm:p-6"
           >
             {/* Layout Mobile Compacto - AJUSTADO PARA XS */}
-            <div className="md:hidden flex items-start xs:items-center justify-between gap-2 xs:gap-3 mb-2">
-              <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                  <Star size={18} fill="currentColor" />
+            <div className="md:hidden flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={20} fill="currentColor" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-xs xs:text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-0.5 truncate">
+                  <h2 className="text-sm sm:text-base font-bold text-yellow-800 dark:text-yellow-200 mb-0.5 truncate">
                     Plano Trial
                   </h2>
-                  <p className="text-xs text-yellow-700 dark:text-yellow-300 font-semibold line-clamp-2">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 font-semibold line-clamp-2">
                     Teste gratuito!
                     {daysLeft !== null && daysLeft >= 0 && (
                       <span className="block mt-0.5">
@@ -394,7 +394,7 @@ export default function ProfilePage({
                 onClick={onNavigateToPlans}
                 variant="primary"
                 size="sm"
-                className="flex-shrink-0 text-xs px-2 py-1.5 h-auto"
+                className="flex-shrink-0 text-sm px-3 py-2"
               >
                 Gerenciar
               </Button>
@@ -441,19 +441,19 @@ export default function ProfilePage({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 rounded-2xl shadow-md p-3 xs:p-4 sm:p-6"
+            className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 rounded-2xl shadow-md p-4 sm:p-6"
           >
             {/* Layout Mobile Compacto - AJUSTADO PARA XS */}
-            <div className="md:hidden flex items-start xs:items-center justify-between gap-2 xs:gap-3 mb-2">
-              <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                  <Star size={18} fill="currentColor" />
+            <div className="md:hidden flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={20} fill="currentColor" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-xs xs:text-sm font-bold text-emerald-800 dark:text-emerald-200 mb-0.5 truncate">
+                  <h2 className="text-sm sm:text-base font-bold text-emerald-800 dark:text-emerald-200 mb-0.5 truncate">
                     Plano Mensal
                   </h2>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold line-clamp-2">
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold line-clamp-2">
                     R$ 9,90/mês
                     {nextBillingDate &&
                       ` • ${new Date(nextBillingDate).toLocaleDateString(
@@ -467,7 +467,7 @@ export default function ProfilePage({
                 onClick={onNavigateToPlans}
                 variant="primary"
                 size="sm"
-                className="flex-shrink-0 text-xs px-2 py-1.5 h-auto"
+                className="flex-shrink-0 text-sm px-3 py-2"
               >
                 Gerenciar
               </Button>
@@ -510,19 +510,19 @@ export default function ProfilePage({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-400 rounded-2xl shadow-md p-3 xs:p-4 sm:p-6"
+            className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-400 rounded-2xl shadow-md p-4 sm:p-6"
           >
             {/* Layout Mobile Compacto - AJUSTADO PARA XS */}
-            <div className="md:hidden flex items-start xs:items-center justify-between gap-2 xs:gap-3">
-              <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                  <Crown size={18} fill="currentColor" />
+            <div className="md:hidden flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Crown size={20} fill="currentColor" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-xs xs:text-sm font-bold text-purple-800 dark:text-purple-200 mb-1 truncate">
+                  <h2 className="text-sm sm:text-base font-bold text-purple-800 dark:text-purple-200 mb-1 truncate">
                     Acesso Vitalício
                   </h2>
-                  <span className="bg-purple-500 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider inline-block whitespace-nowrap">
+                  <span className="bg-purple-500 text-white text-sm font-bold px-2.5 py-1 rounded-lg sm:rounded-full uppercase tracking-wider inline-block whitespace-nowrap">
                     Vitalício
                   </span>
                 </div>
@@ -531,7 +531,7 @@ export default function ProfilePage({
                 onClick={onNavigateToPlans}
                 variant="primary"
                 size="sm"
-                className="flex-shrink-0 text-xs px-2 py-1.5 h-auto"
+                className="flex-shrink-0 text-sm px-3 py-2"
               >
                 Gerenciar
               </Button>
@@ -549,7 +549,7 @@ export default function ProfilePage({
                   </h2>
                   <p className="text-sm text-purple-700 dark:text-purple-300">
                     Acesso ilimitado para sempre!
-                    <span className="ml-3 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    <span className="ml-3 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-lg xs:rounded-lg sm:rounded-full uppercase tracking-wider">
                       Vitalício
                     </span>
                   </p>
@@ -569,22 +569,22 @@ export default function ProfilePage({
       </div>
 
       {/* Grid Layout - Desktop Split - RESPONSIVO PARA XS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 xs:gap-4 sm:gap-6 lg:gap-8 lg:items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 lg:items-stretch">
         {/* Coluna Esquerda - Cartão de Identidade - RESPONSIVO */}
         <div className="lg:col-span-4">
           {/* Card de Perfil - RESPONSIVO PARA XS */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-3 xs:p-4 sm:p-6 h-full flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-6 md:p-8 h-full flex flex-col">
             {/* Foto de Perfil - RESPONSIVA */}
-            <div className="flex flex-col items-center mb-4 xs:mb-4 sm:mb-6">
+            <div className="flex flex-col items-center mb-4 sm:mb-6">
               <div className="relative">
                 {avatarPreview ? (
                   <img
                     src={avatarPreview}
                     alt="Avatar"
-                    className="w-20 h-20 xs:w-24 sm:w-32 md:h-32 rounded-full object-cover border-4 border-emerald-500 shadow-lg"
+                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover object-center border-4 border-emerald-500 shadow-lg aspect-square"
                   />
                 ) : (
-                  <div className="w-20 h-20 xs:w-24 sm:w-32 md:h-32 rounded-full bg-emerald-500 flex items-center justify-center text-white text-2xl xs:text-3xl sm:text-4xl font-bold border-4 border-emerald-600 shadow-lg">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-emerald-500 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold border-4 border-emerald-600 shadow-lg aspect-square">
                     {getInitials()}
                   </div>
                 )}
@@ -594,9 +594,9 @@ export default function ProfilePage({
                   variant="primary"
                   size="sm"
                   isLoading={uploadingAvatar}
-                  className="absolute bottom-0 right-0 p-2 xs:p-2.5 sm:p-3 rounded-full shadow-lg hover:scale-110"
+                  className="absolute bottom-0 right-0 p-2.5 sm:p-3 rounded-full shadow-lg hover:scale-110"
                 >
-                  {!uploadingAvatar && <Camera size={16} />}
+                  {!uploadingAvatar && <Camera size={18} />}
                 </Button>
               </div>
               <input
@@ -606,15 +606,15 @@ export default function ProfilePage({
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <p className="text-xs xs:text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2 text-center px-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center px-1">
                 Clique na câmera para alterar
               </p>
             </div>
 
             {/* Nome Completo Display - RESPONSIVO */}
             {(profile.first_name || profile.last_name) && (
-              <div className="text-center mb-3 xs:mb-3 sm:mb-4">
-                <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate px-1">
+              <div className="text-center mb-4">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate px-1">
                   {profile.first_name} {profile.last_name}
                 </h3>
               </div>
@@ -622,16 +622,16 @@ export default function ProfilePage({
 
             {/* E-mail (Read-only) - RESPONSIVO */}
             <div className="mt-auto">
-              <label className="block text-xs xs:text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                 E-mail
               </label>
               <input
                 type="email"
                 value={session?.user?.email || ""}
                 disabled
-                className="w-full px-3 xs:px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 cursor-not-allowed text-xs xs:text-xs sm:text-sm"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 h-12 sm:h-14 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 cursor-not-allowed text-sm"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                 E-mail não pode ser alterado
               </p>
             </div>
@@ -641,15 +641,15 @@ export default function ProfilePage({
         {/* Coluna Direita - Formulários - RESPONSIVO */}
         <div className="lg:col-span-8">
           {/* Card de Dados Pessoais - RESPONSIVO PARA XS */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-3 xs:p-4 sm:p-6 md:p-8 h-full flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-6 md:p-8 h-full flex flex-col">
             <div className="flex-1">
-              <h2 className="text-base xs:text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 xs:mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
                 Dados Pessoais
               </h2>
 
-              <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 gap-3 xs:gap-3 sm:gap-4 mb-3 xs:mb-3 sm:mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
                 <div>
-                  <label className="block text-xs xs:text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                     Nome
                   </label>
                   <input
@@ -662,12 +662,12 @@ export default function ProfilePage({
                       }))
                     }
                     placeholder="Seu nome"
-                    className="w-full px-3 xs:px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs xs:text-xs sm:text-sm"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 h-12 sm:h-14 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs xs:text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                     Sobrenome
                   </label>
                   <input
@@ -680,13 +680,13 @@ export default function ProfilePage({
                       }))
                     }
                     placeholder="Seu sobrenome"
-                    className="w-full px-3 xs:px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs xs:text-xs sm:text-sm"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 h-12 sm:h-14 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                   />
                 </div>
               </div>
 
-              <div className="min-w-0 mb-4 xs:mb-4 sm:mb-6">
-                <label className="block text-xs xs:text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="min-w-0 mb-4 sm:mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                   Data de Nascimento
                 </label>
                 <div className="relative min-w-0">
@@ -696,14 +696,14 @@ export default function ProfilePage({
                     value={profile.birth_date}
                     onChange={handleDateChange}
                     placeholder="DD/MM/AAAA"
-                    className={`w-full max-w-full px-3 xs:px-3 sm:px-4 py-2 border ${
+                    className={`w-full max-w-full px-3 sm:px-4 py-2.5 sm:py-3 h-12 sm:h-14 border ${
                       !isDateValid
                         ? "border-red-500 focus:ring-red-500"
                         : "border-gray-300 dark:border-gray-600 focus:ring-emerald-500"
-                    } rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:border-transparent min-w-0 outline-none transition-all text-xs xs:text-xs sm:text-sm`}
+                    } rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:border-transparent min-w-0 outline-none transition-all text-sm`}
                   />
                   {!isDateValid && (
-                    <p className="text-xs xs:text-xs sm:text-sm text-red-500 mt-1 font-bold">
+                    <p className="text-sm text-red-500 mt-1 font-bold">
                       Data inválida ou no futuro
                     </p>
                   )}
@@ -719,8 +719,8 @@ export default function ProfilePage({
               fullWidth
               size="lg"
               isLoading={saving}
-              leftIcon={!saving ? <Save size={18} /> : undefined}
-              className="disabled:opacity-50 disabled:cursor-not-allowed mt-auto text-xs xs:text-xs sm:text-sm"
+              leftIcon={!saving ? <Save size={20} /> : undefined}
+              className="disabled:opacity-50 disabled:cursor-not-allowed mt-auto py-3 sm:py-4"
             >
               {saving ? "Salvando..." : "Salvar Alterações"}
             </Button>

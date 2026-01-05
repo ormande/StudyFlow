@@ -386,7 +386,7 @@ export default function DashboardPage({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <WelcomeModal
         isOpen={showWelcomeModal}
         onClose={handleWelcomeClose}
@@ -444,7 +444,7 @@ export default function DashboardPage({
       )}
 
       {/* Header */}
-      <div className="text-center mb-6 sm:mb-8">
+      <div className="text-center mb-4 sm:mb-6 md:mb-8">
         <div className="flex items-center justify-center gap-2 mb-2">
           <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -457,11 +457,11 @@ export default function DashboardPage({
       </div>
 
       {isLoading ? (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* MOBILE LAYOUT - Skeletons */}
-          <div className="lg:hidden space-y-6">
+          <div className="lg:hidden space-y-4 sm:space-y-6">
             {/* LINHA 1 - Mobile: 2 Skeletons */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
               <Skeleton className="h-24 w-full" />
               <Skeleton className="h-24 w-full" />
             </div>
@@ -498,11 +498,11 @@ export default function DashboardPage({
       ) : subjects.length > 0 || logs.length > 0 ? (
         <div className="space-y-6">
           {/* MOBILE LAYOUT */}
-          <div className="lg:hidden space-y-6">
+          <div className="lg:hidden space-y-4 sm:space-y-6">
             {/* LINHA 1 - Mobile: Hoje e Total */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
               {/* Card Hoje */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-3 sm:p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
                 <button
                   onClick={() => setShowShareModal(true)}
                   className="absolute top-3 right-3 z-20 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all active:scale-95 h-auto min-w-0"
@@ -512,7 +512,7 @@ export default function DashboardPage({
                   <Share2 size={18} />
                 </button>
                 <Clock className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-                <div className="relative z-10">
+                <div className="relative z-10 flex flex-col justify-center h-full">
                   <div className="flex items-center gap-2 mb-1 opacity-90">
                     <Clock className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wide">
@@ -531,9 +531,9 @@ export default function DashboardPage({
               </div>
 
               {/* Card Total */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-3 sm:p-4 text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
                 <Zap className="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-20 rotate-12" />
-                <div className="relative z-10">
+                <div className="relative z-10 flex flex-col justify-center h-full">
                   <div className="flex items-center gap-2 mb-1 opacity-90">
                     <Zap className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wide">
@@ -551,7 +551,7 @@ export default function DashboardPage({
             </div>
 
             {/* LINHA 2 - Mobile: Ritmo da Semana (altura reduzida) */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg p-4 text-white transition-transform hover:scale-[1.005] duration-300">
+            <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg p-3 sm:p-4 text-white transition-transform hover:scale-[1.005] duration-300">
               <Flame className="absolute -right-8 -bottom-8 w-40 h-40 text-white opacity-10 rotate-12" />
               <div className="relative z-10 flex flex-col h-full justify-between">
                 <div className="flex items-center justify-between mb-3">
@@ -629,7 +629,7 @@ export default function DashboardPage({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 transition-colors duration-300 border border-gray-100 dark:border-gray-700 relative overflow-hidden"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-6 transition-colors duration-300 relative overflow-hidden"
             >
               <Sparkles className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-500 dark:text-emerald-400 opacity-10 rotate-12" />
               <div className="relative z-10 flex flex-col items-center text-center">
@@ -640,12 +640,12 @@ export default function DashboardPage({
             </motion.div>
 
             {/* LINHA 3 - Mobile: Progresso Hoje */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Card Progresso Hoje */}
               {(dailyProgress.time.goal > 0 ||
                 dailyProgress.questions.goal > 0) && (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 border border-gray-100 dark:border-gray-700">
-                  <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-5">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <Target size={16} className="text-emerald-500" />
                     Progresso Hoje
                   </h2>
@@ -654,7 +654,7 @@ export default function DashboardPage({
                   {dailyProgress.time.goal > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
                           <Clock size={14} className="text-emerald-500" />
                           Tempo de Estudo
                         </span>
@@ -698,7 +698,7 @@ export default function DashboardPage({
                   {dailyProgress.questions.goal > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
                           <HelpCircle size={14} className="text-emerald-500" />
                           Questões Resolvidas
                         </span>
@@ -743,7 +743,7 @@ export default function DashboardPage({
                     weeklyProgress.questions.goal > 0) && (
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
                           <BarChart2 size={14} className="text-emerald-500" />
                           Progresso Semanal
                         </span>
@@ -770,8 +770,8 @@ export default function DashboardPage({
 
             {/* LINHA 4 - Mobile: Progresso */}
             {subjects.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
-                <div className="flex items-center gap-2 mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-5 transition-colors duration-300">
+                <div className="flex items-center gap-2 mb-3 sm:mb-4">
                   <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                     Progresso
@@ -817,7 +817,7 @@ export default function DashboardPage({
 
             {/* LINHA 5 - Mobile: Desempenho */}
             {subjects.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 md:p-5 transition-colors duration-300 border border-gray-100 dark:border-gray-700">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-3 sm:p-4 md:p-5 transition-colors duration-300">
                 {/* Nível 0 - Header e Resumo Geral */}
                 <Button
                   onClick={() =>
@@ -857,7 +857,7 @@ export default function DashboardPage({
                 </Button>
 
                 {/* Resumo Geral - Sempre Visível */}
-                <div className="mb-4">
+                <div className="mb-3 sm:mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <span
                       className={`text-2xl font-black ${getAccuracyTextColor(
@@ -921,7 +921,7 @@ export default function DashboardPage({
                           />
                           Por Matéria:
                         </h3>
-                        <div className="space-y-3">
+                        <div className="space-y-2 sm:space-y-3">
                           {sortedSubjectsByPerformance.map(
                             ({ subject, performance }) => {
                               const isSubjectExpanded =
@@ -929,7 +929,7 @@ export default function DashboardPage({
                               return (
                                 <div
                                   key={`perf-${subject.id}`}
-                                  className={`bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 transition-all duration-200 ${
+                                  className={`bg-gray-50 dark:bg-gray-700/50 rounded-xl p-2.5 sm:p-3 transition-all duration-200 ${
                                     isSubjectExpanded
                                       ? "border-2 border-emerald-500"
                                       : "border border-gray-200 dark:border-gray-600"
@@ -1071,8 +1071,8 @@ export default function DashboardPage({
             )}
 
             {/* LINHA 6 - Mobile: Recentes */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
-              <div className="flex items-center gap-2 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-3 sm:p-5 transition-colors duration-300">
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
                 <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                   Hoje
@@ -1080,7 +1080,7 @@ export default function DashboardPage({
               </div>
               {recentActivities.length > 0 ? (
                 <>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {recentActivities.map((log) => {
                       const subject = subjects.find(
                         (s) => s.id === log.subjectId
@@ -1089,7 +1089,7 @@ export default function DashboardPage({
                       return (
                         <div
                           key={log.id}
-                          className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"
+                          className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-gray-50 dark:bg-gray-700 transition-colors"
                         >
                           <div
                             className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
@@ -1138,13 +1138,13 @@ export default function DashboardPage({
                     fullWidth
                     size="md"
                     leftIcon={<History size={18} />}
-                    className="mt-4"
+                    className="mt-3 sm:mt-4 text-lg font-semibold"
                   >
                     Ver histórico completo
                   </Button>
                 </>
               ) : (
-                <div className="text-center py-6">
+                <div className="text-center py-4 sm:py-6">
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Nenhum registro de hoje ainda.
                   </p>
@@ -1486,7 +1486,7 @@ export default function DashboardPage({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 transition-colors duration-300 border border-gray-100 dark:border-gray-700 relative overflow-hidden"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 transition-colors duration-300 relative overflow-hidden"
             >
               <Sparkles className="absolute -right-4 -bottom-4 w-24 h-24 text-emerald-500 dark:text-emerald-400 opacity-10 rotate-12" />
               <div className="relative z-10 flex flex-col items-center text-center">
@@ -1500,7 +1500,7 @@ export default function DashboardPage({
             <div className="grid grid-cols-3 gap-6">
               {/* Card Desempenho */}
               {subjects.length > 0 && (
-                <div className="col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300 border border-gray-100 dark:border-gray-700">
+                <div className="col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 transition-colors duration-300">
                   {/* Nível 0 - Header e Resumo Geral */}
                   <Button
                     onClick={() =>
@@ -1510,37 +1510,37 @@ export default function DashboardPage({
                     }
                     variant="ghost"
                     fullWidth
-                    className="mb-4 h-auto justify-between"
-                    rightIcon={
-                      isGeneralPerformanceExpanded ? (
-                        <ChevronUp
-                          size={20}
-                          className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200"
-                        />
-                      ) : (
-                        <ChevronDown
-                          size={20}
-                          className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200"
-                        />
-                      )
-                    }
-                    aria-expanded={isGeneralPerformanceExpanded}
-                    aria-label={
-                      isGeneralPerformanceExpanded
-                        ? "Recolher detalhes"
-                        : "Expandir detalhes"
-                    }
-                  >
-                    <div className="flex items-center gap-2">
-                      <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                        Desempenho Geral
-                      </h2>
-                    </div>
-                  </Button>
+                  className="mb-3 sm:mb-4 h-auto justify-between"
+                  rightIcon={
+                    isGeneralPerformanceExpanded ? (
+                      <ChevronUp
+                        size={20}
+                        className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200"
+                      />
+                    ) : (
+                      <ChevronDown
+                        size={20}
+                        className="text-gray-500 group-hover:text-emerald-500 transition-colors duration-200"
+                      />
+                    )
+                  }
+                  aria-expanded={isGeneralPerformanceExpanded}
+                  aria-label={
+                    isGeneralPerformanceExpanded
+                      ? "Recolher detalhes"
+                      : "Expandir detalhes"
+                  }
+                >
+                  <div className="flex items-center gap-2">
+                    <BarChart2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                      Desempenho Geral
+                    </h2>
+                  </div>
+                </Button>
 
-                  {/* Resumo Geral - Sempre Visível */}
-                  <div className="mb-4">
+                {/* Resumo Geral - Sempre Visível */}
+                <div className="mb-3 sm:mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <span
                         className={`text-2xl font-black ${getAccuracyTextColor(

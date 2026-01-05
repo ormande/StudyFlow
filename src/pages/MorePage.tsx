@@ -177,26 +177,26 @@ export default function MorePage({
       className="max-w-lg mx-auto px-6 py-6 pb-24"
     >
       {/* Header - Perfil do usuário */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-5 mb-6">
-        <div className="flex items-center gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 mb-6">
+        <div className="flex items-center gap-3">
           {profileData.avatarUrl && !imgError ? (
             <img
               src={profileData.avatarUrl}
               alt="Avatar"
-              className="w-14 h-14 sm:w-16 sm:h-16 min-w-[3.5rem] sm:min-w-[4rem] aspect-square rounded-full object-cover flex-shrink-0"
+              className="w-16 h-16 sm:w-20 sm:h-20 min-w-[4rem] sm:min-w-[5rem] aspect-square rounded-full object-cover object-center border-2 border-emerald-500 flex-shrink-0"
               loading="eager"
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="w-14 h-14 sm:w-16 sm:h-16 min-w-[3.5rem] sm:min-w-[4rem] aspect-square rounded-full bg-emerald-500 flex items-center justify-center text-white text-xl sm:text-2xl font-bold flex-shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 min-w-[4rem] sm:min-w-[5rem] aspect-square rounded-full bg-emerald-500 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold border-2 border-emerald-600 flex-shrink-0">
               {getInitial()}
             </div>
           )}
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate">
               {displayName}
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-base text-gray-600 dark:text-gray-400 truncate">
               {userEmail}
             </p>
           </div>
@@ -207,8 +207,8 @@ export default function MorePage({
           }
           variant="ghost"
           fullWidth
-          size="sm"
-          className="mt-4 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+          size="md"
+          className="mt-3 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
         >
           Editar Perfil →
         </Button>

@@ -168,7 +168,7 @@ export default function HistoryPage({
         {/* Cabeçalho da Página */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <History className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600 dark:text-emerald-400" />
+            <History className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
               Histórico
             </h1>
@@ -190,7 +190,7 @@ export default function HistoryPage({
               value={localSearchTerm}
               onChange={(e) => setLocalSearchTerm(e.target.value)}
               placeholder="Buscar por matéria, subtópico ou observação..."
-              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-emerald-500 transition-colors"
+              className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:border-emerald-500 transition-colors"
             />
             {localSearchTerm && (
               <Button
@@ -206,7 +206,7 @@ export default function HistoryPage({
         </div>
 
         {/* Filtros: Matéria e Data (Desktop: lado a lado, Mobile: empilhados) */}
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {/* Filtro de Matéria */}
           <div className="relative">
             <Filter
@@ -216,7 +216,7 @@ export default function HistoryPage({
             <select
               value={filterSubject}
               onChange={(e) => setFilterSubject(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-colors"
             >
               <option value="all">Todas as matérias</option>
               {subjects.map((s) => (
@@ -242,22 +242,22 @@ export default function HistoryPage({
               return (
                 <Button
                   key={`${label}-${days}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (
-                      !loadingMoreLogs &&
-                      onDaysFilterChange &&
-                      daysFilter !== days
-                    ) {
-                      onDaysFilterChange(days);
-                    }
-                  }}
-                  disabled={loadingMoreLogs}
-                  variant={isActive ? "primary" : "secondary"}
-                  size="sm"
-                  className="whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-full text-xs md:text-sm"
-                >
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (
+                                      !loadingMoreLogs &&
+                                      onDaysFilterChange &&
+                                      daysFilter !== days
+                                    ) {
+                                      onDaysFilterChange(days);
+                                    }
+                                  }}
+                                  disabled={loadingMoreLogs}
+                                  variant={isActive ? "primary" : "secondary"}
+                                  size="sm"
+                                  className="whitespace-nowrap flex-shrink-0 px-3 py-1.5 sm:py-2 rounded-full text-xs md:text-sm"
+                                >
                   {label}
                 </Button>
               );
@@ -267,7 +267,7 @@ export default function HistoryPage({
 
         {/* Contador de Registros */}
         <div className="mb-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             {filteredLogs.length} registro(s) encontrado(s)
           </p>
         </div>
@@ -275,8 +275,8 @@ export default function HistoryPage({
         {/* Tabela de Registros */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {filteredLogs.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-500 dark:text-gray-400">
+            <div className="p-6 sm:p-8 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Nenhum registro encontrado.
               </p>
             </div>
@@ -326,7 +326,7 @@ export default function HistoryPage({
                           }
                         >
                           {/* Matéria */}
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <div
                                 className="w-3 h-3 rounded-full flex-shrink-0"
@@ -336,14 +336,14 @@ export default function HistoryPage({
                                   ),
                                 }}
                               />
-                              <span className="font-semibold text-gray-900 dark:text-white">
+                              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                                 {getSubjectName(log.subjectId)}
                               </span>
                             </div>
                           </td>
 
                           {/* Data */}
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               {new Date(log.timestamp).toLocaleDateString(
                                 "pt-BR"
@@ -352,21 +352,21 @@ export default function HistoryPage({
                           </td>
 
                           {/* Tipo */}
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               {getTypeLabel(log.type)}
                             </span>
                           </td>
 
                           {/* Tempo */}
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white">
                               {formatTime(log.hours, log.minutes, log.seconds)}
                             </span>
                           </td>
 
                           {/* Detalhes */}
-                          <td className="px-4 py-4">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4">
                             <div className="text-sm text-gray-600 dark:text-gray-400">
                               {log.type === "teoria" && log.pages && (
                                 <span>{log.pages} págs</span>
@@ -396,7 +396,7 @@ export default function HistoryPage({
                           </td>
 
                           {/* Ações */}
-                          <td className="px-4 py-4 whitespace-nowrap text-right">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-2">
                               <Button
                                 onClick={() => {
@@ -451,15 +451,15 @@ export default function HistoryPage({
                             >
                               <td
                                 colSpan={6}
-                                className="px-2 md:px-4 py-3 md:py-4"
+                                className="px-2 md:px-4 py-2.5 md:py-3"
                               >
-                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 md:p-4 border border-gray-200 dark:border-gray-600">
-                                  <div className="space-y-3 md:space-y-4">
+                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 sm:p-4 border border-gray-200 dark:border-gray-600">
+                                  <div className="space-y-3 sm:space-y-4">
                                     {/* Layout Mobile e Desktop - 3 colunas */}
-                                    <div className="grid grid-cols-3 gap-2 md:gap-4">
+                                    <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                                       {/* Tempo */}
                                       <div>
-                                        <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
+                                        <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
                                           Tempo{" "}
                                           <span className="text-red-500">
                                             *
@@ -484,10 +484,10 @@ export default function HistoryPage({
                                                   ),
                                                 })
                                               }
-                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-sm rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
-                                            <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
+                                            <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
                                               h
                                             </span>
                                           </div>
@@ -510,10 +510,10 @@ export default function HistoryPage({
                                                   ),
                                                 })
                                               }
-                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-sm rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
-                                            <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
+                                            <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
                                               m
                                             </span>
                                           </div>
@@ -522,7 +522,7 @@ export default function HistoryPage({
 
                                       {/* Questões */}
                                       <div>
-                                        <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
+                                        <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
                                           Questões
                                         </label>
                                         <div className="flex gap-1 md:gap-2">
@@ -541,7 +541,7 @@ export default function HistoryPage({
                                                   ),
                                                 })
                                               }
-                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 focus:border-emerald-500 outline-none text-center"
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-sm rounded-lg border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-300 focus:border-emerald-500 outline-none text-center"
                                               placeholder="0"
                                             />
                                             <div className="flex justify-center mt-0.5">
@@ -567,7 +567,7 @@ export default function HistoryPage({
                                                   ),
                                                 })
                                               }
-                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-red-500 dark:border-red-400 bg-white dark:bg-gray-800 text-red-700 dark:text-red-300 focus:border-red-500 outline-none text-center"
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-sm rounded-lg border-2 border-red-500 dark:border-red-400 bg-white dark:bg-gray-800 text-red-700 dark:text-red-300 focus:border-red-500 outline-none text-center"
                                               placeholder="0"
                                             />
                                             <div className="flex justify-center mt-0.5">
@@ -582,7 +582,7 @@ export default function HistoryPage({
 
                                       {/* Páginas */}
                                       <div>
-                                        <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
+                                        <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
                                           Páginas
                                         </label>
                                         <input
@@ -599,10 +599,10 @@ export default function HistoryPage({
                                               ),
                                             })
                                           }
-                                          className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
+                                          className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-sm rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-emerald-500 outline-none text-center"
                                           placeholder="0"
                                         />
-                                        <span className="text-[9px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
+                                        <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 block text-center mt-0.5">
                                           págs
                                         </span>
                                       </div>
@@ -610,7 +610,7 @@ export default function HistoryPage({
 
                                     {/* Observações */}
                                     <div>
-                                      <label className="block text-[10px] md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
+                                      <label className="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 md:mb-2">
                                         Observações
                                       </label>
                                       <textarea
@@ -622,7 +622,7 @@ export default function HistoryPage({
                                           })
                                         }
                                         rows={2}
-                                        className="w-full px-2 md:px-4 py-1.5 md:py-3 text-xs md:text-base rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 outline-none resize-none"
+                                        className="w-full px-2 md:px-4 py-1.5 md:py-3 text-xs md:text-sm rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 outline-none resize-none"
                                         placeholder="Observações (opcional)"
                                       />
                                     </div>
@@ -677,6 +677,7 @@ export default function HistoryPage({
                   <Loader2 className="w-5 h-5 animate-spin" />
                 )
               }
+              className="text-sm"
             >
               {loadingMoreLogs ? "Carregando..." : "Carregar mais histórico"}
             </Button>

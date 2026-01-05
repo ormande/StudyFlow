@@ -7,8 +7,6 @@ import {
   TrendingUp,
   BarChart3,
   PieChart,
-  Calendar,
-  BookOpen,
 } from "lucide-react";
 import {
   LineChart,
@@ -126,7 +124,7 @@ type TimeRangeOption =
 export default function StatsPage({
   logs,
   subjects,
-  cycleStartDate,
+  cycleStartDate: _cycleStartDate,
   streak,
   accuracyGoal = 70, // Valor padrão caso não seja passado
   onNavigateBack,

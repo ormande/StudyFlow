@@ -11,8 +11,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TabType } from "../types";
 import { FADE_UP_ANIMATION } from "../utils/animations";
 import {
-  getLocalDateString,
-  getPreviousDateString,
   calculateCurrentStreak,
 } from "../utils/dateUtils";
 import { useSupabaseData } from "../hooks/useSupabaseData";

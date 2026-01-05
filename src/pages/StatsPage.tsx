@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Clock,
   HelpCircle,
@@ -9,7 +9,6 @@ import {
   PieChart,
   Calendar,
   BookOpen,
-  ChevronDown,
 } from "lucide-react";
 import {
   LineChart,
@@ -27,12 +26,37 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Subject, StudyLog } from "../types";
-import IOSSwitch from "../components/IOSSwitch";
 import Button from "../components/Button";
 import FloatingBackButton from "../components/FloatingBackButton";
+import CustomDateRangeModal from "../components/CustomDateRangeModal";
+import { getLocalDateString } from "../utils/dateUtils";
+
+// Função helper para formatar horas em "Xh Ymin" ou apenas "Ymin"
+const formatHoursToTime = (hours: number | undefined | null | string): string => {
+  // Converter para número e validar entrada
+  const numHours = typeof hours === 'string' ? parseFloat(hours) : hours;
+  
+  if (numHours === undefined || numHours === null || isNaN(numHours) || numHours < 0) {
+    return "0min";
+  }
+  
+  if (numHours === 0) return "0min";
+  
+  const totalMinutes = Math.round(numHours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const min = totalMinutes % 60;
+  
+  if (h === 0) {
+    return `${min}min`;
+  }
+  if (min === 0) {
+    return `${h}h`;
+  }
+  return `${h}h ${min}min`;
+};
 
 // Componente CustomTooltip para gráficos Recharts
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, formatter }: any) => {
   if (!active || !payload || !payload.length) return null;
 
   return (
@@ -45,15 +69,36 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
         {label}
       </p>
-      {payload.map((entry: any, index: number) => (
-        <p
-          key={index}
-          className="text-sm font-medium"
-          style={{ color: entry.color }}
-        >
-          {entry.name}: {entry.value}
-        </p>
-      ))}
+      {payload.map((entry: any, index: number) => {
+        // Se o valor já foi formatado (string), usar diretamente
+        // Caso contrário, formatar se necessário
+        let displayValue = entry.value;
+        
+        // Se o valor já é uma string formatada (contém "min" ou "h"), usar diretamente
+        if (typeof displayValue === 'string' && (displayValue.includes('min') || displayValue.includes('h'))) {
+          // Já está formatado, usar como está
+        } else if (formatter && typeof formatter === 'function') {
+          displayValue = formatter(entry.value, entry.name, entry);
+        } else if (entry.name === "Horas" || entry.name === "Tempo") {
+          // Formatar horas para "Xh Ymin"
+          const hoursValue = typeof entry.value === 'number' ? entry.value : parseFloat(entry.value) || 0;
+          displayValue = formatHoursToTime(hoursValue);
+        } else if (entry.dataKey === "hours") {
+          // Para gráficos de distribuição por horário
+          const hoursValue = typeof entry.value === 'number' ? entry.value : parseFloat(entry.value) || 0;
+          displayValue = formatHoursToTime(hoursValue);
+        }
+        
+        return (
+          <p
+            key={index}
+            className="text-sm font-medium"
+            style={{ color: entry.color }}
+          >
+            {entry.name}: {displayValue}
+          </p>
+        );
+      })}
     </div>
   );
 };
@@ -63,23 +108,34 @@ interface StatsPageProps {
   subjects: Subject[];
   cycleStartDate: number;
   streak: number;
+  accuracyGoal?: number; // Meta de taxa de acerto (padrão: 70)
   onNavigateBack: () => void;
 }
 
-type PeriodOption = "7days" | "30days" | "3months" | "cycle" | "all" | "custom";
+type TimeRangeOption =
+  | "today"
+  | "yesterday"
+  | "last7days"
+  | "last30days"
+  | "thisMonth"
+  | "lastMonth"
+  | "thisYear"
+  | "allTime"
+  | "custom";
 
 export default function StatsPage({
   logs,
   subjects,
   cycleStartDate,
   streak,
+  accuracyGoal = 70, // Valor padrão caso não seja passado
   onNavigateBack,
 }: StatsPageProps) {
-  const [period, setPeriod] = useState<PeriodOption>("all");
-  const [cycleOnly, setCycleOnly] = useState(false);
+  const [timeRange, setTimeRange] = useState<TimeRangeOption>("last30days");
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>("all");
-  const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
-  const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const [showCustomDateModal, setShowCustomDateModal] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -109,47 +165,103 @@ export default function StatsPage({
     return () => observer.disconnect();
   }, []);
 
-  // Fechar dropdowns ao clicar fora
+  // Função helper para calcular ranges de data
+  const calculateDateRange = useCallback((range: TimeRangeOption): { startDate: Date; endDate: Date } => {
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      const startOfToday = new Date(today);
+      startOfToday.setHours(0, 0, 0, 0);
+
+      switch (range) {
+        case "today":
+          return { startDate: startOfToday, endDate: today };
+        case "yesterday":
+          const yesterday = new Date(startOfToday);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const endOfYesterday = new Date(startOfToday);
+          endOfYesterday.setMilliseconds(-1);
+          return { startDate: yesterday, endDate: endOfYesterday };
+        case "last7days":
+          const last7 = new Date(startOfToday);
+          last7.setDate(last7.getDate() - 7);
+          return { startDate: last7, endDate: today };
+        case "last30days":
+          const last30 = new Date(startOfToday);
+          last30.setDate(last30.getDate() - 30);
+          return { startDate: last30, endDate: today };
+        case "thisMonth":
+          const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+          return { startDate: startOfMonth, endDate: today };
+        case "lastMonth":
+          const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+          const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
+          return { startDate: lastMonthStart, endDate: lastMonthEnd };
+        case "thisYear":
+          const startOfYear = new Date(today.getFullYear(), 0, 1);
+          return { startDate: startOfYear, endDate: today };
+        case "allTime":
+          return { startDate: new Date(0), endDate: today };
+        case "custom":
+          if (customStartDate && customEndDate) {
+            const start = new Date(customStartDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(customEndDate);
+            end.setHours(23, 59, 59, 999);
+            return { startDate: start, endDate: end };
+          }
+          return { startDate: startOfToday, endDate: today };
+        default:
+          return { startDate: startOfToday, endDate: today };
+      }
+  }, [customStartDate, customEndDate]);
+
+  // Inicializar datas quando o componente montar ou timeRange mudar
   useEffect(() => {
-    const handleClickOutside = () => {
-      setShowPeriodDropdown(false);
-      setShowSubjectDropdown(false);
-    };
-    if (showPeriodDropdown || showSubjectDropdown) {
-      document.addEventListener("click", handleClickOutside);
-      return () => document.removeEventListener("click", handleClickOutside);
+    if (timeRange !== "custom") {
+      const { startDate, endDate } = calculateDateRange(timeRange);
+      setCustomStartDate(getLocalDateString(startDate));
+      setCustomEndDate(getLocalDateString(endDate));
     }
-  }, [showPeriodDropdown, showSubjectDropdown]);
+  }, [timeRange, calculateDateRange]);
+
+  // Handler para mudança de período
+  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as TimeRangeOption;
+
+    if (value === "custom") {
+      setShowCustomDateModal(true);
+    } else {
+      setTimeRange(value);
+    }
+  };
+
+  // Handler para aplicar data personalizada
+  const handleApplyCustomDate = (startDate: string, endDate: string) => {
+    setTimeRange("custom");
+    setCustomStartDate(startDate);
+    setCustomEndDate(endDate);
+  };
 
   // Filtrar logs baseado nos filtros
   const filteredLogs = useMemo(() => {
-    const now = new Date();
-
-    // determinar data inicial pelo período
-    let startDate: Date | null = null;
-    if (period === "7days")
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    else if (period === "30days")
-      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    else if (period === "3months")
-      startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-    else if (period === "cycle")
-      startDate = cycleStartDate ? new Date(cycleStartDate) : null;
+    const { startDate, endDate } = calculateDateRange(timeRange);
 
     const filtered = logs
       .filter((log) => {
-        const ts = log.timestamp
-          ? new Date(log.timestamp)
-          : log.date
-          ? new Date(log.date)
-          : null;
-        if (!ts) return false;
+        // Filtro de matéria
+        if (selectedSubjectId !== "all" && log.subjectId !== selectedSubjectId) {
+          return false;
+        }
 
-        if (startDate && ts < startDate) return false;
-        if (cycleOnly && cycleStartDate && ts < new Date(cycleStartDate))
+        // Filtro de tempo - usar log.date (YYYY-MM-DD) para comparação
+        const logDate = log.date ? new Date(log.date + "T00:00:00") : null;
+        if (!logDate) return false;
+
+        // Verificar se está dentro do range
+        if (logDate < startDate || logDate > endDate) {
           return false;
-        if (selectedSubjectId !== "all" && log.subjectId !== selectedSubjectId)
-          return false;
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -163,7 +275,7 @@ export default function StatsPage({
       });
 
     return filtered;
-  }, [logs, period, cycleOnly, selectedSubjectId, cycleStartDate]);
+  }, [logs, timeRange, selectedSubjectId, customStartDate, customEndDate]);
 
   // Dados de evolução temporal (horas e questões por dia)
   const evolutionData = useMemo(() => {
@@ -395,10 +507,12 @@ export default function StatsPage({
     }));
   }, [filteredLogs]);
 
-  // Função para obter cor da taxa de acerto
+  // Função para obter cor da taxa de acerto (baseada na meta configurável)
   const getAccuracyColor = (accuracy: number) => {
-    if (accuracy >= 70) return "text-emerald-600 dark:text-emerald-400";
-    if (accuracy >= 60) return "text-amber-600 dark:text-amber-400";
+    if (accuracy >= accuracyGoal) return "text-emerald-600 dark:text-emerald-400";
+    // Se a meta é alta (>=80), ajusta os limites
+    const warningThreshold = accuracyGoal >= 80 ? accuracyGoal - 15 : accuracyGoal - 10;
+    if (accuracy >= warningThreshold) return "text-amber-600 dark:text-amber-400";
     return "text-red-600 dark:text-red-400";
   };
 
@@ -442,10 +556,10 @@ export default function StatsPage({
               </p>
               <div className="space-y-2 mb-6 text-left max-w-md">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  • Desativar o filtro "Ciclo Atual" para ver todos os registros
+                  • Alterar o período para "Todos os tempos"
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  • Alterar o período para "Todos os tempos"
+                  • Selecionar "Todas as matérias"
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   • Verificar se há registros no período selecionado
@@ -453,9 +567,10 @@ export default function StatsPage({
               </div>
               <Button
                 onClick={() => {
-                  setCycleOnly(false);
-                  setPeriod("all");
+                  setTimeRange("allTime");
                   setSelectedSubjectId("all");
+                  setCustomStartDate("");
+                  setCustomEndDate("");
                 }}
                 variant="primary"
                 size="md"
@@ -479,14 +594,17 @@ export default function StatsPage({
     );
   }
 
-  const periodLabels: Record<PeriodOption, string> = {
-    "7days": "Últimos 7 dias",
-    "30days": "Últimos 30 dias",
-    "3months": "Últimos 3 meses",
-    cycle: "Ciclo atual",
-    all: "Todos os tempos",
-    custom: "Personalizado",
-  };
+  const timeRangeOptions = [
+    { value: "today", label: "Hoje" },
+    { value: "yesterday", label: "Ontem" },
+    { value: "last7days", label: "Últimos 7 dias" },
+    { value: "last30days", label: "Últimos 30 dias" },
+    { value: "thisMonth", label: "Este mês" },
+    { value: "lastMonth", label: "Mês passado" },
+    { value: "thisYear", label: "Este ano" },
+    { value: "allTime", label: "Todos os tempos" },
+    { value: "custom", label: "Personalizado..." },
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
@@ -506,150 +624,35 @@ export default function StatsPage({
           </p>
         </div>
 
-        {/* Filtros - Desktop */}
-        <div className="hidden md:flex items-center gap-3 justify-end">
-          <div className="relative">
-            <Button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowPeriodDropdown(!showPeriodDropdown);
-              }}
-              variant="outline"
-              size="sm"
-              leftIcon={<Calendar size={16} />}
-              rightIcon={<ChevronDown size={16} />}
-              className="px-4 py-2"
-            >
-              {periodLabels[period]}
-            </Button>
-            {showPeriodDropdown && (
-              <div
-                className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-10 min-w-[200px]"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {Object.entries(periodLabels).map(([key, label]) => (
-                  <Button
-                    key={key}
-                    type="button"
-                    onClick={() => {
-                      setPeriod(key as PeriodOption);
-                      setShowPeriodDropdown(false);
-                    }}
-                    variant={period === key ? "primary" : "ghost"}
-                    size="sm"
-                    fullWidth
-                    className="w-full text-left px-4 py-2 justify-start"
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
-            <IOSSwitch
-              checked={cycleOnly}
-              onChange={setCycleOnly}
-              aria-label={cycleOnly ? "Ciclo atual" : "Todos os tempos"}
-            />
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              {cycleOnly ? "Ciclo Atual" : "Todos os Tempos"}
-            </span>
-          </div>
-
-          <div className="relative">
-            <Button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowSubjectDropdown(!showSubjectDropdown);
-              }}
-              variant="outline"
-              size="sm"
-              leftIcon={<BookOpen size={16} />}
-              rightIcon={<ChevronDown size={16} />}
-              className="px-4 py-2"
-            >
-              {selectedSubjectId === "all"
-                ? "Todas as matérias"
-                : subjects.find((s) => s.id === selectedSubjectId)?.name ||
-                  "Todas"}
-            </Button>
-            {showSubjectDropdown && (
-              <div
-                className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-10 min-w-[200px] max-h-[300px] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setSelectedSubjectId("all");
-                    setShowSubjectDropdown(false);
-                  }}
-                  variant={selectedSubjectId === "all" ? "primary" : "ghost"}
-                  size="sm"
-                  fullWidth
-                  className="w-full text-left px-4 py-2 justify-start"
-                >
-                  Todas as matérias
-                </Button>
-                {subjects.map((subject) => (
-                  <Button
-                    key={subject.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedSubjectId(subject.id);
-                      setShowSubjectDropdown(false);
-                    }}
-                    variant={
-                      selectedSubjectId === subject.id ? "primary" : "ghost"
-                    }
-                    size="sm"
-                    fullWidth
-                    className="w-full text-left px-4 py-2 justify-start"
-                  >
-                    {subject.name}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Filtros - Mobile */}
-        <div className="md:hidden space-y-3">
-          <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-gray-500 dark:text-gray-400" />
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
+          {/* Filtro de Tempo */}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Período
+            </label>
             <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as PeriodOption)}
-              className="flex-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white"
+              value={timeRange}
+              onChange={handleTimeRangeChange}
+              className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-gray-900 dark:text-white transition-colors text-sm"
             >
-              {Object.entries(periodLabels).map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
+              {timeRangeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
           </div>
-          <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              {cycleOnly ? "Ciclo Atual" : "Todos os Tempos"}
-            </span>
-            <IOSSwitch
-              checked={cycleOnly}
-              onChange={setCycleOnly}
-              aria-label={cycleOnly ? "Ciclo atual" : "Todos os tempos"}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <BookOpen size={16} className="text-gray-500 dark:text-gray-400" />
+
+          {/* Filtro de Matéria */}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Matéria
+            </label>
             <select
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
-              className="flex-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-gray-900 dark:text-white transition-colors text-sm"
             >
               <option value="all">Todas as matérias</option>
               {subjects.map((subject) => (
@@ -660,6 +663,15 @@ export default function StatsPage({
             </select>
           </div>
         </div>
+
+        {/* Modal de Data Personalizada */}
+        <CustomDateRangeModal
+          isOpen={showCustomDateModal}
+          onClose={() => setShowCustomDateModal(false)}
+          onApply={handleApplyCustomDate}
+          initialStartDate={customStartDate}
+          initialEndDate={customEndDate}
+        />
       </div>
 
       {/* SEÇÃO A: RESUMO GERAL (Cards) */}
@@ -771,7 +783,26 @@ export default function StatsPage({
                 fontWeight: 500,
               }}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip 
+              content={(props: any) => {
+                // Customizar o tooltip para formatar horas
+                if (props.active && props.payload) {
+                  const formattedPayload = props.payload.map((entry: any) => {
+                    if (entry.dataKey === "hours") {
+                      const hoursValue = typeof entry.value === 'number' ? entry.value : parseFloat(entry.value) || 0;
+                      return {
+                        ...entry,
+                        value: formatHoursToTime(hoursValue),
+                        name: "Tempo"
+                      };
+                    }
+                    return entry;
+                  });
+                  return <CustomTooltip {...props} payload={formattedPayload} />;
+                }
+                return null;
+              }}
+            />
             <Legend
               wrapperStyle={{
                 fontFamily: "Poppins, system-ui, sans-serif",
@@ -787,7 +818,7 @@ export default function StatsPage({
               dataKey="hours"
               stroke="#10b981"
               strokeWidth={2}
-              name="Horas"
+              name="Tempo"
               dot={{ fill: "#10b981", r: 4 }}
             />
             <Line
@@ -838,10 +869,24 @@ export default function StatsPage({
                 }}
               />
               <Tooltip
-                formatter={(value: number | undefined) =>
-                  value !== undefined ? `${value.toFixed(1)}h` : ""
-                }
-                content={<CustomTooltip />}
+                content={(props: any) => {
+                  // Customizar o tooltip para formatar horas
+                  if (props.active && props.payload) {
+                    const formattedPayload = props.payload.map((entry: any) => {
+                      if (entry.dataKey === "hours") {
+                        const hoursValue = typeof entry.value === 'number' ? entry.value : parseFloat(entry.value) || 0;
+                        return {
+                          ...entry,
+                          value: formatHoursToTime(hoursValue),
+                          name: "Tempo"
+                        };
+                      }
+                      return entry;
+                    });
+                    return <CustomTooltip {...props} payload={formattedPayload} />;
+                  }
+                  return null;
+                }}
               />
               <Bar
                 dataKey="hours"
@@ -971,10 +1016,30 @@ export default function StatsPage({
                 }}
               />
               <Tooltip
-                formatter={(value: number | undefined) =>
-                  value !== undefined ? `${value}%` : ""
-                }
-                content={<CustomTooltip />}
+                content={(props: any) => {
+                  // Customizar o tooltip para taxa de acerto
+                  if (props.active && props.payload) {
+                    const formattedPayload = props.payload.map((entry: any) => {
+                      if (entry.dataKey === "accuracy") {
+                        return {
+                          ...entry,
+                          value: `${entry.value}%`,
+                          name: "Taxa de acerto"
+                        };
+                      } else if (typeof entry.dataKey === 'function') {
+                        // Linha da meta
+                        return {
+                          ...entry,
+                          value: `${accuracyGoal}%`,
+                          name: "Meta"
+                        };
+                      }
+                      return entry;
+                    });
+                    return <CustomTooltip {...props} payload={formattedPayload} />;
+                  }
+                  return null;
+                }}
               />
               <Legend
                 wrapperStyle={{
@@ -990,16 +1055,16 @@ export default function StatsPage({
                 dataKey="accuracy"
                 stroke="#10b981"
                 strokeWidth={2}
-                name="Taxa de Acerto"
+                name={`Taxa de acerto: ${accuracyEvolutionData.length > 0 ? accuracyEvolutionData[accuracyEvolutionData.length - 1]?.accuracy || 0 : 0}%`}
                 dot={{ fill: "#10b981", r: 4 }}
               />
               <Line
                 type="monotone"
-                dataKey={() => 70}
+                dataKey={() => accuracyGoal}
                 stroke="#6b7280"
                 strokeWidth={1}
                 strokeDasharray="5 5"
-                name="Meta (70%)"
+                name={`Meta: ${accuracyGoal}%`}
                 dot={false}
               />
             </LineChart>
@@ -1037,8 +1102,27 @@ export default function StatsPage({
                 fontWeight: 500,
               }}
             />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="hours" radius={[8, 8, 0, 0]}>
+            <Tooltip
+              content={(props: any) => {
+                // Customizar o tooltip para distribuição por horário
+                if (props.active && props.payload) {
+                  const formattedPayload = props.payload.map((entry: any) => {
+                    if (entry.dataKey === "hours") {
+                      const hoursValue = typeof entry.value === 'number' ? entry.value : parseFloat(entry.value) || 0;
+                      return {
+                        ...entry,
+                        value: formatHoursToTime(hoursValue),
+                        name: "Tempo"
+                      };
+                    }
+                    return entry;
+                  });
+                  return <CustomTooltip {...props} payload={formattedPayload} />;
+                }
+                return null;
+              }}
+            />
+            <Bar dataKey="hours" radius={[8, 8, 0, 0]} name="Tempo">
               {timeDistributionData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}

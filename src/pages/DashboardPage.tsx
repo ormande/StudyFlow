@@ -32,6 +32,30 @@ import { getQuoteOfTheDay } from "../data/motivationalQuotes";
 import { useGoals } from "../hooks/useGoals";
 import { getLocalDateString } from "../utils/dateUtils";
 
+// Função helper para formatar horas em "Xh Ymin" ou apenas "Ymin"
+const formatHoursToTime = (hours: number | undefined | null | string): string => {
+  // Converter para número e validar entrada
+  const numHours = typeof hours === 'string' ? parseFloat(hours) : hours;
+  
+  if (numHours === undefined || numHours === null || isNaN(numHours) || numHours < 0) {
+    return "0min";
+  }
+  
+  if (numHours === 0) return "0min";
+  
+  const totalMinutes = Math.round(numHours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const min = totalMinutes % 60;
+  
+  if (h === 0) {
+    return `${min}min`;
+  }
+  if (min === 0) {
+    return `${h}h`;
+  }
+  return `${h}h ${min}min`;
+};
+
 interface DashboardPageProps {
   subjects: Subject[];
   logs: StudyLog[];
@@ -659,8 +683,8 @@ export default function DashboardPage({
                           Tempo de Estudo
                         </span>
                         <span className="text-xs text-gray-600 dark:text-gray-400">
-                          {dailyProgress.time.current.toFixed(1)}h /{" "}
-                          {dailyProgress.time.goal}h (
+                          {formatHoursToTime(dailyProgress.time.current)} /{" "}
+                          {formatHoursToTime(dailyProgress.time.goal)} (
                           {Math.floor(dailyProgress.time.percentage)}%)
                         </span>
                       </div>
@@ -683,12 +707,12 @@ export default function DashboardPage({
                         </div>
                       </div>
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs text-gray-400">0h</span>
+                        <span className="text-xs text-gray-400">0min</span>
                         <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                           {getProgressBadge(dailyProgress.time.percentage)}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {dailyProgress.time.goal}h
+                          {formatHoursToTime(dailyProgress.time.goal)}
                         </span>
                       </div>
                     </div>
@@ -750,8 +774,8 @@ export default function DashboardPage({
                       </div>
                       {weeklyProgress.time.goal > 0 && (
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                          {weeklyProgress.time.current.toFixed(1)}h /{" "}
-                          {weeklyProgress.time.goal}h (
+                          {formatHoursToTime(weeklyProgress.time.current)} /{" "}
+                          {formatHoursToTime(weeklyProgress.time.goal)} (
                           {Math.floor(weeklyProgress.time.percentage)}%)
                         </p>
                       )}
@@ -1258,8 +1282,8 @@ export default function DashboardPage({
                           Tempo de Estudo
                         </span>
                         <span className="text-xs text-gray-600 dark:text-gray-400">
-                          {dailyProgress.time.current.toFixed(1)}h /{" "}
-                          {dailyProgress.time.goal}h (
+                          {formatHoursToTime(dailyProgress.time.current)} /{" "}
+                          {formatHoursToTime(dailyProgress.time.goal)} (
                           {Math.floor(dailyProgress.time.percentage)}%)
                         </span>
                       </div>
@@ -1282,12 +1306,12 @@ export default function DashboardPage({
                         </div>
                       </div>
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs text-gray-400">0h</span>
+                        <span className="text-xs text-gray-400">0min</span>
                         <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                           {getProgressBadge(dailyProgress.time.percentage)}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {dailyProgress.time.goal}h
+                          {formatHoursToTime(dailyProgress.time.goal)}
                         </span>
                       </div>
                     </div>
@@ -1349,8 +1373,8 @@ export default function DashboardPage({
                       </div>
                       {weeklyProgress.time.goal > 0 && (
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                          {weeklyProgress.time.current.toFixed(1)}h /{" "}
-                          {weeklyProgress.time.goal}h (
+                          {formatHoursToTime(weeklyProgress.time.current)} /{" "}
+                          {formatHoursToTime(weeklyProgress.time.goal)} (
                           {Math.floor(weeklyProgress.time.percentage)}%)
                         </p>
                       )}

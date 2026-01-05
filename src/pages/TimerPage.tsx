@@ -354,7 +354,7 @@ export default function TimerPage({
       className="flex flex-col min-h-screen overflow-y-auto pb-24 md:pb-8 px-4 sm:px-6 py-6 sm:py-8"
     >
       {/* Seletor de Modos (Abas) */}
-      <div className="mb-4 sm:mb-6 mt-2 md:mt-4 pt-20 md:pt-4 relative z-10">
+      <div className="mb-4 sm:mb-6 md:mt-4 relative z-10">
         {/* Mobile - Botões de Modo com Stagger Animation */}
         <div className="md:hidden flex flex-col gap-3 items-center">
           <motion.div

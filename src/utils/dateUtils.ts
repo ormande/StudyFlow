@@ -76,3 +76,48 @@ export function isToday(dateString: string): boolean {
 export function isYesterday(dateString: string): boolean {
   return dateString === getYesterdayDateString();
 }
+
+/**
+ * Calcula a sequência atual (streak) de dias consecutivos com estudo
+ * Baseado na lógica correta do HeatmapModal
+ * @param logs Array de logs de estudo
+ * @param maxDays Número máximo de dias para verificar (padrão: 365)
+ * @returns Número de dias consecutivos estudados (do dia mais recente para trás)
+ */
+export function calculateCurrentStreak(
+  logs: Array<{ date: string }>,
+  maxDays: number = 365
+): number {
+  if (logs.length === 0) return 0;
+
+  // Agrupar logs por data (YYYY-MM-DD)
+  const groupedByDate: Record<string, boolean> = {};
+  logs.forEach((log) => {
+    groupedByDate[log.date] = true;
+  });
+
+  // Gerar array de últimos N dias (do mais antigo para o mais recente)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysArray: Date[] = [];
+  for (let i = maxDays - 1; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    daysArray.push(date);
+  }
+
+  // Calcular sequência atual (do dia mais recente para trás)
+  let currentStreak = 0;
+  for (let i = daysArray.length - 1; i >= 0; i--) {
+    const dateStr = getLocalDateString(daysArray[i]);
+    const hasStudy = groupedByDate[dateStr] || false;
+
+    if (hasStudy) {
+      currentStreak++;
+    } else {
+      break;
+    }
+  }
+
+  return currentStreak;
+}

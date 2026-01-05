@@ -93,7 +93,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Workaholic',
     description: 'Volume intenso de estudos',
     icon: Briefcase,
-    color: 'text-gray-700',
+    color: 'text-gray-600 dark:text-gray-300',
     levels: [
       { level: 1, requirement: 50, label: '50 horas', xpReward: 100 },
       { level: 2, requirement: 250, label: '250 horas', xpReward: 250 },

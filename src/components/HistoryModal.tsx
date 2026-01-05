@@ -161,34 +161,44 @@ export default function HistoryModal({
                       </div>
 
                       {/* Info do tipo */}
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3 flex-wrap">
                         <TypeIcon size={14} />
                         <span>{getTypeLabel(log.type)}</span>
                         <span>•</span>
                         <span>{logMinutes} min</span>
-                        {log.type === "teoria" && log.pages && (
+                        {/* Páginas - sempre mostrar se existir */}
+                        {log.pages !== undefined && log.pages > 0 && (
                           <>
                             <span>•</span>
                             <span>{log.pages} págs</span>
                           </>
                         )}
-                        {log.type === "questoes" && (
+                        {/* Questões: Acertos, Erros e Em Branco - sempre mostrar se existir */}
+                        {(log.correct !== undefined && log.correct > 0) ||
+                        (log.wrong !== undefined && log.wrong > 0) ||
+                        (log.blank !== undefined && log.blank > 0) ? (
                           <>
                             <span>•</span>
-                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-                              {log.correct || 0}
-                              <Check size={12} />
-                            </span>
-                            <span className="text-red-600 dark:text-red-400 flex items-center gap-0.5">
-                              {log.wrong || 0}
-                              <XCircle size={12} />
-                            </span>
-                            <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
-                              {log.blank || 0}
-                              <Circle size={12} />
-                            </span>
+                            {log.correct !== undefined && log.correct > 0 && (
+                              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                                {log.correct}
+                                <Check size={12} />
+                              </span>
+                            )}
+                            {log.wrong !== undefined && log.wrong > 0 && (
+                              <span className="text-red-600 dark:text-red-400 flex items-center gap-0.5">
+                                {log.wrong}
+                                <XCircle size={12} />
+                              </span>
+                            )}
+                            {log.blank !== undefined && log.blank > 0 && (
+                              <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
+                                {log.blank}
+                                <Circle size={12} />
+                              </span>
+                            )}
                           </>
-                        )}
+                        ) : null}
                       </div>
 
                       {/* Observações */}

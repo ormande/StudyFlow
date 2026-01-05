@@ -14,6 +14,7 @@ export interface Goals {
   weeklyTimeGoal: number; // horas
   dailyQuestionsGoal: number;
   weeklyQuestionsGoal: number;
+  accuracyGoal: number; // porcentagem (0-100)
   settings: GoalsSettings;
 }
 
@@ -22,6 +23,7 @@ const DEFAULT_GOALS: Goals = {
   weeklyTimeGoal: 18,
   dailyQuestionsGoal: 20,
   weeklyQuestionsGoal: 100,
+  accuracyGoal: 70, // Meta padrão de 70% de taxa de acerto
   settings: {
     countWeekends: true,
     strictMode: false,
@@ -45,6 +47,9 @@ export function useGoals(logs: StudyLog[]) {
         const weeklyQuestions = localStorage.getItem(
           "studyflow_weekly_questions_goal"
         );
+        const accuracyGoal = localStorage.getItem(
+          "studyflow_accuracy_goal"
+        );
         const settingsStr = localStorage.getItem("studyflow_goals_settings");
 
         const loadedGoals: Goals = {
@@ -60,6 +65,9 @@ export function useGoals(logs: StudyLog[]) {
           weeklyQuestionsGoal: weeklyQuestions
             ? parseInt(weeklyQuestions)
             : DEFAULT_GOALS.weeklyQuestionsGoal,
+          accuracyGoal: accuracyGoal
+            ? parseInt(accuracyGoal)
+            : DEFAULT_GOALS.accuracyGoal,
           settings: settingsStr
             ? JSON.parse(settingsStr)
             : DEFAULT_GOALS.settings,
@@ -94,6 +102,10 @@ export function useGoals(logs: StudyLog[]) {
         localStorage.setItem(
           "studyflow_weekly_questions_goal",
           newGoals.weeklyQuestionsGoal.toString()
+        );
+        localStorage.setItem(
+          "studyflow_accuracy_goal",
+          newGoals.accuracyGoal.toString()
         );
         localStorage.setItem(
           "studyflow_goals_settings",

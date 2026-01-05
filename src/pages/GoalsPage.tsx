@@ -44,6 +44,10 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
     useState(false);
   const [weeklyQuestionsInputValue, setWeeklyQuestionsInputValue] =
     useState("");
+  
+  // Estados para controle de edição de taxa de acerto
+  const [isAccuracyEditing, setIsAccuracyEditing] = useState(false);
+  const [accuracyInputValue, setAccuracyInputValue] = useState("");
 
   // Sincronizar com goals do hook quando mudarem
   useEffect(() => {
@@ -155,7 +159,8 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
       | "dailyTimeGoal"
       | "weeklyTimeGoal"
       | "dailyQuestionsGoal"
-      | "weeklyQuestionsGoal",
+      | "weeklyQuestionsGoal"
+      | "accuracyGoal",
     delta: number
   ) => {
     const current = localGoals[field];
@@ -170,9 +175,14 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
     } else if (field === "dailyQuestionsGoal") {
       newValue = Math.max(5, Math.min(500, current + delta * 5));
       newValue = Math.round(newValue / 5) * 5; // Múltiplo de 5
-    } else {
+    } else if (field === "weeklyQuestionsGoal") {
       newValue = Math.max(10, Math.min(2000, current + delta * 10));
       newValue = Math.round(newValue / 10) * 10; // Múltiplo de 10
+    } else if (field === "accuracyGoal") {
+      newValue = Math.max(0, Math.min(100, current + delta * 5));
+      newValue = Math.round(newValue / 5) * 5; // Múltiplo de 5
+    } else {
+      newValue = current + delta;
     }
 
     updateLocalGoal(field, newValue);
@@ -710,7 +720,117 @@ export default function GoalsPage({ logs, onNavigateBack }: GoalsPageProps) {
           </div>
         </div>
 
-        {/* SEÇÃO 3 - CONFIGURAÇÕES AVANÇADAS */}
+        {/* SEÇÃO 3 - META DE TAXA DE ACERTO */}
+        <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Target size={20} className="text-emerald-500" />
+            Meta de Taxa de Acerto
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Configure a meta de porcentagem de acerto que será exibida no gráfico de estatísticas
+          </p>
+          
+          <div className="max-w-md mx-auto">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Taxa de Acerto Mínima
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  if (isAccuracyEditing) {
+                    setIsAccuracyEditing(false);
+                    setAccuracyInputValue(localGoals.accuracyGoal.toString());
+                  }
+                  adjustValue("accuracyGoal", -5);
+                }}
+                className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
+                aria-label="Decrementar 5%"
+              >
+                <Minus
+                  size={20}
+                  className="text-gray-700 dark:text-gray-300"
+                />
+              </button>
+              <div className="flex-1">
+                {!isAccuracyEditing ? (
+                  <button
+                    onClick={() => {
+                      setIsAccuracyEditing(true);
+                      setAccuracyInputValue(localGoals.accuracyGoal.toString());
+                    }}
+                    className="w-full text-center text-2xl font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl py-3 px-4 hover:border-amber-500 dark:hover:border-amber-400"
+                  >
+                    {localGoals.accuracyGoal}%
+                  </button>
+                ) : (
+                  <div>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      step="5"
+                      min="0"
+                      max="100"
+                      value={accuracyInputValue}
+                      onChange={(e) => setAccuracyInputValue(e.target.value)}
+                      onBlur={() => {
+                        const value = parseInt(accuracyInputValue) || 0;
+                        if (value < 0 || value > 100) {
+                          addToast("Taxa de acerto deve estar entre 0% e 100%", "error");
+                          setAccuracyInputValue(localGoals.accuracyGoal.toString());
+                        } else {
+                          updateLocalGoal("accuracyGoal", value);
+                        }
+                        setIsAccuracyEditing(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                        }
+                        if (e.key === "Escape") {
+                          setIsAccuracyEditing(false);
+                          setAccuracyInputValue(localGoals.accuracyGoal.toString());
+                        }
+                      }}
+                      autoFocus
+                      className="w-full text-center text-2xl font-bold text-amber-600 dark:text-amber-400 bg-transparent border-b-2 border-amber-500 dark:border-amber-400 outline-none py-3 px-4"
+                      placeholder="Ex: 70"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                      Valor entre 0 e 100
+                    </p>
+                  </div>
+                )}
+                {!isAccuracyEditing && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                    porcentagem
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  if (isAccuracyEditing) {
+                    setIsAccuracyEditing(false);
+                    setAccuracyInputValue(localGoals.accuracyGoal.toString());
+                  }
+                  adjustValue("accuracyGoal", 5);
+                }}
+                className="w-12 h-12 md:w-14 md:h-14 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
+                aria-label="Incrementar 5%"
+              >
+                <Plus
+                  size={20}
+                  className="text-gray-700 dark:text-gray-300"
+                />
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+              Usada como referência no gráfico de evolução da taxa de acerto
+            </p>
+          </div>
+        </div>
+
+        {/* SEÇÃO 4 - CONFIGURAÇÕES AVANÇADAS */}
         <div className="md:col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Settings size={20} className="text-emerald-500" />

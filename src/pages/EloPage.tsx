@@ -167,7 +167,7 @@ export default function EloPage({ onNavigateToMore }: EloPageProps) {
             variant="primary"
             size="md"
             leftIcon={<TrendingUp size={18} />}
-            className="xs:w-full py-3 sm:py-3.5 text-sm"
+            className="xs:w-full md:max-w-xs py-3 sm:py-3.5 text-sm"
           >
             Ver histórico de XP
           </Button>

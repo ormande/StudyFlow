@@ -228,7 +228,7 @@ export default function HistoryPage({
           </div>
 
           {/* Filtros de Data (Chips) */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2 md:flex-nowrap md:justify-between md:gap-0 md:space-x-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2 md:flex-nowrap md:gap-1.5 md:items-stretch md:pb-0 md:mx-0 md:px-0">
             {[
               { label: "Hoje", days: 1 },
               { label: "7D", days: 7 },
@@ -242,22 +242,22 @@ export default function HistoryPage({
               return (
                 <Button
                   key={`${label}-${days}`}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (
-                                      !loadingMoreLogs &&
-                                      onDaysFilterChange &&
-                                      daysFilter !== days
-                                    ) {
-                                      onDaysFilterChange(days);
-                                    }
-                                  }}
-                                  disabled={loadingMoreLogs}
-                                  variant={isActive ? "primary" : "secondary"}
-                                  size="sm"
-                                  className="whitespace-nowrap flex-shrink-0 px-3 py-1.5 sm:py-2 rounded-full text-xs md:text-sm"
-                                >
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (
+                      !loadingMoreLogs &&
+                      onDaysFilterChange &&
+                      daysFilter !== days
+                    ) {
+                      onDaysFilterChange(days);
+                    }
+                  }}
+                  disabled={loadingMoreLogs}
+                  variant={isActive ? "primary" : "secondary"}
+                  size="sm"
+                  className="whitespace-nowrap flex-shrink-0 px-3 py-1.5 sm:py-2 rounded-full text-sm md:text-base md:flex-1 md:h-auto md:py-2.5"
+                >
                   {label}
                 </Button>
               );
@@ -285,22 +285,25 @@ export default function HistoryPage({
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                       Matéria
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                       Data
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                       Tipo
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                      Subtópico
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                       Tempo
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                       Detalhes
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                       Ações
                     </th>
                   </tr>
@@ -326,7 +329,7 @@ export default function HistoryPage({
                           }
                         >
                           {/* Matéria */}
-                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-left">
                             <div className="flex items-center gap-2">
                               <div
                                 className="w-3 h-3 rounded-full flex-shrink-0"
@@ -343,7 +346,7 @@ export default function HistoryPage({
                           </td>
 
                           {/* Data */}
-                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               {new Date(log.timestamp).toLocaleDateString(
                                 "pt-BR"
@@ -352,43 +355,62 @@ export default function HistoryPage({
                           </td>
 
                           {/* Tipo */}
-                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               {getTypeLabel(log.type)}
                             </span>
                           </td>
 
+                          {/* Subtópico */}
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {log.subtopic || "-"}
+                            </span>
+                          </td>
+
                           {/* Tempo */}
-                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center">
                             <span className="text-sm font-semibold text-gray-900 dark:text-white">
                               {formatTime(log.hours, log.minutes, log.seconds)}
                             </span>
                           </td>
 
                           {/* Detalhes */}
-                          <td className="px-3 sm:px-4 py-3 sm:py-4">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 text-center">
                             <div className="text-sm text-gray-600 dark:text-gray-400">
-                              {log.type === "teoria" && log.pages && (
-                                <span>{log.pages} págs</span>
-                              )}
-                              {log.type === "questoes" && (
-                                <div className="flex gap-2">
-                                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                    {log.correct || 0}
-                                    <Check size={12} />
-                                  </span>
-                                  <span className="text-red-600 dark:text-red-400 flex items-center gap-1">
-                                    {log.wrong || 0}
-                                    <X size={12} />
-                                  </span>
-                                  <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                                    {log.blank || 0}
-                                    <Circle size={12} />
-                                  </span>
-                                </div>
-                              )}
+                              {/* Detalhes de desempenho lado a lado */}
+                              <div className="flex gap-2 flex-wrap items-center justify-center">
+                                {/* Questões: Acertos, Erros e Em Branco */}
+                                {(log.correct || log.wrong || log.blank) && (
+                                  <>
+                                    {log.correct !== undefined && log.correct > 0 && (
+                                      <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                        {log.correct}
+                                        <Check size={12} />
+                                      </span>
+                                    )}
+                                    {log.wrong !== undefined && log.wrong > 0 && (
+                                      <span className="text-red-600 dark:text-red-400 flex items-center gap-1">
+                                        {log.wrong}
+                                        <X size={12} />
+                                      </span>
+                                    )}
+                                    {log.blank !== undefined && log.blank > 0 && (
+                                      <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                        {log.blank}
+                                        <Circle size={12} />
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                                {/* Páginas */}
+                                {log.pages !== undefined && log.pages > 0 && (
+                                  <span>{log.pages} págs</span>
+                                )}
+                              </div>
+                              {/* Observações abaixo */}
                               {log.notes && (
-                                <p className="text-xs italic mt-1 text-gray-500 dark:text-gray-500">
+                                <p className="text-xs italic text-gray-500 dark:text-gray-500 mt-1">
                                   {log.notes}
                                 </p>
                               )}
@@ -396,8 +418,8 @@ export default function HistoryPage({
                           </td>
 
                           {/* Ações */}
-                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-right">
-                            <div className="flex items-center justify-end gap-2">
+                          <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center">
+                            <div className="flex items-center justify-center gap-2">
                               <Button
                                 onClick={() => {
                                   if (editingId === log.id) {
@@ -450,7 +472,7 @@ export default function HistoryPage({
                               }
                             >
                               <td
-                                colSpan={6}
+                                colSpan={7}
                                 className="px-2 md:px-4 py-2.5 md:py-3"
                               >
                                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 sm:p-4 border border-gray-200 dark:border-gray-600">
@@ -574,6 +596,32 @@ export default function HistoryPage({
                                               <X
                                                 size={10}
                                                 className="text-red-600 dark:text-red-400 md:w-3 md:h-3"
+                                              />
+                                            </div>
+                                          </div>
+
+                                          <div className="flex-1">
+                                            <input
+                                              type="number"
+                                              inputMode="numeric"
+                                              pattern="[0-9]*"
+                                              min="0"
+                                              value={editForm.blank || 0}
+                                              onChange={(e) =>
+                                                setEditForm({
+                                                  ...editForm,
+                                                  blank: sanitizeNumericInput(
+                                                    e.target.value
+                                                  ),
+                                                })
+                                              }
+                                              className="w-full px-1 md:px-3 py-1 md:py-2 text-xs md:text-sm rounded-lg border-2 border-blue-500 dark:border-blue-400 bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-300 focus:border-blue-500 outline-none text-center"
+                                              placeholder="0"
+                                            />
+                                            <div className="flex justify-center mt-0.5">
+                                              <Circle
+                                                size={10}
+                                                className="text-blue-600 dark:text-blue-400 md:w-3 md:h-3"
                                               />
                                             </div>
                                           </div>

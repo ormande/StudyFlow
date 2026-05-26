@@ -3,13 +3,30 @@ import { StudyLog } from '../types';
 import { Elo, XPHistoryEntry, calculateXPProgress, getEloByXP } from '../types/elo';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../contexts/ToastContext';
-import { calculateXPFromLogs } from '../utils/xp';
-
-export { calculateXPFromLog } from '../utils/xp';
 
 interface UseXPProps {
   logs: StudyLog[];
   userId?: string;
+}
+
+// Função helper exportada para calcular XP de um log
+// REGRAS OFICIAIS DE XP:
+// - 1 minuto estudado = 1 XP
+// - 1 questão correta = 5 XP
+// - 1 página lida = 2 XP
+export function calculateXPFromLog(log: StudyLog): number {
+  // XP por tempo de estudo (1 XP por minuto)
+  const totalMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
+  const xpFromTime = Math.floor(totalMinutes);
+  
+  // XP por questões corretas (5 XP por questão correta)
+  const xpFromQuestions = (log.correct || 0) * 5;
+  
+  // XP por páginas lidas (2 XP por página)
+  const xpFromPages = (log.pages || 0) * 2;
+  
+  // Somar todos os tipos de XP
+  return xpFromTime + xpFromQuestions + xpFromPages;
 }
 
 export function useXP({ logs, userId }: UseXPProps) {
@@ -22,6 +39,30 @@ export function useXP({ logs, userId }: UseXPProps) {
   // Rastrear logs já processados para evitar duplicação de XP
   const processedLogsRef = useRef<Set<string>>(new Set());
   const initialLoadDoneRef = useRef<boolean>(false);
+
+  // Calcular XP baseado nos logs
+  // REGRAS OFICIAIS: 1 XP/minuto + 5 XP/questão correta + 2 XP/página
+  const calculateXPFromLogs = useCallback((studyLogs: StudyLog[]): number => {
+    let xp = 0;
+
+    studyLogs.forEach(log => {
+      // XP por tempo de estudo (1 XP por minuto - todos os tipos)
+      const totalMinutes = (log.hours || 0) * 60 + (log.minutes || 0) + ((log.seconds || 0) / 60);
+      xp += Math.floor(totalMinutes);
+
+      // XP por questão correta (5 XP por questão correta)
+      if (log.correct) {
+        xp += log.correct * 5;
+      }
+
+      // XP por página lida (2 XP por página)
+      if (log.pages) {
+        xp += log.pages * 2;
+      }
+    });
+
+    return xp;
+  }, []);
 
   // Carregar XP do Supabase ou localStorage
   const loadXP = useCallback(async () => {

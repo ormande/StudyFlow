@@ -35,7 +35,7 @@ interface MorePageProps {
   onNavigateToAbout?: () => void;
   onNavigateToPlans?: () => void;
   onLogout: () => void;
-  onNavigateToProfile: () => void;
+  onNavigateToProfile?: () => void;
 }
 
 const PROFILE_CACHE_KEY = "studyflow_profile_cache";
@@ -165,6 +165,10 @@ export default function MorePage({
     onNavigateToGoals();
   };
 
+  const handleEditProfile = () => {
+    addToast("Edição de perfil em breve!", "info");
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -174,11 +178,7 @@ export default function MorePage({
     >
       {/* Header - Perfil do usuário */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 mb-6">
-        <button
-          type="button"
-          onClick={onNavigateToProfile}
-          className="flex items-center gap-3 w-full text-left rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors p-1 -m-1"
-        >
+        <div className="flex items-center gap-3">
           {profileData.avatarUrl && !imgError ? (
             <img
               src={profileData.avatarUrl}
@@ -200,14 +200,11 @@ export default function MorePage({
               {userEmail}
             </p>
           </div>
-          <ChevronRight
-            size={20}
-            className="text-gray-400 flex-shrink-0"
-            aria-hidden
-          />
-        </button>
+        </div>
         <Button
-          onClick={onNavigateToProfile}
+          onClick={
+            onNavigateToProfile ? onNavigateToProfile : handleEditProfile
+          }
           variant="ghost"
           fullWidth
           size="md"

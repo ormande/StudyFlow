@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Save,
-  Plus,
   BookOpen,
   Check,
   X,
@@ -252,31 +251,7 @@ export default function RegisterPage({
   const handleBlankChange = (value: string) =>
     setBlank(sanitizeNumericInput(value));
 
-  const clearSessionFields = () => {
-    setHours("");
-    setSeconds("");
-    setMinutes("");
-    setNotes("");
-    setPages("");
-    setCorrect("");
-    setWrong("");
-    setBlank("");
-    setMarkSubtopicCompleted(false);
-    onTimeClear();
-  };
-
-  const resetFormFully = () => {
-    setSubjectId("");
-    setSubtopicId("");
-    clearSessionFields();
-    const todayDate = getLocalDateString();
-    setDate(todayDate);
-    const [year, month, day] = todayDate.split("-");
-    setMaskedDate(`${day}/${month}/${year}`);
-    setDateOption("today");
-  };
-
-  const submitLog = (mode: "full" | "continue") => {
+  const handleSubmit = () => {
     if (!subjectId) {
       addToast("Selecione uma matéria, guerreiro!", "warning");
       return;
@@ -311,6 +286,7 @@ export default function RegisterPage({
 
     onAddLog(newLog);
 
+    // Marcar subtópico como concluído se opção estiver marcada
     if (
       markSubtopicCompleted &&
       subtopicId &&
@@ -324,22 +300,28 @@ export default function RegisterPage({
       onUpdateSubject(subjectId, { subtopics: updatedSubtopics });
     }
 
-    if (mode === "continue") {
-      clearSessionFields();
-      addToast(
-        "Registro salvo! Matéria e data mantidas — preencha o próximo.",
-        "success"
-      );
-    } else {
-      resetFormFully();
-      addToast("Estudo registrado com sucesso!", "success");
-    }
+    setSubjectId("");
+    setSubtopicId("");
+    setHours("");
+    setSeconds("");
+    setMinutes("");
+    setNotes("");
+    setPages("");
+    setCorrect("");
+    setWrong("");
+    setBlank("");
+    setMarkSubtopicCompleted(false);
+    const todayDate = getLocalDateString();
+    setDate(todayDate);
+    const [year, month, day] = todayDate.split("-");
+    setMaskedDate(`${day}/${month}/${year}`);
+    setDateOption("today");
+    onTimeClear();
 
     if (navigator.vibrate) navigator.vibrate(200);
-  };
 
-  const handleSubmit = () => submitLog("full");
-  const handleSubmitAndNew = () => submitLog("continue");
+    addToast("Estudo registrado com sucesso!", "success");
+  };
 
   const typeButtons = [
     { id: "teoria", label: "Teoria", icon: BookOpen },
@@ -829,43 +811,20 @@ export default function RegisterPage({
           />
         </div>
 
-        {/* Ações de salvar — divisão 50/50 */}
-        <div className="md:col-span-12 flex justify-center px-0">
-          <div className="w-full max-w-2xl flex flex-col gap-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                onClick={handleSubmitAndNew}
-                disabled={!isDateValid}
-                variant="outline"
-                fullWidth
-                size="lg"
-                leftIcon={<Plus size={20} />}
-                className="py-3 md:py-4 px-4 md:px-5 font-bold min-h-[52px] border-2 border-cyan-500 text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Salvar e criar novo
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={!isDateValid}
-                variant="primary"
-                fullWidth
-                size="lg"
-                leftIcon={<Save size={20} />}
-                className="py-3 md:py-4 px-4 md:px-5 font-bold min-h-[52px] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Salvar registro
-              </Button>
-            </div>
-            <p className="text-center text-xs text-gray-500 dark:text-gray-400 px-1">
-              <span className="text-cyan-600 dark:text-cyan-400 font-medium">
-                Criar novo
-              </span>{" "}
-              mantém matéria, subtópico, tipo e data.{" "}
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                Salvar registro
-              </span>{" "}
-              limpa o formulário.
-            </p>
+        {/* Botão Salvar - Destaque */}
+        <div className="md:col-span-12 flex justify-center">
+          <div className="w-full max-w-lg">
+            <Button
+              onClick={handleSubmit}
+              disabled={!isDateValid}
+              variant="primary"
+              fullWidth
+              size="lg"
+              leftIcon={<Save size={20} />}
+              className="py-3 md:py-4 px-5 md:px-6 font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Salvar Registro
+            </Button>
           </div>
         </div>
       </div>

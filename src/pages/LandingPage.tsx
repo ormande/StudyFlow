@@ -29,8 +29,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
     },
     {
       icon: Smartphone,
-      title: "PWA Instalável",
-      description: "Instale na tela inicial como um app nativo. Interface otimizada para celular e desktop.",
+      title: "PWA & Offline",
+      description: "Funciona como app nativo, funciona offline e sincroniza quando voltar online.",
     },
   ]
 
@@ -45,7 +45,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         },
         {
           question: "O app funciona no celular?",
-          answer: "Sim! O StudyFlow é um PWA (Progressive Web App) que funciona em celular, tablet e computador. Você pode instalá-lo na tela inicial como um app nativo. Os dados ficam na nuvem e sincronizam entre dispositivos quando você está online."
+          answer: "Sim! O StudyFlow é um PWA (Progressive Web App) que funciona perfeitamente em celular, tablet e computador. Você pode instalar como um app nativo e usar offline. Seus dados sincronizam automaticamente na nuvem."
         },
         {
           question: "Posso usar em vários dispositivos?",
@@ -89,7 +89,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         },
         {
           question: "Preciso ter conexão com internet?",
-          answer: "Sim, é necessária conexão com a internet para login, sincronização e registro de estudos (dados no Supabase). O modo offline completo está planejado para uma versão futura."
+          answer: "O app funciona offline para registrar estudos. A sincronização com a nuvem acontece automaticamente quando você conectar."
         }
       ]
     }

@@ -1,0 +1,45 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_and_test:
+    name: Build & Type Check
+    runs-on: ubuntu-latest
+    env:
+      # Variáveis dummy necessárias para o build passar
+      # O código verifica se essas variáveis existem em src/lib/supabase.ts
+      # Valores reais serão configurados no Vercel durante o deploy
+      VITE_SUPABASE_URL: 'https://dummy.supabase.co'
+      VITE_SUPABASE_ANON_KEY: 'dummy_key_for_ci_build'
+    
+    steps:
+      - name: ⬇️ Checkout do Código
+        uses: actions/checkout@v4
+      
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Versão LTS recomendada
+          cache: 'npm' # Cache do npm para builds mais rápidos
+      
+      - name: 📦 Instalar Dependências (npm ci)
+        # Usa 'npm ci' para builds de CI, garantindo que o lockfile seja usado
+        run: npm ci
+      
+      - name: 🔎 Verificar Tipagem TypeScript
+        # Executa o script 'typecheck' do package.json (tsc --noEmit)
+        run: npm run typecheck
+      
+      - name: 🧪 Executar Testes
+        run: npm run test -- --run
+
+      - name: 🏗️ Fazer Build para Produção
+        # Executa o build final (e verifica se ele passa)
+        run: npm run build

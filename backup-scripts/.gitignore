@@ -1,0 +1,8 @@
+# Credenciais - NUNCA commitar!
+backup.js
+
+# Pasta de backups
+backups/
+
+# Dependências
+node_modules/

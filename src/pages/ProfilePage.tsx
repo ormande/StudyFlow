@@ -1,0 +1,732 @@
+import { useState, useEffect, useRef, useMemo } from "react";
+import { motion } from "framer-motion";
+import {
+  User,
+  Camera,
+  Save,
+  Loader2,
+  Crown,
+  Star,
+  Gift,
+  CreditCard,
+  Diamond,
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../contexts/ToastContext";
+import Button from "../components/Button";
+import FloatingBackButton from "../components/FloatingBackButton";
+
+interface ProfilePageProps {
+  session: any;
+  onNavigateBack?: () => void;
+  subscriptionStatus?: string | null;
+  subscriptionType?: string | null;
+  trialEndsAt?: string | null;
+  onNavigateToPlans?: () => void;
+}
+
+interface ProfileData {
+  first_name: string;
+  last_name: string;
+  birth_date: string;
+  avatar_url: string | null;
+}
+
+export default function ProfilePage({
+  session,
+  onNavigateBack,
+  subscriptionStatus = null,
+  subscriptionType = null,
+  trialEndsAt = null,
+  onNavigateToPlans,
+}: ProfilePageProps) {
+  const { addToast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [profile, setProfile] = useState<ProfileData>({
+    first_name: "",
+    last_name: "",
+    birth_date: "", // No formato DD/MM/AAAA para o input
+    avatar_url: null,
+  });
+  const [isDateValid, setIsDateValid] = useState(true);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [nextBillingDate, setNextBillingDate] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const validateDate = (value: string): boolean => {
+    if (!value || value.length < 10) return true;
+    const [d, m, y] = value.split("/").map(Number);
+    const date = new Date(y, m - 1, d);
+    const now = new Date();
+    const matches =
+      date.getDate() === d &&
+      date.getMonth() === m - 1 &&
+      date.getFullYear() === y;
+    const isReasonable = y > 1900 && date <= now;
+    return matches && isReasonable;
+  };
+
+  // Carregar dados do perfil e assinatura
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    async function fetchProfile() {
+      try {
+        const { data, error } = await supabase
+          .from("user_settings")
+          .select("first_name, last_name, birth_date, avatar_url")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+
+        if (error && error.code !== "PGRST116") {
+          console.error("Erro ao carregar perfil:", error);
+          addToast(
+            "Erro ao carregar perfil. Detalhe: " + error.message,
+            "error"
+          );
+        }
+
+        if (data) {
+          // Converter YYYY-MM-DD para DD/MM/YYYY para o input
+          let formattedDate = "";
+          if (data.birth_date) {
+            const [y, m, d] = data.birth_date.split("-");
+            formattedDate = `${d}/${m}/${y}`;
+          }
+
+          setProfile({
+            first_name: data.first_name || "",
+            last_name: data.last_name || "",
+            birth_date: formattedDate,
+            avatar_url: data.avatar_url || null,
+          });
+          if (data.avatar_url) {
+            const { data: urlData } = supabase.storage
+              .from("avatars")
+              .getPublicUrl(data.avatar_url);
+            setAvatarPreview(urlData.publicUrl);
+          }
+        }
+
+        // Buscar dados de assinatura
+        const { data: subscriptionData, error: subscriptionError } =
+          await supabase
+            .from("user_settings")
+            .select(
+              "subscription_status, subscription_type, trial_ends_at, next_billing_date"
+            )
+            .eq("user_id", session.user.id)
+            .single();
+
+        if (!subscriptionError && subscriptionData) {
+          setNextBillingDate(subscriptionData.next_billing_date || null);
+        }
+      } catch (error: any) {
+        console.error("Erro ao carregar perfil:", error);
+        addToast(
+          "Erro ao carregar perfil. Detalhe: " +
+            (error?.message || "Erro desconhecido"),
+          "error"
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProfile();
+  }, [session?.user?.id, addToast]);
+
+  // Determinar tipo de plano
+  const planType = useMemo(() => {
+    if (subscriptionStatus === "trial") return "trial";
+    if (subscriptionStatus === "active") {
+      return subscriptionType === "lifetime" ? "lifetime" : "monthly";
+    }
+    return "none";
+  }, [subscriptionStatus, subscriptionType]);
+
+  // Calcular dias restantes do trial
+  const daysLeft = useMemo(() => {
+    if (planType === "trial" && trialEndsAt) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endDate = new Date(trialEndsAt);
+      endDate.setHours(0, 0, 0, 0);
+      const diffMs = endDate.getTime() - today.getTime();
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      return days;
+    }
+    return null;
+  }, [planType, trialEndsAt]);
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, "");
+
+    if (value.length >= 2) {
+      const day = parseInt(value.slice(0, 2));
+      if (day > 31) value = "31" + value.slice(2);
+      if (day === 0 && value.length === 2) value = "01";
+    }
+    if (value.length >= 4) {
+      const month = parseInt(value.slice(2, 4));
+      if (month > 12) value = value.slice(0, 2) + "12" + value.slice(4);
+      if (month === 0 && value.length === 4) value = value.slice(0, 2) + "01";
+    }
+
+    if (value.length > 8) value = value.slice(0, 8);
+
+    if (value.length >= 5) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length >= 3) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    setProfile((prev) => ({ ...prev, birth_date: value }));
+    setIsDateValid(validateDate(value));
+  };
+
+  // Upload de avatar
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !session?.user?.id) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith("image/")) {
+      addToast("Por favor, selecione uma imagem válida.", "error");
+      return;
+    }
+
+    // Validar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      addToast("A imagem deve ter no máximo 5MB.", "error");
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      // Criar preview local
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Preparar nome do arquivo: uid/timestamp.png
+      const timestamp = Date.now();
+      const fileExt = file.name.split(".").pop() || "png";
+      const fileName = `${session.user.id}/${timestamp}.${fileExt}`;
+
+      // Upload para o bucket 'avatars'
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: true, // Substitui se já existir
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Atualizar avatar_url no perfil
+      const { error: updateError } = await supabase
+        .from("user_settings")
+        .upsert(
+          {
+            user_id: session.user.id,
+            avatar_url: fileName,
+          },
+          {
+            onConflict: "user_id",
+          }
+        );
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setProfile((prev) => ({ ...prev, avatar_url: fileName }));
+      addToast("Foto de perfil atualizada com sucesso!", "success");
+    } catch (error: any) {
+      console.error("Erro ao fazer upload do avatar:", error);
+      addToast(
+        "Erro ao fazer upload da foto. Detalhe: " +
+          (error?.message || "Erro desconhecido"),
+        "error"
+      );
+      setAvatarPreview(null);
+    } finally {
+      setUploadingAvatar(false);
+      // Limpar input para permitir selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Salvar perfil
+  const handleSave = async () => {
+    if (!session?.user?.id) return;
+
+    setSaving(true);
+
+    try {
+      // Converter DD/MM/AAAA -> AAAA-MM-DD para o banco
+      let isoDate = null;
+      if (profile.birth_date && profile.birth_date.length === 10) {
+        const [d, m, y] = profile.birth_date.split("/");
+        isoDate = `${y}-${m}-${d}`;
+      } else if (profile.birth_date && profile.birth_date.length > 0) {
+        addToast("Data de nascimento inválida. Use DD/MM/AAAA.", "warning");
+        setSaving(false);
+        return;
+      }
+
+      const { error } = await supabase.from("user_settings").upsert(
+        {
+          user_id: session.user.id,
+          first_name: profile.first_name.trim(),
+          last_name: profile.last_name.trim(),
+          birth_date: isoDate,
+          avatar_url: profile.avatar_url,
+        },
+        {
+          onConflict: "user_id",
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      addToast("Perfil salvo com sucesso!", "success");
+    } catch (error: any) {
+      console.error("Erro ao salvar perfil:", error);
+      addToast(
+        "Erro ao salvar perfil. Detalhe: " +
+          (error?.message || "Erro desconhecido"),
+        "error"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Obter iniciais do nome
+  const getInitials = () => {
+    const firstName = profile.first_name?.charAt(0) || "";
+    const lastName = profile.last_name?.charAt(0) || "";
+    if (firstName || lastName) {
+      return (firstName + lastName).toUpperCase();
+    }
+    return session?.user?.email?.charAt(0).toUpperCase() || "U";
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="animate-spin text-emerald-500 w-8 h-8" />
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="max-w-2xl lg:max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 md:pb-8"
+    >
+      {/* Botão Voltar Flutuante */}
+      {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
+
+      {/* Header - RESPONSIVO */}
+      <div className="text-center mb-4 sm:mb-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <User className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            Meu Perfil
+          </h1>
+        </div>
+        <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base line-clamp-2">
+          Gerencie suas informações pessoais
+        </p>
+      </div>
+
+      {/* Cards de Status da Assinatura - RESPONSIVO PARA XS */}
+      <div className="mb-4 sm:mb-6">
+        {/* Card de Status da Assinatura */}
+        {planType === "trial" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-2xl shadow-md p-4 sm:p-6"
+          >
+            {/* Layout Mobile Compacto - AJUSTADO PARA XS */}
+            <div className="md:hidden flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={20} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-sm sm:text-base font-bold text-yellow-800 dark:text-yellow-200 mb-0.5 truncate">
+                    Plano Trial
+                  </h2>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 font-semibold line-clamp-2">
+                    Teste gratuito!
+                    {daysLeft !== null && daysLeft >= 0 && (
+                      <span className="block mt-0.5">
+                        {daysLeft === 0
+                          ? "Último dia!"
+                          : `${daysLeft} ${daysLeft === 1 ? "dia" : "dias"}`}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="sm"
+                className="flex-shrink-0 text-sm px-3 py-2"
+              >
+                Gerenciar
+              </Button>
+            </div>
+
+            {/* Layout Desktop - Horizontal */}
+            <div className="hidden md:flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={32} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-yellow-800 dark:text-yellow-200 mb-1 flex items-center gap-2">
+                    <Gift size={20} /> Plano Trial
+                  </h2>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Você está testando o StudyFlow gratuitamente!
+                    {daysLeft !== null && daysLeft >= 0 && (
+                      <span className="ml-2 font-semibold">
+                        •{" "}
+                        {daysLeft === 0
+                          ? "Último dia!"
+                          : `${daysLeft} ${
+                              daysLeft === 1 ? "dia restante" : "dias restantes"
+                            }`}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="md"
+                className="flex-shrink-0"
+              >
+                Gerenciar Assinatura
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {planType === "monthly" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 rounded-2xl shadow-md p-4 sm:p-6"
+          >
+            {/* Layout Mobile Compacto - AJUSTADO PARA XS */}
+            <div className="md:hidden flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={20} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-sm sm:text-base font-bold text-emerald-800 dark:text-emerald-200 mb-0.5 truncate">
+                    Plano Mensal
+                  </h2>
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold line-clamp-2">
+                    R$ 9,90/mês
+                    {nextBillingDate &&
+                      ` • ${new Date(nextBillingDate).toLocaleDateString(
+                        "pt-BR",
+                        { day: "2-digit", month: "2-digit" }
+                      )}`}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="sm"
+                className="flex-shrink-0 text-sm px-3 py-2"
+              >
+                Gerenciar
+              </Button>
+            </div>
+
+            {/* Layout Desktop - Horizontal */}
+            <div className="hidden md:flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Star size={32} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-emerald-800 dark:text-emerald-200 mb-1 flex items-center gap-2">
+                    <CreditCard size={20} /> Plano Mensal Ativo
+                  </h2>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                    R$ 9,90/mês
+                    {nextBillingDate && (
+                      <span className="ml-2">
+                        • Próxima cobrança:{" "}
+                        {new Date(nextBillingDate).toLocaleDateString("pt-BR")}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="md"
+                className="flex-shrink-0"
+              >
+                Gerenciar Assinatura
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {planType === "lifetime" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-400 rounded-2xl shadow-md p-4 sm:p-6"
+          >
+            {/* Layout Mobile Compacto - AJUSTADO PARA XS */}
+            <div className="md:hidden flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Crown size={20} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-sm sm:text-base font-bold text-purple-800 dark:text-purple-200 mb-1 truncate">
+                    Acesso Vitalício
+                  </h2>
+                  <span className="bg-purple-500 text-white text-sm font-bold px-2.5 py-1 rounded-lg sm:rounded-full uppercase tracking-wider inline-block whitespace-nowrap">
+                    Vitalício
+                  </span>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="sm"
+                className="flex-shrink-0 text-sm px-3 py-2"
+              >
+                Gerenciar
+              </Button>
+            </div>
+
+            {/* Layout Desktop - Horizontal */}
+            <div className="hidden md:flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                  <Crown size={32} fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-purple-800 dark:text-purple-200 mb-1 flex items-center gap-2">
+                    <Diamond size={20} /> Acesso Vitalício
+                  </h2>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Acesso ilimitado para sempre!
+                    <span className="ml-3 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-lg xs:rounded-lg sm:rounded-full uppercase tracking-wider">
+                      Vitalício
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={onNavigateToPlans}
+                variant="primary"
+                size="md"
+                className="flex-shrink-0"
+              >
+                Gerenciar Assinatura
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Grid Layout - Desktop Split - RESPONSIVO PARA XS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 lg:items-stretch">
+        {/* Coluna Esquerda - Cartão de Identidade - RESPONSIVO */}
+        <div className="lg:col-span-4">
+          {/* Card de Perfil - RESPONSIVO PARA XS */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-6 md:p-8 h-full flex flex-col">
+            {/* Foto de Perfil - RESPONSIVA */}
+            <div className="flex flex-col items-center mb-4 sm:mb-6">
+              <div className="relative">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar"
+                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover object-center border-4 border-emerald-500 shadow-lg aspect-square"
+                  />
+                ) : (
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-emerald-500 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold border-4 border-emerald-600 shadow-lg aspect-square">
+                    {getInitials()}
+                  </div>
+                )}
+                <Button
+                  onClick={handleAvatarClick}
+                  disabled={uploadingAvatar}
+                  variant="primary"
+                  size="sm"
+                  isLoading={uploadingAvatar}
+                  className="absolute bottom-0 right-0 p-2.5 sm:p-3 rounded-full shadow-lg hover:scale-110"
+                >
+                  {!uploadingAvatar && <Camera size={18} />}
+                </Button>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center px-1">
+                Clique na câmera para alterar
+              </p>
+            </div>
+
+            {/* Nome Completo Display - RESPONSIVO */}
+            {(profile.first_name || profile.last_name) && (
+              <div className="text-center mb-4">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate px-1">
+                  {profile.first_name} {profile.last_name}
+                </h3>
+              </div>
+            )}
+
+            {/* E-mail (Read-only) - RESPONSIVO */}
+            <div className="mt-auto">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+                E-mail
+              </label>
+              <input
+                type="email"
+                value={session?.user?.email || ""}
+                disabled
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 h-12 sm:h-14 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 cursor-not-allowed text-sm"
+              />
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                E-mail não pode ser alterado
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Coluna Direita - Formulários - RESPONSIVO */}
+        <div className="lg:col-span-8">
+          {/* Card de Dados Pessoais - RESPONSIVO PARA XS */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-6 md:p-8 h-full flex flex-col">
+            <div className="flex-1">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
+                Dados Pessoais
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+                    Nome
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.first_name}
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        first_name: e.target.value,
+                      }))
+                    }
+                    placeholder="Seu nome"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 h-12 sm:h-14 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+                    Sobrenome
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.last_name}
+                    onChange={(e) =>
+                      setProfile((prev) => ({
+                        ...prev,
+                        last_name: e.target.value,
+                      }))
+                    }
+                    placeholder="Seu sobrenome"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 h-12 sm:h-14 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="min-w-0 mb-4 sm:mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+                  Data de Nascimento
+                </label>
+                <div className="relative min-w-0">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={profile.birth_date}
+                    onChange={handleDateChange}
+                    placeholder="DD/MM/AAAA"
+                    className={`w-full max-w-full px-3 sm:px-4 py-2.5 sm:py-3 h-12 sm:h-14 border ${
+                      !isDateValid
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 dark:border-gray-600 focus:ring-emerald-500"
+                    } rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:border-transparent min-w-0 outline-none transition-all text-sm`}
+                  />
+                  {!isDateValid && (
+                    <p className="text-sm text-red-500 mt-1 font-bold">
+                      Data inválida ou no futuro
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Botão Salvar - RESPONSIVO */}
+            <Button
+              onClick={handleSave}
+              disabled={saving || !isDateValid}
+              variant="primary"
+              fullWidth
+              size="lg"
+              isLoading={saving}
+              leftIcon={!saving ? <Save size={20} /> : undefined}
+              className="disabled:opacity-50 disabled:cursor-not-allowed mt-auto py-3 sm:py-4"
+            >
+              {saving ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}

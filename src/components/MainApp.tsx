@@ -10,9 +10,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { TabType } from "../types";
 import { FADE_UP_ANIMATION } from "../utils/animations";
-import {
-  calculateCurrentStreak,
-} from "../utils/dateUtils";
 import { useSupabaseData } from "../hooks/useSupabaseData";
 import { useGoals } from "../hooks/useGoals";
 import BottomNav from "./BottomNav";
@@ -66,7 +63,7 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
     subjects,
     logs,
     stats,
-    allLogDates,
+    currentStreak,
     cycleStartDate,
     dailyGoal,
     showPerformance,
@@ -186,11 +183,7 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
     parseInt(localStorage.getItem(MORE_PAGE_SCROLL_KEY) || "0")
   );
 
-  // useMemo para calcular streak (evita recálculo desnecessário) - DEVE VIR ANTES DE useAchievements
-  // ✅ CORRIGIDO: Usa a mesma lógica do HeatmapModal que está funcionando corretamente
-  const streak = useMemo(() => {
-    return calculateCurrentStreak(allLogDates, 365);
-  }, [allLogDates]);
+  const streak = currentStreak;
 
   // O hook será usado via contexto no componente interno
 

@@ -95,8 +95,8 @@ export default function PixPaymentModal({
         if (!user) return;
 
         const { data, error: fetchError } = await supabase
-          .from('user_settings')
-          .select('subscription_status')
+          .from('user_subscriptions')
+          .select('status')
           .eq('user_id', user.id)
           .single();
 
@@ -105,7 +105,7 @@ export default function PixPaymentModal({
           return;
         }
 
-        if (data?.subscription_status === 'active') {
+        if (data?.status === 'active') {
           setStatus('success');
           clearInterval(interval);
           setTimeout(() => {
@@ -227,7 +227,10 @@ export default function PixPaymentModal({
 
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    R$ {String(pixData.valor).replace('.', ',')}
+                    {Number(pixData.valor || 0).toLocaleString('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    })}
                   </p>
                   <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                     Escaneie o código acima com o app do seu banco

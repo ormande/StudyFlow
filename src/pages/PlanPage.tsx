@@ -67,10 +67,8 @@ export default function PlanPage({
       if (!session) return;
 
       const { data, error } = await supabase
-        .from("user_settings")
-        .select(
-          "subscription_status, subscription_type, trial_ends_at, next_billing_date"
-        )
+        .from("user_subscriptions")
+        .select("status, plan_type, trial_ends_at, next_billing_date")
         .eq("user_id", session.user.id)
         .single();
 
@@ -79,22 +77,22 @@ export default function PlanPage({
         return;
       }
 
-      if (data.subscription_status === "trial") {
+      if (data.status === "trial") {
         setPlanStatus({
           type: "trial",
           status: "active",
           trialEndsAt: data.trial_ends_at,
         });
-      } else if (data.subscription_status === "active") {
+      } else if (data.status === "active") {
         setPlanStatus({
-          type: data.subscription_type === "lifetime" ? "lifetime" : "monthly",
+          type: data.plan_type === "lifetime" ? "lifetime" : "monthly",
           status: "active",
           nextBillingDate: data.next_billing_date,
         });
       } else {
         setPlanStatus({
           type: "none",
-          status: data.subscription_status || "none",
+          status: data.status || "none",
         });
       }
     };

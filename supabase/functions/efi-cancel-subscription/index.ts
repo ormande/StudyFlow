@@ -28,28 +28,28 @@ serve(async (req) => {
     }
 
     // 2. Buscar assinatura atual
-    const { data: settings, error: fetchError } = await supabaseClient
-      .from("user_settings")
-      .select("subscription_status, subscription_type, next_billing_date")
+    const { data: subscription, error: fetchError } = await supabaseClient
+      .from("user_subscriptions")
+      .select("status, plan_type, next_billing_date")
       .eq("user_id", user.id)
       .single();
 
-    if (fetchError || !settings) {
+    if (fetchError || !subscription) {
       return new Response(
-        JSON.stringify({ error: "Configurações não encontradas" }),
+        JSON.stringify({ error: "Assinatura não encontrada" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // 3. Verificar se pode cancelar
-    if (settings.subscription_type === "lifetime") {
+    if (subscription.plan_type === "lifetime") {
       return new Response(
         JSON.stringify({ error: "Plano vitalício não pode ser cancelado" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (settings.subscription_status !== "active") {
+    if (subscription.status !== "active") {
       return new Response(
         JSON.stringify({ error: "Nenhuma assinatura ativa para cancelar" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -58,9 +58,10 @@ serve(async (req) => {
 
     // 4. Cancelar assinatura (mantém acesso até next_billing_date)
     const { error: updateError } = await supabaseClient
-      .from("user_settings")
+      .from("user_subscriptions")
       .update({
-        subscription_status: "cancelled",
+        status: "cancelled",
+        updated_at: new Date().toISOString(),
       })
       .eq("user_id", user.id);
 
@@ -77,7 +78,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: "Assinatura cancelada. Você ainda terá acesso até o fim do período pago.",
-        access_until: settings.next_billing_date,
+        access_until: subscription.next_billing_date,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

@@ -113,10 +113,8 @@ export default function ProfilePage({
         // Buscar dados de assinatura
         const { data: subscriptionData, error: subscriptionError } =
           await supabase
-            .from("user_settings")
-            .select(
-              "subscription_status, subscription_type, trial_ends_at, next_billing_date"
-            )
+            .from("user_subscriptions")
+            .select("status, plan_type, trial_ends_at, next_billing_date")
             .eq("user_id", session.user.id)
             .single();
 

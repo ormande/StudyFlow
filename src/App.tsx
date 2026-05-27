@@ -7,6 +7,7 @@ import LandingPage from "./pages/LandingPage";
 import LoginScreen from "./components/LoginScreen";
 import PricingPage from "./pages/PricingPage";
 import SignupPage from "./pages/SignupPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import { useAppearance } from "./hooks/useAppearance";
 
 const CHECKOUT_INTENT_KEY = "studyflow_checkout_intent";
@@ -26,6 +27,7 @@ function App() {
   });
   const [forceLanding, setForceLanding] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [pendingVerifyEmail, setPendingVerifyEmail] = useState("");
 
   // Usar hook de aparência para gerenciar tema (aplicado automaticamente)
   useAppearance();
@@ -231,12 +233,30 @@ function App() {
                 setAuthView("login");
                 setIsRegistering(false);
               }}
-              onSuccess={() => {
-                // Após cadastro bem-sucedido, o usuário está autenticado
-                // Limpar o flag de registro para exibir o Dashboard
+              onSuccess={(email) => {
                 setIsRegistering(false);
+                if (email) {
+                  // Confirmação de e-mail obrigatória — sem sessão imediata
+                  setPendingVerifyEmail(email);
+                  setAuthView("verify-email");
+                  return;
+                }
+                // Cadastro com sessão imediata — entra no app
               }}
               onStartSignup={() => setIsRegistering(true)}
+            />
+          )}
+          {authView === "verify-email" && pendingVerifyEmail && (
+            <VerifyEmailPage
+              email={pendingVerifyEmail}
+              onNavigateToLogin={() => {
+                setAuthView("login");
+                setPendingVerifyEmail("");
+              }}
+              onNavigateToSignup={() => {
+                setAuthView("signup");
+                setPendingVerifyEmail("");
+              }}
             />
           )}
           {(authView === "login" || authView === "forgot") && (

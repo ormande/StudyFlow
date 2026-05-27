@@ -9,6 +9,15 @@ interface UseXPProps {
   userId?: string;
 }
 
+interface XpEventRow {
+  id: string;
+  amount: number;
+  reason: string;
+  icon: string | null;
+  is_bonus: boolean | null;
+  created_at: string;
+}
+
 // Função helper exportada para calcular XP de um log
 // REGRAS OFICIAIS DE XP:
 // - 1 minuto estudado = 1 XP
@@ -115,7 +124,7 @@ export function useXP({ logs, userId }: UseXPProps) {
       // Tentar carregar do Supabase (maybeSingle não gera erro 404 se não encontrar)
       const { data, error } = await supabase
         .from('user_xp')
-        .select('total_xp, xp_history')
+        .select('total_xp')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -146,13 +155,43 @@ export function useXP({ logs, userId }: UseXPProps) {
       } else if (data) {
         // Dados encontrados no Supabase
         setTotalXP(data.total_xp || 0);
-        if (data.xp_history) {
-          setXpHistory(data.xp_history);
-        }
       } else {
         // Primeira vez (sem registro no Supabase), calcular dos logs
         const initialXP = calculateXPFromLogs(logs);
         setTotalXP(initialXP);
+      }
+
+      // Carregar histórico via xp_events (últimos 50)
+      try {
+        const { data: events, error: eventsError } = await supabase
+          .from('xp_events')
+          .select('id, amount, reason, icon, is_bonus, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50)
+          .returns<XpEventRow[]>();
+
+        if (eventsError) {
+          const isExpectedEventsError =
+            eventsError.code === 'PGRST205' ||
+            eventsError.code === 'PGRST116' ||
+            eventsError.message?.toLowerCase().includes('could not find the table');
+          if (!isExpectedEventsError) {
+            console.error('Erro ao carregar xp_events:', eventsError);
+          }
+        } else if (events) {
+          const mapped = events.map((e) => ({
+            id: e.id,
+            date: new Date(e.created_at).getTime(),
+            amount: e.amount,
+            reason: e.reason,
+            icon: e.icon ?? '',
+            isBonus: e.is_bonus ?? false,
+          }));
+          setXpHistory(mapped);
+        }
+      } catch (e) {
+        // Silencioso: mantém xpHistory atual
       }
       
       // Marcar todos os logs existentes como processados
@@ -216,7 +255,6 @@ export function useXP({ logs, userId }: UseXPProps) {
         .upsert({
           user_id: userId,
           total_xp: xp,
-          xp_history: history,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: 'user_id'
@@ -233,6 +271,23 @@ export function useXP({ logs, userId }: UseXPProps) {
 
   // Adicionar XP
   const addXP = useCallback((amount: number, reason: string, icon: string, isBonus: boolean = false) => {
+    if (userId) {
+      // Fire-and-forget: registra evento (append-only). Mantém UX responsiva.
+      (async () => {
+        try {
+          await supabase.from('xp_events').insert({
+            user_id: userId,
+            amount,
+            reason,
+            icon,
+            is_bonus: isBonus,
+          });
+        } catch (e) {
+          // Silencioso: a UI já atualizou localmente
+        }
+      })();
+    }
+
     setTotalXP(prev => {
       const newTotal = prev + amount;
       

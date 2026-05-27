@@ -5,7 +5,35 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.4] - 2026-05-26 - Atual
+## [1.10.0] - 2026-05-27 - Atual
+
+### Adicionado
+- **Banco / Escala:** nova tabela `user_subscriptions` para separar assinatura das configurações de perfil (`user_settings`).
+- **Gamificação:** nova tabela `xp_events` (append-only) para histórico de XP em formato escalável.
+- **Busca server-side:** RPC `search_study_logs(...)` para busca centralizada no Postgres.
+- **Sincronização em tempo real:** `Supabase Realtime` substituindo sincronização local por `BroadcastChannel`.
+
+### Modificado
+- **Streak:** frontend passou a consumir `get_streak(p_user_id)` via RPC (remoção do cálculo local com fetch de todas as datas).
+- **Stats:** `get_user_stats(p_user_id)` reescrita para agregação em 1 query e proteção com `auth.uid()`.
+- **Assinaturas:** fluxo migrado para `user_subscriptions` em frontend e Edge Functions (`asaas-webhook`, `asaas-polling`, `efi-cancel-subscription`).
+- **Signup:** layout do formulário reorganizado em grid equilibrado (3 linhas), com melhor aproveitamento horizontal no desktop.
+
+### Segurança
+- **RLS / trigger:** criação automática de linha em `user_subscriptions` no `handle_new_user`.
+- **Pagamentos:** manutenção de `verify_jwt = false` apenas para funções de webhook/polling, com validações próprias por token/status.
+
+### Infraestrutura
+- **Cron:** agendamento da função `asaas-polling` ativo no painel do Supabase (execução horária).
+
+### Migrations neste ciclo
+- `06_add_xp_events.sql`
+- `07_search_study_logs_rpc.sql`
+- `08_create_user_subscriptions.sql`
+- `09_update_handle_new_user_subscriptions.sql`
+- `10_drop_legacy_subscription_columns.sql`
+
+## [1.9.4] - 2026-05-26
 
 ### Documentado
 - **Variáveis de ambiente:** Recuperação do mapa após perda do `.env` original (referência em `.env.example`).
@@ -264,6 +292,8 @@ Esta versão consolida a Gamificação, introduz a gestão completa de Perfil e 
 - Tema Claro/Escuro.
 
 [1.9.2]: https://github.com/ormande/study-flow/compare/v1.9.1...v1.9.2
+[1.10.0]: https://github.com/ormande/study-flow/compare/v1.9.4...v1.10.0
+[1.9.4]: https://github.com/ormande/study-flow/compare/v1.9.3...v1.9.4
 [1.9.1]: https://github.com/ormande/study-flow/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/ormande/study-flow/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/ormande/study-flow/compare/v1.7.0...v1.8.0

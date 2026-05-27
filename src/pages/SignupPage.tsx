@@ -34,6 +34,7 @@ export default function SignupPage({
   const [lastName, setLastName] = useState("");
   const [birthDate, setBirthDate] = useState(""); // Armazena no formato DD/MM/AAAA
   const [isDateValid, setIsDateValid] = useState(true);
+  const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -107,6 +108,36 @@ export default function SignupPage({
     return Math.abs(ageDate.getUTCFullYear() - 1970);
   };
 
+  const formatCpf = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) {
+      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    }
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
+
+  const isValidCpf = (rawCpf: string) => {
+    const cpfDigits = rawCpf.replace(/\D/g, "");
+    if (cpfDigits.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(cpfDigits)) return false;
+
+    const calcDigit = (base: string, factor: number) => {
+      let total = 0;
+      for (const char of base) {
+        total += Number(char) * factor;
+        factor -= 1;
+      }
+      const remainder = (total * 10) % 11;
+      return remainder === 10 ? 0 : remainder;
+    };
+
+    const d1 = calcDigit(cpfDigits.slice(0, 9), 10);
+    const d2 = calcDigit(cpfDigits.slice(0, 10), 11);
+    return d1 === Number(cpfDigits[9]) && d2 === Number(cpfDigits[10]);
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -117,6 +148,11 @@ export default function SignupPage({
 
     if (!birthDate || birthDate.length < 10) {
       addToast("Data de nascimento inválida. Use DD/MM/AAAA.", "warning");
+      return;
+    }
+
+    if (!cpf || !isValidCpf(cpf)) {
+      addToast("CPF inválido. Verifique os números digitados.", "warning");
       return;
     }
 
@@ -164,6 +200,14 @@ export default function SignupPage({
         await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+              birth_date: isoDate,
+              cpf_cnpj: cpf.replace(/\D/g, ""),
+            },
+          },
         });
 
       if (signUpError) throw signUpError;
@@ -171,6 +215,10 @@ export default function SignupPage({
       // Se não houver sessão imediata (ex: confirmação de email habilitada)
       if (!signUpData.session) {
         setLoading(false);
+        addToast(
+          "Conta criada! Verifique seu e-mail (incluindo spam) para ativar e fazer login.",
+          "success"
+        );
         onSuccess(email);
         return;
       }
@@ -203,13 +251,10 @@ export default function SignupPage({
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         birth_date: isoDate,
+        cpf_cnpj: cpf.replace(/\D/g, ""),
         avatar_url: uploadedAvatarUrl,
         terms_accepted: true,
         terms_accepted_at: new Date().toISOString(),
-        subscription_status: "trial",
-        trial_ends_at: new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString(),
         cycle_start_date: Date.now(),
         daily_goal: 0,
         show_performance: true,
@@ -225,6 +270,29 @@ export default function SignupPage({
         console.error(
           "Erro ao salvar configurações do usuário:",
           settingsError
+        );
+      }
+
+      // Assinatura/trial agora vivem em user_subscriptions
+      const trialEndsAt = new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000
+      ).toISOString();
+      const { error: subscriptionError } = await supabase
+        .from("user_subscriptions")
+        .upsert(
+          {
+            user_id: session.user.id,
+            status: "trial",
+            trial_ends_at: trialEndsAt,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (subscriptionError) {
+        console.error(
+          "Erro ao salvar assinatura do usuário:",
+          subscriptionError
         );
       }
 
@@ -310,7 +378,7 @@ export default function SignupPage({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-xl space-y-8 py-12 lg:py-0"
+          className="w-full max-w-2xl lg:max-w-[48vw] space-y-8 py-12 lg:py-0"
         >
           <div className="text-center lg:text-left">
             <img
@@ -385,7 +453,8 @@ export default function SignupPage({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Linha 1: nome, sobrenome, nascimento (3 colunas iguais) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
                   Nome
@@ -424,9 +493,6 @@ export default function SignupPage({
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
                   Nascimento
@@ -456,7 +522,11 @@ export default function SignupPage({
                   </p>
                 )}
               </div>
-              <div>
+            </div>
+
+            {/* Linha 2: e-mail (2/3) + CPF (1/3) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
                   Seu E-mail
                 </label>
@@ -477,8 +547,25 @@ export default function SignupPage({
                   />
                 </div>
               </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
+                  CPF
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    value={cpf}
+                    onChange={(e) => setCpf(formatCpf(e.target.value))}
+                    placeholder="000.000.000-00"
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
+                  />
+                </div>
+              </div>
             </div>
 
+            {/* Linha 3: senha + confirmar senha */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">

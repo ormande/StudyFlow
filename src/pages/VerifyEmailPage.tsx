@@ -66,9 +66,13 @@ export default function VerifyEmailPage({ email, onNavigateToLogin, onNavigateTo
             Verifique seu e-mail
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
-            Enviamos um link de confirmação para <br />
-            <span className="font-bold text-gray-900 dark:text-white">{email}</span>. <br />
-            Clique no link para ativar sua conta.
+            Enviamos um link de confirmação para{" "}
+            <span className="font-bold text-gray-900 dark:text-white">{email}</span>.
+          </p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-4 leading-relaxed">
+            Abra sua caixa de entrada e clique no link para validar o e-mail.
+            Se não encontrar, confira também a pasta de <strong>spam</strong> ou{" "}
+            <strong>lixo eletrônico</strong>. Depois disso, volte aqui e faça login.
           </p>
         </div>
 

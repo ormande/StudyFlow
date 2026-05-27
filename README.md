@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.4-emerald" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.10.0-emerald" alt="Version" />
   <img src="https://img.shields.io/badge/license-Proprietário-red" alt="License" />
   <img src="https://img.shields.io/badge/status-beta-yellow" alt="Status" />
   <img src="https://img.shields.io/badge/produto-SaaS-blueviolet" alt="Type" />
@@ -39,7 +39,7 @@ Principais diferenciais:
 - 🔥 **Ofensiva** (dias consecutivos de estudo) e heatmap de constância
 - ⏱️ **Timer integrado** (Cronômetro, Temporizador e Pomodoro)
 - 📊 **Análises avançadas** por matéria, subtópico e evolução temporal
-- 💳 **Assinaturas** (trial, mensal e vitalício) — pagamentos via Efi Bank *(migração para Asaas em andamento)*
+- 💳 **Assinaturas** (trial, mensal e vitalício) — pagamentos via Asaas
 
 🔗 **App em produção:** [getstudyflow.com.br](https://getstudyflow.com.br)
 
@@ -94,7 +94,7 @@ Principais diferenciais:
 
 - Perfil editável (nome, foto, data de nascimento)
 - Landing page pública, cadastro, login e recuperação de senha
-- Planos PRO (trial, mensal, vitalício) com checkout PIX *(gateway: Efi Bank hoje; migração Asaas planejada)*
+- Planos PRO (trial, mensal, vitalício) com checkout PIX via Asaas
 - Verificação de e-mail e gestão de assinatura
 
 ### ⚙️ Configurações e Aparência
@@ -110,7 +110,7 @@ Principais diferenciais:
 - Instalável na tela inicial (`manifest.json` + ícones em `public/`)
 - Interface responsiva com **BottomNav** (5 abas) e sidebar no desktop
 - Safe areas para iOS (notch e barra inferior)
-- Sincronização entre abas abertas (`BroadcastChannel`)
+- Sincronização entre abas/dispositivos via Supabase Realtime
 
 #### Status PWA (o que existe hoje)
 
@@ -174,7 +174,7 @@ Variáveis do **frontend** (arquivo `.env` na raiz — detalhes em [`.env.exampl
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SB_SERVICE_ROLE_KEY` | Obrigatórios para as funções |
 | `BREVO_API_KEY` | E-mails transacionais (opcional) |
 | `TELEGRAM_BOT_TOKEN`, `ADMIN_CHAT_ID`, `FUNCTION_SECRET` | Bot de suporte (opcional) |
-| `EFI_CLIENT_ID`, `EFI_CLIENT_SECRET`, `EFI_SANDBOX` | **Pendente** — aguardando migração para **Asaas** |
+| `ASAAS_API_KEY`, `ASAAS_SANDBOX_API_KEY`, `ASAAS_SANDBOX`, `ASAAS_WEBHOOK_TOKEN` | Integração de pagamentos via Asaas |
 
 > ⚠️ Nunca commite `.env` com chaves reais. O `service_role` só no Supabase, nunca no bundle do navegador.
 
@@ -240,7 +240,7 @@ O CI no GitHub Actions executa `typecheck`, `test` e `build` em pushes para `mai
 ### Backend e pagamentos
 
 - **[Supabase](https://supabase.com/)** — auth, PostgreSQL, Storage, RLS, Edge Functions
-- **Efi Bank (Gerencianet)** — PIX e assinaturas hoje (`supabase/functions/efi-*`); **migração para Asaas planejada**
+- **Asaas** — PIX e assinaturas (`supabase/functions/pix-create`, `asaas-webhook`, `asaas-polling`)
 
 ### Infraestrutura
 
@@ -290,7 +290,7 @@ StudyFlow/
 
 ## 🗺️ Roadmap
 
-O roadmap reflete o estado do repositório em **v1.9.4**. Detalhes por versão estão no [CHANGELOG.md](./CHANGELOG.md).
+O roadmap reflete o estado do repositório em **v1.10.0**. Detalhes por versão estão no [CHANGELOG.md](./CHANGELOG.md).
 
 ### ✅ Concluído (v1.0 – v1.9)
 
@@ -307,7 +307,7 @@ O roadmap reflete o estado do repositório em **v1.9.4**. Detalhes por versão e
 
 ### 🚧 Em andamento / polish
 
-- [ ] **Pagamentos:** migrar gateway **Efí Bank → Asaas** (novos secrets, webhooks e Edge Functions)
+- [x] **Pagamentos:** migração de gateway **Efí Bank → Asaas** (PIX, webhook e polling)
 - [x] Botão **“Salvar e criar novo”** no registro de estudos
 - [ ] Service Worker e modo offline completo
 - [ ] Push notifications remotas (background)

@@ -944,7 +944,11 @@ export function useSupabaseData(session: any) {
           return;
         }
 
-        const mappedLogs = (rpcData || []).map((l) => ({
+        const rpcRows: SearchStudyLogsRow[] = Array.isArray(rpcData)
+          ? rpcData
+          : [];
+
+        const mappedLogs = rpcRows.map((l: SearchStudyLogsRow) => ({
           ...l,
           subjectId: l.subject_id ?? "",
           subtopicId: l.subtopic_id ?? undefined,

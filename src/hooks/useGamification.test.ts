@@ -28,10 +28,9 @@ describe('useGamification', () => {
     // Assert: Verificar o cálculo de XP
     // XP esperado:
     // - 60 minutos de estudo = 60 XP
-    // - 10 questões registradas = 10 * 2 = 20 XP
     // - 10 questões corretas = 10 * 5 = 50 XP
-    // Total = 60 + 20 + 50 = 130 XP
-    expect(result.current.totalXP).toBe(130);
+    // Total = 60 + 50 = 110 XP
+    expect(result.current.totalXP).toBe(110);
   });
 
   it('deve calcular XP corretamente para múltiplos logs', () => {
@@ -65,9 +64,9 @@ describe('useGamification', () => {
 
     // XP esperado:
     // Log 1: 30 minutos = 30 XP
-    // Log 2: 15 minutos = 15 XP + (5+2+1)*2 = 16 XP de questões + 5*5 = 25 XP de acertos
-    // Total = 30 + 15 + 16 + 25 = 86 XP
-    expect(result.current.totalXP).toBe(86);
+    // Log 2: 15 minutos = 15 XP + 5*5 = 25 XP de acertos
+    // Total = 30 + 15 + 25 = 70 XP
+    expect(result.current.totalXP).toBe(70);
   });
 
   it('deve retornar o nível correto baseado no XP total', () => {

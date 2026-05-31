@@ -93,7 +93,7 @@ Principais diferenciais:
 ### 👤 Perfil, Planos e Autenticação
 
 - Perfil editável (nome, foto, data de nascimento)
-- Landing page pública, cadastro, login e recuperação de senha
+- Landing page pública, cadastro (data de nascimento com máscara `dd/mm/aaaa`), login e recuperação de senha
 - Planos PRO (trial, mensal, vitalício) com checkout PIX via Asaas
 - Verificação de e-mail e gestão de assinatura
 

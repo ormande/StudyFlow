@@ -14,12 +14,13 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **Perfil / signup:** sincronização de nome e data de nascimento a partir dos metadados do auth (`syncProfileFromMetadata`).
 - **Avatares:** bucket de storage e utilitário de URL pública (`avatarUrl`).
 - **Sessão:** guarda de sessão (`sessionGuard`) para fluxos sensíveis de autenticação.
+- **Datas:** utilitários `formatDateInputMask` e `parseMaskedDateToIso` para entrada mascarada `dd/mm/aaaa`.
 
 ### Modificado
 - **Histórico:** filtros de período (Hoje, 7d, 30d…) não recarregam mais o app inteiro; loading isolado na tabela com animação no `tbody`.
 - **Histórico:** filtro “Hoje” usa dia de calendário local (não janela de 24h); RPC `search_study_logs` atualizada na migration 14.
 - **Conquistas:** animação de brilho nas pendentes e saída suave ao resgatar.
-- **Registro / cadastro:** campos de data e selects migrados para os novos componentes.
+- **Registro / cadastro:** campos de data e selects migrados para os novos componentes; data de nascimento no signup usa input numérico mascarado (`dd/mm/aaaa`), sem calendário.
 - **Subtópicos:** fonte única de verdade no banco (migration 13).
 - **XP / assinatura:** ajustes em polling, contexto e testes de gamificação.
 
@@ -27,6 +28,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **HistoryPage:** imports ausentes de `motion` e `AnimatePresence` que quebravam a página.
 - **Ciclo vs histórico:** discrepância de minutos por matéria (paginação de 20 logs + filtro por `timestamp` em vez de `date`).
 - **Scroll mobile pós-signup** e badge de trial em páginas de plano.
+- **TypeScript:** erros em `useSupabaseData`, `AchievementsPage`, `DashboardPage` e `RegisterPage` (CI typecheck).
 
 ### Migrations neste ciclo
 - `11_handle_new_user_profile_from_metadata.sql`

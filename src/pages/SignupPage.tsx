@@ -12,10 +12,13 @@ import {
 import { supabase } from "../lib/supabase";
 import { useToast } from "../contexts/ToastContext";
 import Button from "../components/Button";
-import DatePicker from "../components/DatePicker";
 import TermsModal from "../components/TermsModal";
 import PrivacyModal from "../components/PrivacyModal";
-import { getLocalDateString } from "../utils/dateUtils";
+import {
+  formatDateInputMask,
+  getLocalDateString,
+  parseMaskedDateToIso,
+} from "../utils/dateUtils";
 
 interface SignupPageProps {
   onBack: () => void;
@@ -33,6 +36,7 @@ export default function SignupPage({
   const { addToast } = useToast();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [birthDateMask, setBirthDateMask] = useState("");
   const [birthDate, setBirthDate] = useState(""); // YYYY-MM-DD
   const [isDateValid, setIsDateValid] = useState(true);
   const [cpf, setCpf] = useState("");
@@ -61,8 +65,26 @@ export default function SignupPage({
   };
 
   const handleBirthDateChange = (value: string) => {
-    setBirthDate(value);
-    setIsDateValid(validateBirthDate(value));
+    const formatted = formatDateInputMask(value);
+    setBirthDateMask(formatted);
+
+    if (!formatted) {
+      setBirthDate("");
+      setIsDateValid(true);
+      return;
+    }
+
+    const iso = parseMaskedDateToIso(formatted);
+    if (iso) {
+      setBirthDate(iso);
+      setIsDateValid(validateBirthDate(iso));
+    } else if (formatted.length === 10) {
+      setBirthDate("");
+      setIsDateValid(false);
+    } else {
+      setBirthDate("");
+      setIsDateValid(true);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -478,15 +500,20 @@ export default function SignupPage({
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
                   Nascimento
                 </label>
-                <DatePicker
-                  value={birthDate}
-                  onChange={handleBirthDateChange}
-                  min="1900-01-01"
-                  max={getLocalDateString()}
-                  variant="muted"
-                  invalid={!isDateValid}
-                  placeholder="Data de nascimento"
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="bday"
+                  required
+                  value={birthDateMask}
+                  onChange={(e) => handleBirthDateChange(e.target.value)}
+                  placeholder="dd/mm/aaaa"
                   aria-label="Data de nascimento"
+                  className={`w-full bg-gray-50 dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-all ${
+                    !isDateValid
+                      ? "border-red-500"
+                      : "border-gray-200 dark:border-gray-600"
+                  }`}
                 />
                 {!isDateValid && (
                   <p className="text-[10px] text-red-500 mt-1 ml-1 font-bold">

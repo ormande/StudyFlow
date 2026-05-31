@@ -81,7 +81,7 @@ export default function DashboardPage({
   subjects,
   logs,
   cycleLogs,
-  cycleStartDate,
+  cycleStartDate: _cycleStartDate,
   onDeleteLog,
   onEditLog,
   dailyGoal,

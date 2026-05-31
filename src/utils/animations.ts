@@ -52,7 +52,7 @@ export const PENDING_ACHIEVEMENT_SHINE = {
     duration: 2.5,
     repeat: Infinity,
     repeatType: "mirror" as const,
-    ease: "easeInOut",
+    ease: "easeInOut" as const,
   },
 };
 

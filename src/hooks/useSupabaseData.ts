@@ -30,7 +30,6 @@ const sanitizeNumber = (
 };
 
 const mapLogRow = (l: Record<string, unknown>): StudyLog => ({
-  ...(l as StudyLog),
   id: l.id as string,
   subjectId: l.subject_id as string,
   subtopicId: (l.subtopic_id as string | null) ?? undefined,

@@ -252,8 +252,6 @@ export default function RegisterPage({
     setMarkSubtopicCompleted(false);
     const todayDate = getLocalDateString();
     setDate(todayDate);
-    const [year, month, day] = todayDate.split("-");
-    setMaskedDate(`${day}/${month}/${year}`);
     setDateOption("today");
     onTimeClear();
 

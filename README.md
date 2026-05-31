@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.10.0-emerald" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.11.0-emerald" alt="Version" />
   <img src="https://img.shields.io/badge/license-Proprietário-red" alt="License" />
   <img src="https://img.shields.io/badge/status-beta-yellow" alt="Status" />
   <img src="https://img.shields.io/badge/produto-SaaS-blueviolet" alt="Type" />
@@ -69,7 +69,7 @@ Principais diferenciais:
 
 - Tempo (horas, minutos, segundos), tipo (Teoria / Questões / Revisão)
 - Questões certas, erradas e em branco; páginas lidas; observações
-- Matérias e subtópicos; data retroativa com seletor **Hoje / Ontem / Outro**
+- Matérias e subtópicos; data retroativa com seletor **Hoje / Ontem / Outro** e calendário customizado
 - **Salvar e criar novo** — salva e mantém matéria, subtópico, tipo e data para registrar o próximo bloco
 
 ### 📚 Ciclo de Estudos
@@ -87,7 +87,7 @@ Principais diferenciais:
 ### 📈 Estatísticas e Histórico
 
 - Gráficos de evolução (últimos 30 dias), taxa de acerto e filtros por período
-- Histórico com busca global no servidor, paginação e filtros por data
+- Histórico com busca global no servidor, paginação, filtros por período (dia de calendário) e exportação PDF
 - Exportação de relatório em PDF
 
 ### 👤 Perfil, Planos e Autenticação
@@ -290,7 +290,7 @@ StudyFlow/
 
 ## 🗺️ Roadmap
 
-O roadmap reflete o estado do repositório em **v1.10.0**. Detalhes por versão estão no [CHANGELOG.md](./CHANGELOG.md).
+O roadmap reflete o estado do repositório em **v1.11.0**. Detalhes por versão estão no [CHANGELOG.md](./CHANGELOG.md).
 
 ### ✅ Concluído (v1.0 – v1.9)
 

@@ -6,15 +6,16 @@ import {
   CheckCircle,
   ArrowRight,
   User,
-  Calendar,
   Camera,
   ArrowLeft,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../contexts/ToastContext";
 import Button from "../components/Button";
+import DatePicker from "../components/DatePicker";
 import TermsModal from "../components/TermsModal";
 import PrivacyModal from "../components/PrivacyModal";
+import { getLocalDateString } from "../utils/dateUtils";
 
 interface SignupPageProps {
   onBack: () => void;
@@ -32,7 +33,7 @@ export default function SignupPage({
   const { addToast } = useToast();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [birthDate, setBirthDate] = useState(""); // Armazena no formato DD/MM/AAAA
+  const [birthDate, setBirthDate] = useState(""); // YYYY-MM-DD
   const [isDateValid, setIsDateValid] = useState(true);
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
@@ -45,49 +46,23 @@ export default function SignupPage({
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formScrollRef = useRef<HTMLDivElement>(null);
 
-  const validateDate = (value: string): boolean => {
-    if (value.length < 10) return true; // Ainda digitando
-    const [d, m, y] = value.split("/").map(Number);
-    const date = new Date(y, m - 1, d);
-    const now = new Date();
-
-    // Verifica se os valores batem (evita 31/02 que o JS converte para 03/03)
-    const matches =
-      date.getDate() === d &&
-      date.getMonth() === m - 1 &&
-      date.getFullYear() === y;
-    // Não permite data futura ou ano muito antigo
-    const isReasonable = y > 1900 && date <= now;
-
-    return matches && isReasonable;
+  const scrollSignupToTop = () => {
+    formScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   };
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove não-numéricos
+  const validateBirthDate = (value: string): boolean => {
+    if (!value) return true;
+    const [y] = value.split("-").map(Number);
+    if (y <= 1900) return false;
+    return value <= getLocalDateString();
+  };
 
-    // Bloqueio imediato de valores impossíveis
-    if (value.length >= 2) {
-      const day = parseInt(value.slice(0, 2));
-      if (day > 31) value = "31" + value.slice(2);
-      if (day === 0 && value.length === 2) value = "01";
-    }
-    if (value.length >= 4) {
-      const month = parseInt(value.slice(2, 4));
-      if (month > 12) value = value.slice(0, 2) + "12" + value.slice(4);
-      if (month === 0 && value.length === 4) value = value.slice(0, 2) + "01";
-    }
-
-    if (value.length > 8) value = value.slice(0, 8);
-
-    if (value.length >= 5) {
-      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
-    } else if (value.length >= 3) {
-      value = `${value.slice(0, 2)}/${value.slice(2)}`;
-    }
-
+  const handleBirthDateChange = (value: string) => {
     setBirthDate(value);
-    setIsDateValid(validateDate(value));
+    setIsDateValid(validateBirthDate(value));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,31 +115,35 @@ export default function SignupPage({
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    scrollSignupToTop();
 
     if (!firstName.trim() || !lastName.trim()) {
       addToast("Nome e sobrenome são obrigatórios.", "warning");
       return;
     }
 
-    if (!birthDate || birthDate.length < 10) {
-      addToast("Data de nascimento inválida. Use DD/MM/AAAA.", "warning");
+    if (!birthDate) {
+      addToast("Data de nascimento inválida.", "warning");
       return;
     }
 
-    if (!cpf || !isValidCpf(cpf)) {
-      addToast("CPF inválido. Verifique os números digitados.", "warning");
+    if (!isDateValid) {
+      addToast("Data de nascimento inválida ou no futuro.", "warning");
       return;
     }
 
-    // Converter DD/MM/AAAA -> AAAA-MM-DD
-    const [d, m, y] = birthDate.split("/");
-    const isoDate = `${y}-${m}-${d}`;
+    const isoDate = birthDate;
 
     if (calculateAge(isoDate) < 13) {
       addToast(
         "Você precisa ter pelo menos 13 anos para usar o StudyFlow.",
         "warning"
       );
+      return;
+    }
+
+    if (!cpf || !isValidCpf(cpf)) {
+      addToast("CPF inválido. Verifique os números digitados.", "warning");
       return;
     }
 
@@ -206,6 +185,8 @@ export default function SignupPage({
               last_name: lastName.trim(),
               birth_date: isoDate,
               cpf_cnpj: cpf.replace(/\D/g, ""),
+              terms_accepted: true,
+              terms_accepted_at: new Date().toISOString(),
             },
           },
         });
@@ -236,10 +217,7 @@ export default function SignupPage({
           .upload(fileName, avatarFile, { upsert: true });
 
         if (!uploadError) {
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("avatars").getPublicUrl(fileName);
-          uploadedAvatarUrl = publicUrl;
+          uploadedAvatarUrl = fileName;
         } else {
           console.error("Erro upload avatar:", uploadError);
         }
@@ -359,7 +337,10 @@ export default function SignupPage({
       </div>
 
       {/* Lado Direito - Formulário */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative overflow-y-auto">
+      <div
+        ref={formScrollRef}
+        className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 relative overflow-y-auto"
+      >
         {/* Botão Voltar (Desktop/Mobile) */}
         {onBack && (
           <div className="absolute top-6 left-6 md:top-8 md:left-8 z-10">
@@ -497,25 +478,16 @@ export default function SignupPage({
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-1">
                   Nascimento
                 </label>
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={18}
-                  />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    required
-                    value={birthDate}
-                    onChange={handleDateChange}
-                    placeholder="DD/MM/AAAA"
-                    className={`w-full bg-gray-50 dark:bg-gray-700 border ${
-                      !isDateValid
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                        : "border-gray-200 dark:border-gray-600 focus:border-emerald-500"
-                    } rounded-xl py-3 pl-10 pr-3 text-sm text-gray-900 dark:text-white outline-none transition-all`}
-                  />
-                </div>
+                <DatePicker
+                  value={birthDate}
+                  onChange={handleBirthDateChange}
+                  min="1900-01-01"
+                  max={getLocalDateString()}
+                  variant="muted"
+                  invalid={!isDateValid}
+                  placeholder="Data de nascimento"
+                  aria-label="Data de nascimento"
+                />
                 {!isDateValid && (
                   <p className="text-[10px] text-red-500 mt-1 ml-1 font-bold">
                     Data inválida ou no futuro

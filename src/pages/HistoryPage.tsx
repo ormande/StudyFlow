@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Trash2,
   Pencil,
@@ -12,11 +13,11 @@ import {
   Circle,
 } from "lucide-react";
 import { Subject, StudyLog, StudyType } from "../types";
-import { motion, AnimatePresence } from "framer-motion";
+import { formatLocalDateDisplay } from "../utils/dateUtils";
 import Button from "../components/Button";
+import Select from "../components/Select";
 import FloatingBackButton from "../components/FloatingBackButton";
 import {
-  FADE_UP_ANIMATION,
   STAGGER_CONTAINER,
   STAGGER_ITEM,
 } from "../utils/animations";
@@ -156,11 +157,10 @@ export default function HistoryPage({
     setEditForm({});
   };
 
+  const tableFilterKey = `${daysFilter ?? "all"}-${filterSubject}`;
+
   return (
-    <motion.div
-      {...FADE_UP_ANIMATION}
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20"
-    >
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       {/* Botão Voltar Flutuante */}
       {onNavigateBack && <FloatingBackButton onClick={onNavigateBack} />}
 
@@ -208,24 +208,16 @@ export default function HistoryPage({
         {/* Filtros: Matéria e Data (Desktop: lado a lado, Mobile: empilhados) */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {/* Filtro de Matéria */}
-          <div className="relative">
-            <Filter
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
-              size={18}
-            />
-            <select
-              value={filterSubject}
-              onChange={(e) => setFilterSubject(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-colors"
-            >
-              <option value="all">Todas as matérias</option>
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            value={filterSubject}
+            onChange={setFilterSubject}
+            leftIcon={<Filter size={18} />}
+            placeholder="Todas as matérias"
+            options={[
+              { value: "all", label: "Todas as matérias" },
+              ...subjects.map((s) => ({ value: s.id, label: s.name })),
+            ]}
+          />
 
           {/* Filtros de Data (Chips) */}
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2 md:flex-nowrap md:gap-1.5 md:items-stretch md:pb-0 md:mx-0 md:px-0">
@@ -273,13 +265,24 @@ export default function HistoryPage({
         </div>
 
         {/* Tabela de Registros */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {filteredLogs.length === 0 ? (
+        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {loadingMoreLogs && (
+            <div
+              className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-gray-800/70 backdrop-blur-[1px]"
+              aria-busy="true"
+              aria-label="Carregando registros"
+            >
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            </div>
+          )}
+          {filteredLogs.length === 0 && !loadingMoreLogs ? (
             <div className="p-6 sm:p-8 text-center">
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Nenhum registro encontrado.
               </p>
             </div>
+          ) : filteredLogs.length === 0 && loadingMoreLogs ? (
+            <div className="p-6 sm:p-8 text-center min-h-[120px]" />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -309,6 +312,7 @@ export default function HistoryPage({
                   </tr>
                 </thead>
                 <motion.tbody
+                  key={tableFilterKey}
                   className="divide-y divide-gray-200 dark:divide-gray-700"
                   variants={STAGGER_CONTAINER}
                   initial="hidden"
@@ -348,9 +352,7 @@ export default function HistoryPage({
                           {/* Data */}
                           <td className="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {new Date(log.timestamp).toLocaleDateString(
-                                "pt-BR"
-                              )}
+                              {formatLocalDateDisplay(log.date)}
                             </span>
                           </td>
 
@@ -732,6 +734,6 @@ export default function HistoryPage({
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

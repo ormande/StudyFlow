@@ -23,16 +23,19 @@ interface XPProviderProps {
   children: ReactNode;
   logs: StudyLog[];
   userId?: string;
+  logsReady?: boolean;
 }
 
 export function XPProvider({
   children,
   logs,
-  userId
+  userId,
+  logsReady = true,
 }: XPProviderProps) {
   const xpData = useXP({
     logs,
-    userId
+    userId,
+    logsReady,
   });
 
   // Estados para o modal de upgrade

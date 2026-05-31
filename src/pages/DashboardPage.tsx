@@ -30,7 +30,7 @@ import Skeleton from "../components/Skeleton";
 import Button from "../components/Button";
 import { getQuoteOfTheDay } from "../data/motivationalQuotes";
 import { useGoals } from "../hooks/useGoals";
-import { getLocalDateString } from "../utils/dateUtils";
+import { getLocalDateString, getLogTotalMinutes } from "../utils/dateUtils";
 
 // Função helper para formatar horas em "Xh Ymin" ou apenas "Ymin"
 const formatHoursToTime = (hours: number | undefined | null | string): string => {
@@ -59,6 +59,7 @@ const formatHoursToTime = (hours: number | undefined | null | string): string =>
 interface DashboardPageProps {
   subjects: Subject[];
   logs: StudyLog[];
+  cycleLogs: StudyLog[];
   cycleStartDate: number;
   onDeleteLog: (id: string) => void;
   onEditLog: (id: string, updates: Partial<StudyLog>) => void;
@@ -79,6 +80,7 @@ interface DashboardPageProps {
 export default function DashboardPage({
   subjects,
   logs,
+  cycleLogs,
   cycleStartDate,
   onDeleteLog,
   onEditLog,
@@ -168,27 +170,15 @@ export default function DashboardPage({
   };
 
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
-    const totalMinutes = logs
-      .filter(
-        (log) => log.subjectId === subjectId && log.timestamp >= cycleStartDate
-      )
-      .reduce(
-        (sum, log) =>
-          sum +
-          log.hours * 60 +
-          log.minutes +
-          Math.floor((log.seconds || 0) / 60),
-        0
-      );
+    const totalMinutes = cycleLogs
+      .filter((log) => log.subjectId === subjectId)
+      .reduce((sum, log) => sum + getLogTotalMinutes(log), 0);
     const percentage = Math.min((totalMinutes / goalMinutes) * 100, 100);
     return { totalMinutes, percentage };
   };
 
   const getSubjectPerformance = (subjectId: string) => {
-    // Contar questões de TODOS os tipos de estudo, não apenas 'questoes'
-    const subjectLogs = logs.filter(
-      (log) => log.subjectId === subjectId && log.timestamp >= cycleStartDate
-    );
+    const subjectLogs = cycleLogs.filter((log) => log.subjectId === subjectId);
     const totalQuestions = subjectLogs.reduce(
       (sum, log) =>
         sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0),
@@ -227,8 +217,6 @@ export default function DashboardPage({
 
   // Calcula desempenho geral (todas as matérias juntas)
   const getGeneralPerformance = useMemo(() => {
-    // Contar questões de TODOS os tipos de estudo, não apenas 'questoes'
-    const cycleLogs = logs.filter((log) => log.timestamp >= cycleStartDate);
     const totalQuestions = cycleLogs.reduce(
       (sum, log) =>
         sum + (log.correct || 0) + (log.wrong || 0) + (log.blank || 0),
@@ -251,7 +239,7 @@ export default function DashboardPage({
         ? Math.round((totalCorrect / totalQuestions) * 100)
         : 0;
     return { totalQuestions, totalCorrect, totalWrong, totalBlank, accuracy };
-  }, [logs, cycleStartDate]);
+  }, [cycleLogs]);
 
   // Ordena matérias por desempenho (pior primeiro)
   const sortedSubjectsByPerformance = useMemo(() => {
@@ -271,7 +259,7 @@ export default function DashboardPage({
       if (b.performance.totalQuestions === 0) return -1;
       return a.performance.accuracy - b.performance.accuracy; // Ordena por pior desempenho primeiro
     });
-  }, [subjects, logs, cycleStartDate]);
+  }, [subjects, cycleLogs]);
 
   const toggleSubjectExpansion = (subjectId: string) => {
     setExpandedPerformanceSubjects((prev) => {

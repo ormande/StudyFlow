@@ -19,6 +19,7 @@ import {
   STAGGER_CONTAINER,
   STAGGER_ITEM,
 } from "../utils/animations";
+import { getLocalDateString, parseLocalDateString } from "../utils/dateUtils";
 
 interface TimerPageProps {
   onTimerStop: (hours: number, minutes: number, seconds: number) => void;
@@ -113,10 +114,7 @@ export default function TimerPage({
 
   // Calcular minutos estudados hoje
   const getTodayMinutes = () => {
-    const today = new Date();
-    const todayString = `${today.getFullYear()}-${String(
-      today.getMonth() + 1
-    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayString = getLocalDateString();
 
     const todayLogs = logs.filter((log) => log.date === todayString) || [];
     const totalMinutes = todayLogs.reduce(
@@ -133,12 +131,14 @@ export default function TimerPage({
   // Calcular minutos estudados na semana (últimos 7 dias)
   const getWeekMinutes = () => {
     const today = new Date();
-    const sevenDaysAgo = new Date(today);
+    today.setHours(23, 59, 59, 999);
+    const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
 
     const weekLogs = (logs || []).filter((log) => {
       if (!log.date) return false;
-      const logDate = new Date(log.date);
+      const logDate = parseLocalDateString(log.date);
       return logDate >= sevenDaysAgo && logDate <= today;
     });
 

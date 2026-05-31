@@ -46,6 +46,7 @@ import {
 } from "../contexts/AchievementsContext";
 import { XPProvider, useXPContext } from "../contexts/XPContext";
 import { calculateXPFromLog } from "../hooks/useXP";
+import { confirmSubscriptionAfterPayment } from "../utils/subscriptionPolling";
 import FabTimer from "./FabTimer";
 import EloUpgradeModal from "./EloUpgradeModal";
 
@@ -62,6 +63,7 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
   const {
     subjects,
     logs,
+    cycleLogs,
     stats,
     currentStreak,
     cycleStartDate,
@@ -83,12 +85,44 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
     addSubject,
     deleteSubject,
     updateSubject,
+    addSubtopic,
     reorderSubjects,
     addLog,
     deleteLog,
     editLog,
     updateSettings,
+    refreshSubscription,
   } = useSupabaseData(session);
+
+  const { addToast } = useToast();
+
+  const handlePaymentConfirmed = useCallback(async () => {
+    localStorage.removeItem("studyflow_current_page");
+
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    addToast("Confirmando pagamento...", "info");
+
+    try {
+      const subscription = await confirmSubscriptionAfterPayment(userId);
+      await refreshSubscription();
+
+      if (subscription?.status === "active") {
+        addToast("Pagamento confirmado! Seu plano foi ativado.", "success");
+        return;
+      }
+
+      addToast(
+        "Pagamento recebido. Atualizando assinatura — aguarde alguns segundos.",
+        "warning"
+      );
+      window.location.reload();
+    } catch (error) {
+      console.error("Erro ao confirmar assinatura:", error);
+      window.location.reload();
+    }
+  }, [session?.user?.id, refreshSubscription, addToast]);
 
   // GOALS HOOK
   const { goals } = useGoals(logs);
@@ -167,7 +201,6 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
     "cronometro" | "temporizador" | "pomodoro"
   >("cronometro");
   const { sendNotification } = useNotification();
-  const { addToast } = useToast();
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [showRestartSuccess, setShowRestartSuccess] = useState(false);
@@ -333,6 +366,11 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
       updateSubject(id, subject);
     },
     [updateSubject]
+  );
+
+  const handleAddSubtopic = useCallback(
+    (subjectId: string, name: string) => addSubtopic(subjectId, name),
+    [addSubtopic]
   );
 
   const handleReorderSubjects = useCallback(
@@ -532,21 +570,14 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
           onBack={onHardReset}
           onNavigateToLogin={() => {}}
           onNavigateToSignup={() => {}}
-          onPaymentConfirmed={() => {
-            // Limpar página salva para garantir que vá para o Dashboard
-            localStorage.removeItem("studyflow_current_page");
-            // Pequeno delay para garantir que o banco de dados sincronizou
-            setTimeout(() => {
-              window.location.reload();
-            }, 500);
-          }}
+          onPaymentConfirmed={handlePaymentConfirmed}
         />
       );
     }
   }
 
   return (
-    <XPProvider logs={logs} userId={session?.user?.id}>
+    <XPProvider logs={logs} userId={session?.user?.id} logsReady={!loadingData}>
       <AchievementsProvider
         logs={logs}
         stats={stats}
@@ -566,6 +597,7 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
           onHardReset={onHardReset}
           subjects={subjects}
           logs={logs}
+          cycleLogs={cycleLogs}
           cycleStartDate={cycleStartDate}
           dailyGoal={dailyGoal}
           showPerformance={showPerformance}
@@ -616,6 +648,7 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
           handleAddSubject={handleAddSubject}
           handleDeleteSubject={handleDeleteSubject}
           handleUpdateSubject={handleUpdateSubject}
+          handleAddSubtopic={handleAddSubtopic}
           handleReorderSubjects={handleReorderSubjects}
           handleAddLog={handleAddLog}
           handleEditLog={_handleEditLogBase}
@@ -637,6 +670,7 @@ export default function MainApp({ session, onHardReset }: MainAppProps) {
           handleOpenSettings={handleOpenSettings}
           handleLogout={handleLogout}
           handleNavigateToProfile={handleNavigateToProfile}
+          handlePaymentConfirmed={handlePaymentConfirmed}
           addSubject={addSubject}
           deleteSubject={deleteSubject}
           updateSubject={updateSubject}
@@ -667,6 +701,7 @@ function MainAppContent({
   onHardReset: _onHardReset,
   subjects = [],
   logs = [],
+  cycleLogs = [],
   cycleStartDate = Date.now(),
   dailyGoal = 0,
   showPerformance = true,
@@ -717,6 +752,7 @@ function MainAppContent({
   handleAddSubject,
   handleDeleteSubject,
   handleUpdateSubject,
+  handleAddSubtopic,
   handleReorderSubjects,
   handleAddLog,
   handleEditLog: _handleEditLogFromParent, // Não usado - substituído por handleEditLogWithXP
@@ -738,6 +774,7 @@ function MainAppContent({
   handleOpenSettings,
   handleLogout,
   handleNavigateToProfile: _handleNavigateToProfile,
+  handlePaymentConfirmed,
   addSubject: _addSubject,
   deleteSubject: _deleteSubject,
   updateSubject: _updateSubject,
@@ -853,6 +890,7 @@ function MainAppContent({
           <DashboardPage
             subjects={subjects}
             logs={logs}
+            cycleLogs={cycleLogs}
             cycleStartDate={cycleStartDate}
             onDeleteLog={handleDeleteLog}
             onEditLog={handleEditLogWithXP}
@@ -915,11 +953,12 @@ function MainAppContent({
           >
             <CyclePage
               subjects={subjects}
-              logs={logs}
+              cycleLogs={cycleLogs}
               cycleStartDate={cycleStartDate}
               onAddSubject={handleAddSubject}
               onDeleteSubject={handleDeleteSubject}
               onUpdateSubject={handleUpdateSubject}
+              onAddSubtopic={handleAddSubtopic}
               onRestartCycle={handleRestartCycle}
               onReorderSubjects={handleReorderSubjects}
               isLoading={loadingData}
@@ -1116,6 +1155,7 @@ function MainAppContent({
             subscriptionStatus={subscriptionStatus}
             subscriptionType={subType}
             onNavigateBack={() => setActiveTab("more")}
+            onPaymentConfirmed={handlePaymentConfirmed}
           />
         );
       default:
@@ -1125,6 +1165,7 @@ function MainAppContent({
     activeTab,
     subjects,
     logs,
+    cycleLogs,
     cycleStartDate,
     handleDeleteLog,
     handleEditLogWithXP,
@@ -1145,6 +1186,7 @@ function MainAppContent({
     handleAddSubject,
     handleDeleteSubject,
     handleUpdateSubject,
+    handleAddSubtopic,
     handleRestartCycle,
     handleReorderSubjects,
     session,
@@ -1161,6 +1203,7 @@ function MainAppContent({
     handleOpenSettings,
     handleLogout,
     _handleNavigateToProfile,
+    handlePaymentConfirmed,
     setActiveTab,
     handleTogglePerformance,
     subscriptionStatus,

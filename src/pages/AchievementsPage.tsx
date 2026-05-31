@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAchievementsContext } from "../contexts/AchievementsContext";
 import {
   ACHIEVEMENTS,
@@ -18,6 +18,8 @@ import {
   FADE_UP_ANIMATION,
   STAGGER_CONTAINER,
   STAGGER_ITEM,
+  PENDING_ACHIEVEMENT_SHINE,
+  PENDING_ACHIEVEMENT_EXIT,
 } from "../utils/animations";
 
 // Helper para renderizar labels longas (ex: "matérias") de forma responsiva
@@ -167,6 +169,7 @@ export default function AchievementsPage({
     claimAchievement,
     getUserProgress,
   } = useAchievementsContext();
+  const prefersReducedMotion = useReducedMotion();
 
   if (isLoading) {
     return (
@@ -226,15 +229,23 @@ export default function AchievementsPage({
             initial="hidden"
             animate="show"
           >
-            {pendingAchievements.map((achievement) => (
-              <motion.div
-                key={`${achievement.id}-${achievement.level}`}
-                variants={STAGGER_ITEM}
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 sm:p-5 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg overflow-hidden min-w-0 w-full"
-              >
-                <div className="flex items-center gap-4">
+            <AnimatePresence mode="popLayout">
+              {pendingAchievements.map((achievement) => (
+                <motion.div
+                  key={`${achievement.id}-${achievement.level}`}
+                  layout={!prefersReducedMotion}
+                  variants={STAGGER_ITEM}
+                  exit={prefersReducedMotion ? undefined : PENDING_ACHIEVEMENT_EXIT}
+                  className="relative bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 sm:p-5 border-2 border-emerald-300 dark:border-emerald-700 shadow-lg overflow-hidden min-w-0 w-full"
+                >
+                  {!prefersReducedMotion && (
+                    <motion.div
+                      aria-hidden
+                      className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-transparent via-white/40 dark:via-white/15 to-transparent pointer-events-none"
+                      {...PENDING_ACHIEVEMENT_SHINE}
+                    />
+                  )}
+                  <div className="relative flex items-center gap-4">
                   {/* Ícone */}
                   <div className="relative flex-shrink-0">
                     <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center shadow-md">
@@ -281,9 +292,10 @@ export default function AchievementsPage({
                   >
                     Resgatar!
                   </Button>
-                </div>
-              </motion.div>
-            ))}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </motion.div>
         </div>
       )}

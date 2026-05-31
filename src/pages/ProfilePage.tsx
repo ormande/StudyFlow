@@ -15,6 +15,11 @@ import { supabase } from "../lib/supabase";
 import { useToast } from "../contexts/ToastContext";
 import Button from "../components/Button";
 import FloatingBackButton from "../components/FloatingBackButton";
+import {
+  getMissingProfileFields,
+  mergeProfileWithMetadata,
+} from "../utils/syncProfileFromMetadata";
+import { getAvatarPublicUrl } from "../utils/avatarUrl";
 
 interface ProfilePageProps {
   session: any;
@@ -89,24 +94,32 @@ export default function ProfilePage({
         }
 
         if (data) {
+          const metadata = session.user.user_metadata || {};
+          const merged = mergeProfileWithMetadata(data, metadata);
+          const profileBackfill = getMissingProfileFields(data, metadata);
+
+          if (Object.keys(profileBackfill).length > 0) {
+            await supabase
+              .from("user_settings")
+              .update(profileBackfill)
+              .eq("user_id", session.user.id);
+          }
+
           // Converter YYYY-MM-DD para DD/MM/YYYY para o input
           let formattedDate = "";
-          if (data.birth_date) {
-            const [y, m, d] = data.birth_date.split("-");
+          if (merged.birth_date) {
+            const [y, m, d] = merged.birth_date.split("-");
             formattedDate = `${d}/${m}/${y}`;
           }
 
           setProfile({
-            first_name: data.first_name || "",
-            last_name: data.last_name || "",
+            first_name: merged.first_name || "",
+            last_name: merged.last_name || "",
             birth_date: formattedDate,
             avatar_url: data.avatar_url || null,
           });
           if (data.avatar_url) {
-            const { data: urlData } = supabase.storage
-              .from("avatars")
-              .getPublicUrl(data.avatar_url);
-            setAvatarPreview(urlData.publicUrl);
+            setAvatarPreview(getAvatarPublicUrl(data.avatar_url));
           }
         }
 

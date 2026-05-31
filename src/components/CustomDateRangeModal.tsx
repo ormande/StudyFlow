@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { X, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "./Button";
-import { getLocalDateString } from "../utils/dateUtils";
+import DatePicker from "./DatePicker";
+import { getLocalDateString, parseLocalDateString } from "../utils/dateUtils";
 
 interface CustomDateRangeModalProps {
   isOpen: boolean;
@@ -39,9 +40,9 @@ export default function CustomDateRangeModal({
       return;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const today = new Date();
+    const start = parseLocalDateString(startDate);
+    const end = parseLocalDateString(endDate);
+    const today = parseLocalDateString(getLocalDateString());
     today.setHours(23, 59, 59, 999);
 
     if (start > end) {
@@ -99,15 +100,15 @@ export default function CustomDateRangeModal({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Data Inicial
               </label>
-              <input
-                type="date"
+              <DatePicker
                 value={startDate}
-                max={getTodayDate()}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
+                onChange={(value) => {
+                  setStartDate(value);
                   setError("");
                 }}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-gray-900 dark:text-white transition-colors"
+                max={getTodayDate()}
+                variant="muted"
+                placeholder="Data inicial"
               />
             </div>
 
@@ -116,16 +117,16 @@ export default function CustomDateRangeModal({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Data Final
               </label>
-              <input
-                type="date"
+              <DatePicker
                 value={endDate}
-                max={getTodayDate()}
-                min={startDate || undefined}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
+                onChange={(value) => {
+                  setEndDate(value);
                   setError("");
                 }}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-gray-900 dark:text-white transition-colors"
+                min={startDate || undefined}
+                max={getTodayDate()}
+                variant="muted"
+                placeholder="Data final"
               />
             </div>
 

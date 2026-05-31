@@ -25,6 +25,8 @@ import { Subject, StudyLog, Subtopic } from "../types";
 import { getRandomColor, subjectColors } from "../utils/colors";
 import Skeleton from "../components/Skeleton";
 import { useToast } from "../contexts/ToastContext";
+import { subjectsChangedExternally } from "../utils/subjectMapper";
+import { getLogTotalMinutes } from "../utils/dateUtils";
 
 // Componente para cada card de matéria com drag & drop
 interface SortableSubjectCardProps {
@@ -324,11 +326,12 @@ const SortableSubjectCard = ({
 
 interface CyclePageProps {
   subjects: Subject[];
-  logs: StudyLog[];
+  cycleLogs: StudyLog[];
   cycleStartDate: number;
   onAddSubject: (subject: Omit<Subject, "id">) => void;
   onDeleteSubject: (id: string) => void;
   onUpdateSubject: (id: string, subject: Partial<Subject>) => void;
+  onAddSubtopic: (subjectId: string, name: string) => Promise<Subtopic | null>;
   onRestartCycle: () => void;
   onReorderSubjects: (subjects: Subject[]) => void;
   isLoading: boolean;
@@ -336,11 +339,12 @@ interface CyclePageProps {
 
 export default function CyclePage({
   subjects,
-  logs,
+  cycleLogs,
   cycleStartDate,
   onAddSubject,
   onDeleteSubject,
   onUpdateSubject,
+  onAddSubtopic,
   onRestartCycle,
   onReorderSubjects,
   isLoading,
@@ -355,9 +359,10 @@ export default function CyclePage({
   useEffect(() => {
     // Só atualizar se subjects mudou externamente (não por nossa ação otimista)
     // Compara por referência e IDs para evitar loops
-    const subjectsChanged =
-      subjects.length !== previousSubjectsRef.current.length ||
-      subjects.some((s, i) => s.id !== previousSubjectsRef.current[i]?.id);
+    const subjectsChanged = subjectsChangedExternally(
+      subjects,
+      previousSubjectsRef.current
+    );
 
     if (subjectsChanged) {
       setCycleSubjects(subjects);
@@ -459,18 +464,9 @@ export default function CyclePage({
   };
 
   const getSubjectProgress = (subjectId: string, goalMinutes: number) => {
-    const totalMinutes = logs
-      .filter(
-        (log) => log.subjectId === subjectId && log.timestamp >= cycleStartDate
-      )
-      .reduce(
-        (sum, log) =>
-          sum +
-          log.hours * 60 +
-          log.minutes +
-          Math.floor((log.seconds || 0) / 60),
-        0
-      );
+    const totalMinutes = cycleLogs
+      .filter((log) => log.subjectId === subjectId)
+      .reduce((sum, log) => sum + getLogTotalMinutes(log), 0);
     const percentage = Math.min((totalMinutes / goalMinutes) * 100, 100);
     return { totalMinutes, percentage };
   };
@@ -489,13 +485,8 @@ export default function CyclePage({
       (Date.now() - cycleStartDate) / (1000 * 60 * 60 * 24)
     );
 
-    const cycleLogs = logs.filter((log) => log.timestamp >= cycleStartDate);
     const totalMinutes = cycleLogs.reduce(
-      (sum, log) =>
-        sum +
-        log.hours * 60 +
-        log.minutes +
-        Math.floor((log.seconds || 0) / 60),
+      (sum, log) => sum + getLogTotalMinutes(log),
       0
     );
     const totalHours = Math.floor(totalMinutes / 60);
@@ -514,50 +505,56 @@ export default function CyclePage({
   const cycleStats = getCycleStats();
 
   const handleAddSubtopic = (subjectId: string) => {
-    if (!newSubtopic.trim()) return;
+    const name = newSubtopic.trim();
+    if (!name) return;
+
     const subject = cycleSubjects.find((s) => s.id === subjectId);
     if (!subject) return;
 
-    // Gerar UUID válido usando crypto.randomUUID() ou fallback
-    const generateUUID = () => {
-      if (typeof crypto !== "undefined" && crypto.randomUUID) {
-        return crypto.randomUUID();
-      }
-      // Fallback para browsers antigos
-      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0;
-        const v = c === "x" ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      });
-    };
-
-    const subtopic: Subtopic = {
-      id: generateUUID(),
-      name: newSubtopic.trim(),
+    const tempId = `temp-${Date.now()}`;
+    const optimisticSubtopic: Subtopic = {
+      id: tempId,
+      name,
       completed: false,
     };
-    const newSubtopics = [...subject.subtopics, subtopic];
+    const previousSubtopics = subject.subtopics;
 
-    // ✅ OPTIMISTIC UI: Atualizar imediatamente
     setCycleSubjects((prev) =>
       prev.map((s) =>
-        s.id === subjectId ? { ...s, subtopics: newSubtopics } : s
+        s.id === subjectId
+          ? { ...s, subtopics: [...s.subtopics, optimisticSubtopic] }
+          : s
       )
     );
     setNewSubtopic("");
 
-    // Persistir em background
-    Promise.resolve(
-      onUpdateSubject(subjectId, { subtopics: newSubtopics })
-    ).catch(() => {
-      // Reverter em caso de erro
-      setCycleSubjects((prev) =>
-        prev.map((s) =>
-          s.id === subjectId ? { ...s, subtopics: subject.subtopics } : s
-        )
-      );
-      addToast("Erro ao adicionar subtópico. Tente novamente.", "error");
-    });
+    onAddSubtopic(subjectId, name)
+      .then((created) => {
+        if (!created) {
+          throw new Error("Subtópico não foi criado");
+        }
+
+        setCycleSubjects((prev) =>
+          prev.map((s) =>
+            s.id === subjectId
+              ? {
+                  ...s,
+                  subtopics: s.subtopics.map((st) =>
+                    st.id === tempId ? created : st
+                  ),
+                }
+              : s
+          )
+        );
+      })
+      .catch(() => {
+        setCycleSubjects((prev) =>
+          prev.map((s) =>
+            s.id === subjectId ? { ...s, subtopics: previousSubtopics } : s
+          )
+        );
+        addToast("Erro ao adicionar subtópico. Tente novamente.", "error");
+      });
   };
 
   const handleToggleSubtopic = (subjectId: string, subtopicId: string) => {

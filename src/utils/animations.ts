@@ -45,6 +45,24 @@ export const STAGGER_ITEM = {
   show: { opacity: 1, y: 0 }
 };
 
+// 6. Brilho nos cards de conquistas pendentes (sobe e desce suavemente)
+export const PENDING_ACHIEVEMENT_SHINE = {
+  animate: { y: ["110%", "-110%"] },
+  transition: {
+    duration: 2.5,
+    repeat: Infinity,
+    repeatType: "mirror" as const,
+    ease: "easeInOut",
+  },
+};
+
+export const PENDING_ACHIEVEMENT_EXIT = {
+  opacity: 0,
+  scale: 0.97,
+  y: 12,
+  transition: { duration: 0.28, ease: [0.25, 0.1, 0.25, 1] as const },
+};
+
 // 5. Accordion (Expandir/Colapsar)
 export const ACCORDION_ANIMATION = {
   initial: { height: 0, opacity: 0 },

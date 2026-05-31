@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../contexts/ToastContext";
+import { mergeProfileWithMetadata } from "../utils/syncProfileFromMetadata";
+import { getAvatarPublicUrl } from "../utils/avatarUrl";
 import Button from "../components/Button";
 
 interface MorePageProps {
@@ -91,16 +93,17 @@ export default function MorePage({
         }
 
         if (data) {
+          const merged = mergeProfileWithMetadata(
+            data,
+            session.user.user_metadata
+          );
           let avatarUrl = null;
           if (data.avatar_url) {
-            const { data: urlData } = supabase.storage
-              .from("avatars")
-              .getPublicUrl(data.avatar_url);
-            avatarUrl = urlData.publicUrl;
+            avatarUrl = getAvatarPublicUrl(data.avatar_url);
           }
 
           const newProfile = {
-            firstName: data.first_name || "",
+            firstName: merged.first_name || "",
             avatarUrl,
           };
 

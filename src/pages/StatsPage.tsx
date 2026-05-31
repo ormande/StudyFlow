@@ -25,9 +25,10 @@ import {
 } from "recharts";
 import { Subject, StudyLog } from "../types";
 import Button from "../components/Button";
+import Select from "../components/Select";
 import FloatingBackButton from "../components/FloatingBackButton";
 import CustomDateRangeModal from "../components/CustomDateRangeModal";
-import { getLocalDateString } from "../utils/dateUtils";
+import { getLocalDateString, formatLocalDateChartKey, getLogHourFromTimestamp, parseLocalDateString } from "../utils/dateUtils";
 
 // Função helper para formatar horas em "Xh Ymin" ou apenas "Ymin"
 const formatHoursToTime = (hours: number | undefined | null | string): string => {
@@ -223,13 +224,11 @@ export default function StatsPage({
   }, [timeRange, calculateDateRange]);
 
   // Handler para mudança de período
-  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as TimeRangeOption;
-
+  const handleTimeRangeChange = (value: string) => {
     if (value === "custom") {
       setShowCustomDateModal(true);
     } else {
-      setTimeRange(value);
+      setTimeRange(value as TimeRangeOption);
     }
   };
 
@@ -252,8 +251,9 @@ export default function StatsPage({
         }
 
         // Filtro de tempo - usar log.date (YYYY-MM-DD) para comparação
-        const logDate = log.date ? new Date(log.date + "T00:00:00") : null;
-        if (!logDate) return false;
+        if (!log.date) return false;
+
+        const logDate = parseLocalDateString(log.date);
 
         // Verificar se está dentro do range
         if (logDate < startDate || logDate > endDate) {
@@ -263,13 +263,9 @@ export default function StatsPage({
         return true;
       })
       .sort((a, b) => {
-        const ta = a.timestamp
-          ? new Date(a.timestamp).getTime()
-          : new Date(a.date).getTime();
-        const tb = b.timestamp
-          ? new Date(b.timestamp).getTime()
-          : new Date(b.date).getTime();
-        return ta - tb;
+        const dateCompare = a.date.localeCompare(b.date);
+        if (dateCompare !== 0) return dateCompare;
+        return (a.timestamp || 0) - (b.timestamp || 0);
       });
 
     return filtered;
@@ -280,10 +276,8 @@ export default function StatsPage({
     const daysMap = new Map<string, { hours: number; questions: number }>();
 
     filteredLogs.forEach((log) => {
-      const dateKey = new Date(log.date || log.timestamp).toLocaleDateString(
-        "pt-BR",
-        { day: "2-digit", month: "2-digit" }
-      );
+      if (!log.date) return;
+      const dateKey = formatLocalDateChartKey(log.date);
       const existing = daysMap.get(dateKey) || { hours: 0, questions: 0 };
       const logMinutes =
         (log.hours || 0) * 60 +
@@ -325,10 +319,8 @@ export default function StatsPage({
       const q = (log.correct || 0) + (log.wrong || 0) + (log.blank || 0);
       totalQuestions += q;
       correct += log.correct || 0;
-      const dateKey = new Date(log.date || log.timestamp).toLocaleDateString(
-        "pt-BR",
-        { day: "2-digit", month: "2-digit" }
-      );
+      if (!log.date) return;
+      const dateKey = formatLocalDateChartKey(log.date);
       daysSet.add(dateKey);
     });
 
@@ -445,10 +437,9 @@ export default function StatsPage({
       const total = (log.correct || 0) + (log.wrong || 0) + (log.blank || 0);
       if (total === 0) return;
 
-      const dateKey = new Date(log.date).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-      });
+      if (!log.date) return;
+
+      const dateKey = formatLocalDateChartKey(log.date);
       const existing = daysMap.get(dateKey) || { correct: 0, total: 0 };
 
       existing.correct += log.correct || 0;
@@ -481,8 +472,7 @@ export default function StatsPage({
     };
 
     filteredLogs.forEach((log) => {
-      const logDate = new Date(log.timestamp);
-      const hour = logDate.getHours();
+      const hour = getLogHourFromTimestamp(log.timestamp);
       const logMinutes =
         log.hours * 60 + log.minutes + Math.floor((log.seconds || 0) / 60);
       const logHours = logMinutes / 60;
@@ -629,17 +619,11 @@ export default function StatsPage({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Período
             </label>
-            <select
+            <Select
               value={timeRange}
               onChange={handleTimeRangeChange}
-              className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-gray-900 dark:text-white transition-colors text-sm"
-            >
-              {timeRangeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              options={timeRangeOptions}
+            />
           </div>
 
           {/* Filtro de Matéria */}
@@ -647,18 +631,18 @@ export default function StatsPage({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Matéria
             </label>
-            <select
+            <Select
               value={selectedSubjectId}
-              onChange={(e) => setSelectedSubjectId(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-gray-900 dark:text-white transition-colors text-sm"
-            >
-              <option value="all">Todas as matérias</option>
-              {subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.name}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedSubjectId}
+              placeholder="Todas as matérias"
+              options={[
+                { value: "all", label: "Todas as matérias" },
+                ...subjects.map((subject) => ({
+                  value: subject.id,
+                  label: subject.name,
+                })),
+              ]}
+            />
           </div>
         </div>
 

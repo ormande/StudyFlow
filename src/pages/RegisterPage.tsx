@@ -13,13 +13,15 @@ import {
 } from "lucide-react";
 import { Subject, StudyLog } from "../types";
 import { useToast } from "../contexts/ToastContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Button from "../components/Button";
-import { ACCORDION_ANIMATION } from "../utils/animations";
+import Select from "../components/Select";
+import DatePicker from "../components/DatePicker";
 import {
   getLocalDateString,
   getYesterdayDateString,
   getDaysDifference,
+  normalizeLogDate,
 } from "../utils/dateUtils";
 
 interface RegisterPageProps {
@@ -58,58 +60,7 @@ export default function RegisterPage({
     "today"
   );
   const [date, setDate] = useState(getLocalDateString()); // Armazena sempre YYYY-MM-DD com timezone local
-  const [maskedDate, setMaskedDate] = useState(""); // Armazena DD/MM/AAAA para o input desktop
-  const [isDateValid, setIsDateValid] = useState(true);
   const [hours, setHours] = useState("");
-
-  // ... (restante do código)
-
-  const validateDateString = (value: string): boolean => {
-    if (!value || value.length < 10) return true;
-    const [d, m, y] = value.split("/").map(Number);
-    const date = new Date(y, m - 1, d);
-    const now = new Date();
-    const matches =
-      date.getDate() === d &&
-      date.getMonth() === m - 1 &&
-      date.getFullYear() === y;
-    const isReasonable = y > 1900 && date <= now;
-    return matches && isReasonable;
-  };
-
-  const handleMaskedDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-
-    if (value.length >= 2) {
-      const day = parseInt(value.slice(0, 2));
-      if (day > 31) value = "31" + value.slice(2);
-      if (day === 0 && value.length === 2) value = "01";
-    }
-    if (value.length >= 4) {
-      const month = parseInt(value.slice(2, 4));
-      if (month > 12) value = value.slice(0, 2) + "12" + value.slice(4);
-      if (month === 0 && value.length === 4) value = value.slice(0, 2) + "01";
-    }
-
-    if (value.length > 8) value = value.slice(0, 8);
-
-    if (value.length >= 5) {
-      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
-    } else if (value.length >= 3) {
-      value = `${value.slice(0, 2)}/${value.slice(2)}`;
-    }
-    setMaskedDate(value);
-
-    const valid = validateDateString(value);
-    setIsDateValid(valid);
-
-    // Se estiver completo e for válido, atualiza o date original
-    if (value.length === 10 && valid) {
-      const [d, m, y] = value.split("/");
-      const isoDate = `${y}-${m}-${d}`;
-      handleDateChange(isoDate);
-    }
-  };
   const [seconds, setSeconds] = useState("");
   const [minutes, setMinutes] = useState("");
   const [notes, setNotes] = useState("");
@@ -173,11 +124,7 @@ export default function RegisterPage({
     setDateOption(option);
 
     if (option === "today") {
-      const todayDate = getLocalDateString();
-      setDate(todayDate);
-      // Atualizar maskedDate para desktop
-      const [year, month, day] = todayDate.split("-");
-      setMaskedDate(`${day}/${month}/${year}`);
+      setDate(getLocalDateString());
     } else if (option === "yesterday") {
       const now = new Date();
       const currentHour = now.getHours();
@@ -192,21 +139,13 @@ export default function RegisterPage({
           .toString()
           .padStart(2, "0")}. Você quis dizer o dia anterior mesmo?`;
         if (!window.confirm(confirmMessage)) {
-          // Se cancelar, volta para "Hoje"
           setDateOption("today");
-          const todayDate = getLocalDateString();
-          setDate(todayDate);
-          const [year, month, day] = todayDate.split("-");
-          setMaskedDate(`${day}/${month}/${year}`);
+          setDate(getLocalDateString());
           return;
         }
       }
 
-      const yesterdayDate = getYesterdayDateString();
-      setDate(yesterdayDate);
-      // Atualizar maskedDate para desktop
-      const [year, month, day] = yesterdayDate.split("-");
-      setMaskedDate(`${day}/${month}/${year}`);
+      setDate(getYesterdayDateString());
     }
     // Se for "other", mantém a data atual e mostra o date picker
   };
@@ -276,7 +215,7 @@ export default function RegisterPage({
       hours: h,
       minutes: m,
       seconds: s,
-      date: date,
+      date: normalizeLogDate(date),
       notes: notes.trim(),
       pages: Math.max(0, parseInt(pages) || 0),
       correct: Math.max(0, parseInt(correct) || 0),
@@ -360,18 +299,13 @@ export default function RegisterPage({
             <label className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-1.5 md:mb-2 flex items-center gap-1">
               <BookOpen size={14} className="text-emerald-500" /> Matéria
             </label>
-            <select
+            <Select
               value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
-              className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm md:text-base text-gray-900 dark:text-white transition-colors"
-            >
-              <option value="">Selecione a matéria...</option>
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+              onChange={setSubjectId}
+              variant="muted"
+              placeholder="Selecione a matéria..."
+              options={subjects.map((s) => ({ value: s.id, label: s.name }))}
+            />
           </div>
         </motion.div>
 
@@ -429,53 +363,16 @@ export default function RegisterPage({
             </Button>
           </div>
 
-          {/* Date Picker - Sempre visível em desktop, editável apenas quando "Outro" está selecionado */}
+          {/* Date Picker */}
           <div className="relative min-w-0">
-            {/* Input de data customizado (desktop) */}
-            <div className="hidden md:block relative">
-              <Calendar
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none z-10"
-                size={20}
-              />
-              <input
-                type="text"
-                inputMode="numeric"
-                value={maskedDate}
-                onChange={handleMaskedDateChange}
-                placeholder="DD/MM/AAAA"
-                disabled={dateOption !== "other"}
-                className={`w-full px-3 py-3 pl-10 bg-gray-50 dark:bg-gray-700 border ${
-                  !isDateValid
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : "border-gray-200 dark:border-gray-600 hover:border-emerald-500 focus:border-emerald-500"
-                } rounded-xl outline-none text-sm text-gray-900 dark:text-white transition-colors h-12 text-center disabled:opacity-50 disabled:cursor-not-allowed`}
-              />
-            </div>
-            {!isDateValid && (
-              <p className="text-[10px] text-red-500 mt-1 text-center font-bold hidden md:block">
-                Data inválida
-              </p>
-            )}
-
-            {/* Input de data padrão (mobile) - Mantido calendário funcional conforme solicitado */}
-            <AnimatePresence>
-              {dateOption === "other" && (
-                <motion.input
-                  {...ACCORDION_ANIMATION}
-                  type="date"
-                  value={date}
-                  max={getLocalDateString()}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  className="w-full md:hidden px-3 py-3 pr-10 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors appearance-none h-12 [color-scheme:light] dark:[color-scheme:dark] min-w-0 text-center cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 12px center",
-                    backgroundSize: "20px 20px",
-                  }}
-                />
-              )}
-            </AnimatePresence>
+            <DatePicker
+              value={date}
+              onChange={handleDateChange}
+              max={getLocalDateString()}
+              disabled={dateOption !== "other"}
+              variant="muted"
+              placeholder="Selecione a data"
+            />
           </div>
         </motion.div>
 
@@ -523,27 +420,27 @@ export default function RegisterPage({
               (Opcional)
             </span>
           </label>
-          <select
+          <Select
             value={subtopicId}
-            onChange={(e) => setSubtopicId(e.target.value)}
+            onChange={setSubtopicId}
+            variant="muted"
             disabled={
               !selectedSubject || selectedSubject.subtopics.length === 0
             }
-            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:border-emerald-500 outline-none text-sm text-gray-900 dark:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <option value="">
-              {!selectedSubject
+            placeholder={
+              !selectedSubject
                 ? "Selecione uma matéria primeiro"
                 : selectedSubject.subtopics.length === 0
                 ? "Esta matéria não possui subtópicos"
-                : "Geral (Sem subtópico específico)"}
-            </option>
-            {selectedSubject?.subtopics.map((st) => (
-              <option key={st.id} value={st.id}>
-                {st.name} {st.completed ? "(Concluído)" : ""}
-              </option>
-            ))}
-          </select>
+                : "Geral (Sem subtópico específico)"
+            }
+            options={
+              selectedSubject?.subtopics.map((st) => ({
+                value: st.id,
+                label: `${st.name}${st.completed ? " (Concluído)" : ""}`,
+              })) ?? []
+            }
+          />
         </motion.div>
 
         {/* Card 5 - Marcar Concluído */}
@@ -816,7 +713,6 @@ export default function RegisterPage({
           <div className="w-full max-w-lg">
             <Button
               onClick={handleSubmit}
-              disabled={!isDateValid}
               variant="primary"
               fullWidth
               size="lg"

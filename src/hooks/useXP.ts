@@ -7,6 +7,8 @@ import { useToast } from '../contexts/ToastContext';
 interface UseXPProps {
   logs: StudyLog[];
   userId?: string;
+  /** Aguarda matérias/logs carregarem antes de marcar registros existentes como processados */
+  logsReady?: boolean;
 }
 
 interface XpEventRow {
@@ -38,7 +40,7 @@ export function calculateXPFromLog(log: StudyLog): number {
   return xpFromTime + xpFromQuestions + xpFromPages;
 }
 
-export function useXP({ logs, userId }: UseXPProps) {
+export function useXP({ logs, userId, logsReady = true }: UseXPProps) {
   const { addToast } = useToast();
   const [totalXP, setTotalXP] = useState<number>(0);
   const [xpHistory, setXpHistory] = useState<XPHistoryEntry[]>([]);
@@ -48,6 +50,30 @@ export function useXP({ logs, userId }: UseXPProps) {
   // Rastrear logs já processados para evitar duplicação de XP
   const processedLogsRef = useRef<Set<string>>(new Set());
   const initialLoadDoneRef = useRef<boolean>(false);
+  const logsRef = useRef(logs);
+  logsRef.current = logs;
+
+  const getProcessedLogsStorageKey = useCallback(
+    () => `studyflow_processed_logs_${userId || "anon"}`,
+    [userId]
+  );
+
+  const markExistingLogsAsProcessed = useCallback(() => {
+    logsRef.current.forEach((log) => {
+      if (log.id) {
+        processedLogsRef.current.add(log.id);
+      }
+    });
+
+    try {
+      sessionStorage.setItem(
+        getProcessedLogsStorageKey(),
+        JSON.stringify(Array.from(processedLogsRef.current))
+      );
+    } catch {
+      // Ignorar erro de quota/sessionStorage
+    }
+  }, [getProcessedLogsStorageKey]);
 
   // Calcular XP baseado nos logs
   // REGRAS OFICIAIS: 1 XP/minuto + 5 XP/questão correta + 2 XP/página
@@ -73,17 +99,24 @@ export function useXP({ logs, userId }: UseXPProps) {
     return xp;
   }, []);
 
-  // Carregar XP do Supabase ou localStorage
+  // Carregar XP do Supabase ou localStorage (não reexecutar quando logs mudam)
   const loadXP = useCallback(async () => {
-    // Carregar logs processados do sessionStorage
+    initialLoadDoneRef.current = false;
+    setIsLoading(true);
+
+    processedLogsRef.current = new Set();
+
+    // Carregar logs já processados do sessionStorage (por usuário)
     try {
-      const savedProcessed = sessionStorage.getItem('studyflow_processed_logs');
+      const savedProcessed = sessionStorage.getItem(getProcessedLogsStorageKey());
       if (savedProcessed) {
         processedLogsRef.current = new Set(JSON.parse(savedProcessed));
       }
-    } catch (e) {
+    } catch {
       // Ignorar erro
     }
+
+    const currentLogs = logsRef.current;
 
     if (!userId) {
       // Fallback para localStorage
@@ -93,8 +126,7 @@ export function useXP({ logs, userId }: UseXPProps) {
       if (saved) {
         setTotalXP(parseInt(saved, 10));
       } else {
-        // Calcular XP inicial dos logs
-        const initialXP = calculateXPFromLogs(logs);
+        const initialXP = calculateXPFromLogs(currentLogs);
         setTotalXP(initialXP);
         localStorage.setItem('studyflow_total_xp', initialXP.toString());
       }
@@ -102,66 +134,70 @@ export function useXP({ logs, userId }: UseXPProps) {
       if (savedHistory) {
         try {
           setXpHistory(JSON.parse(savedHistory));
-        } catch (e) {
+        } catch {
           setXpHistory([]);
         }
       }
 
-      // Marcar todos os logs existentes como processados
-      logs.forEach(log => {
-        if (log.id) {
-          processedLogsRef.current.add(log.id);
-        }
-      });
-      sessionStorage.setItem('studyflow_processed_logs', JSON.stringify(Array.from(processedLogsRef.current)));
-
+      markExistingLogsAsProcessed();
       setIsLoading(false);
       initialLoadDoneRef.current = true;
       return;
     }
 
     try {
-      // Tentar carregar do Supabase (maybeSingle não gera erro 404 se não encontrar)
-      const { data, error } = await supabase
+      const { data: userXpRow, error: userXpError } = await supabase
         .from('user_xp')
         .select('total_xp')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) {
-        // Erros esperados (não críticos):
-        // - PGRST116: registro não encontrado (maybeSingle retorna null, mas pode ter error)
-        // - PGRST205: tabela não existe no banco (tabela ainda não foi criada)
-        // - PGRST301: múltiplos resultados (não deveria acontecer com maybeSingle)
-        const isExpectedError = error.code === 'PGRST116' || 
-                               error.code === 'PGRST205' || 
-                               error.code === 'PGRST301' ||
-                               error.message?.toLowerCase().includes('404') ||
-                               error.message?.toLowerCase().includes('not found') ||
-                               error.message?.toLowerCase().includes('could not find the table');
-        
-        // Só logar erros reais de conexão/permissão
+      if (userXpError) {
+        const isExpectedError =
+          userXpError.code === 'PGRST116' ||
+          userXpError.code === 'PGRST205' ||
+          userXpError.code === 'PGRST301' ||
+          userXpError.message?.toLowerCase().includes('not found') ||
+          userXpError.message?.toLowerCase().includes('could not find the table');
+
         if (!isExpectedError) {
-          console.error('Erro ao carregar XP do Supabase:', error);
+          console.error('Erro ao carregar XP do Supabase:', userXpError);
         }
-        // Para qualquer erro (incluindo "tabela não existe"), usar fallback silenciosamente
-        const saved = localStorage.getItem('studyflow_total_xp');
-        if (saved) {
-          setTotalXP(parseInt(saved, 10));
-        } else {
-          const initialXP = calculateXPFromLogs(logs);
-          setTotalXP(initialXP);
-        }
-      } else if (data) {
-        // Dados encontrados no Supabase
-        setTotalXP(data.total_xp || 0);
-      } else {
-        // Primeira vez (sem registro no Supabase), calcular dos logs
-        const initialXP = calculateXPFromLogs(logs);
-        setTotalXP(initialXP);
       }
 
-      // Carregar histórico via xp_events (últimos 50)
+      // Histórico recente (UI) + soma total (fonte de verdade quando há eventos)
+      let resolvedTotalXP = userXpRow?.total_xp ?? calculateXPFromLogs(currentLogs);
+
+      try {
+        const { data: amountRows, error: amountError } = await supabase
+          .from('xp_events')
+          .select('amount')
+          .eq('user_id', userId);
+
+        if (!amountError && amountRows && amountRows.length > 0) {
+          resolvedTotalXP = amountRows.reduce(
+            (sum, row) => sum + (row.amount || 0),
+            0
+          );
+
+          // Reconciliar user_xp com a soma real dos eventos
+          if (userXpRow?.total_xp !== resolvedTotalXP) {
+            await supabase.from('user_xp').upsert(
+              {
+                user_id: userId,
+                total_xp: resolvedTotalXP,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'user_id' }
+            );
+          }
+        }
+      } catch {
+        // Se falhar a soma, mantém user_xp ou cálculo dos logs
+      }
+
+      setTotalXP(resolvedTotalXP);
+
       try {
         const { data: events, error: eventsError } = await supabase
           .from('xp_events')
@@ -190,17 +226,9 @@ export function useXP({ logs, userId }: UseXPProps) {
           }));
           setXpHistory(mapped);
         }
-      } catch (e) {
+      } catch {
         // Silencioso: mantém xpHistory atual
       }
-      
-      // Marcar todos os logs existentes como processados
-      logs.forEach(log => {
-        if (log.id) {
-          processedLogsRef.current.add(log.id);
-        }
-      });
-      sessionStorage.setItem('studyflow_processed_logs', JSON.stringify(Array.from(processedLogsRef.current)));
     } catch (error: any) {
       // Erros esperados (não críticos):
       // - PGRST116: registro não encontrado
@@ -215,31 +243,18 @@ export function useXP({ logs, userId }: UseXPProps) {
                              error?.message?.toLowerCase().includes('no rows');
       
       if (!isExpectedError) {
-        // Erro real (não é apenas "tabela não existe" ou "não encontrado")
         console.error('Erro ao carregar XP:', error);
       }
-      
-      // Fallback para localStorage
-      const saved = localStorage.getItem('studyflow_total_xp');
-      if (saved) {
-        setTotalXP(parseInt(saved, 10));
-      } else {
-        const initialXP = calculateXPFromLogs(logs);
-        setTotalXP(initialXP);
-      }
-      
-      // Marcar todos os logs existentes como processados
-      logs.forEach(log => {
-        if (log.id) {
-          processedLogsRef.current.add(log.id);
-        }
-      });
-      sessionStorage.setItem('studyflow_processed_logs', JSON.stringify(Array.from(processedLogsRef.current)));
+
+      const initialXP = calculateXPFromLogs(currentLogs);
+      setTotalXP(initialXP);
     }
 
+    // Registros já existentes não devem gerar XP de novo
+    markExistingLogsAsProcessed();
     setIsLoading(false);
     initialLoadDoneRef.current = true;
-  }, [userId, logs, calculateXPFromLogs]);
+  }, [userId, calculateXPFromLogs, getProcessedLogsStorageKey, markExistingLogsAsProcessed]);
 
   // Salvar XP no Supabase ou localStorage
   const saveXP = useCallback(async (xp: number, history: XPHistoryEntry[]) => {
@@ -311,10 +326,26 @@ export function useXP({ logs, userId }: UseXPProps) {
 
       return newTotal;
     });
-  }, [saveXP]);
+  }, [saveXP, userId]);
 
   // Remover XP
   const removeXP = useCallback((amount: number, reason: string) => {
+    if (userId && amount > 0) {
+      (async () => {
+        try {
+          await supabase.from('xp_events').insert({
+            user_id: userId,
+            amount: -amount,
+            reason,
+            icon: '',
+            is_bonus: false,
+          });
+        } catch {
+          // Silencioso
+        }
+      })();
+    }
+
     setTotalXP(prev => {
       // Não deixar XP ficar negativo
       const newTotal = Math.max(0, prev - amount);
@@ -342,12 +373,18 @@ export function useXP({ logs, userId }: UseXPProps) {
 
       return newTotal;
     });
-  }, [saveXP, addToast]);
+  }, [saveXP, addToast, userId]);
 
-  // Carregar XP inicial
+  // Carregar XP inicial — só após logs do servidor estarem prontos (evita marcar log novo como "já processado")
   useEffect(() => {
-    loadXP();
-  }, [loadXP]);
+    if (userId && !logsReady) {
+      initialLoadDoneRef.current = false;
+      setIsLoading(true);
+      return;
+    }
+
+    void loadXP();
+  }, [userId, logsReady, loadXP]);
 
   // Adicionar XP automaticamente para logs novos
   useEffect(() => {
@@ -435,21 +472,27 @@ export function useXP({ logs, userId }: UseXPProps) {
         
         // Persistir no sessionStorage
         try {
-          sessionStorage.setItem('studyflow_processed_logs', JSON.stringify(Array.from(processedLogsRef.current)));
-        } catch (e) {
+          sessionStorage.setItem(
+            getProcessedLogsStorageKey(),
+            JSON.stringify(Array.from(processedLogsRef.current))
+          );
+        } catch {
           // Ignorar erro de sessionStorage
         }
       } else {
         // Mesmo sem XP, marcar como processado para não verificar novamente
         processedLogsRef.current.add(log.id);
         try {
-          sessionStorage.setItem('studyflow_processed_logs', JSON.stringify(Array.from(processedLogsRef.current)));
-        } catch (e) {
+          sessionStorage.setItem(
+            getProcessedLogsStorageKey(),
+            JSON.stringify(Array.from(processedLogsRef.current))
+          );
+        } catch {
           // Ignorar erro
         }
       }
     });
-  }, [logs, isLoading, addXP]);
+  }, [logs, isLoading, addXP, getProcessedLogsStorageKey]);
 
   // Calcular progresso atual
   const progress = useMemo(() => {

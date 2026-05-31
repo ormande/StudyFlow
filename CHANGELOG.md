@@ -5,7 +5,36 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.10.0] - 2026-05-27 - Atual
+## [1.11.0] - 2026-05-29 - Atual
+
+### Adicionado
+- **DatePicker customizado:** calendário próprio com exibição `dd/mm/aaaa`, portal flutuante e posicionamento adaptativo (flip vertical, clamp na viewport, escala inversamente proporcional ao zoom).
+- **Select customizado:** dropdown estilizado substituindo `<select>` nativo em histórico, registro, estatísticas e modais.
+- **Ciclo:** busca dedicada `cycleLogs` com todos os logs do ciclo atual (até 5000), corrigindo progresso por matéria no Dashboard e na aba Ciclo.
+- **Perfil / signup:** sincronização de nome e data de nascimento a partir dos metadados do auth (`syncProfileFromMetadata`).
+- **Avatares:** bucket de storage e utilitário de URL pública (`avatarUrl`).
+- **Sessão:** guarda de sessão (`sessionGuard`) para fluxos sensíveis de autenticação.
+
+### Modificado
+- **Histórico:** filtros de período (Hoje, 7d, 30d…) não recarregam mais o app inteiro; loading isolado na tabela com animação no `tbody`.
+- **Histórico:** filtro “Hoje” usa dia de calendário local (não janela de 24h); RPC `search_study_logs` atualizada na migration 14.
+- **Conquistas:** animação de brilho nas pendentes e saída suave ao resgatar.
+- **Registro / cadastro:** campos de data e selects migrados para os novos componentes.
+- **Subtópicos:** fonte única de verdade no banco (migration 13).
+- **XP / assinatura:** ajustes em polling, contexto e testes de gamificação.
+
+### Corrigido
+- **HistoryPage:** imports ausentes de `motion` e `AnimatePresence` que quebravam a página.
+- **Ciclo vs histórico:** discrepância de minutos por matéria (paginação de 20 logs + filtro por `timestamp` em vez de `date`).
+- **Scroll mobile pós-signup** e badge de trial em páginas de plano.
+
+### Migrations neste ciclo
+- `11_handle_new_user_profile_from_metadata.sql`
+- `12_create_avatars_storage_bucket.sql`
+- `13_subtopics_single_source.sql`
+- `14_fix_history_date_filter.sql`
+
+## [1.10.0] - 2026-05-27
 
 ### Adicionado
 - **Banco / Escala:** nova tabela `user_subscriptions` para separar assinatura das configurações de perfil (`user_settings`).
@@ -291,6 +320,7 @@ Esta versão consolida a Gamificação, introduz a gestão completa de Perfil e 
 - Suporte a PWA (Instalação em Mobile).
 - Tema Claro/Escuro.
 
+[1.11.0]: https://github.com/ormande/study-flow/compare/v1.10.0...v1.11.0
 [1.9.2]: https://github.com/ormande/study-flow/compare/v1.9.1...v1.9.2
 [1.10.0]: https://github.com/ormande/study-flow/compare/v1.9.4...v1.10.0
 [1.9.4]: https://github.com/ormande/study-flow/compare/v1.9.3...v1.9.4

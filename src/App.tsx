@@ -9,6 +9,11 @@ import PricingPage from "./pages/PricingPage";
 import SignupPage from "./pages/SignupPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import { useAppearance } from "./hooks/useAppearance";
+import { confirmSubscriptionAfterPayment } from "./utils/subscriptionPolling";
+import {
+  ensureValidSession,
+  setupSessionRefreshOnFocus,
+} from "./lib/sessionGuard";
 
 const CHECKOUT_INTENT_KEY = "studyflow_checkout_intent";
 
@@ -90,61 +95,72 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      // ✅ ALTERADO: Permitir que usuários usem o app mesmo sem confirmar email
-      setSession(session);
+      if (event === "TOKEN_REFRESHED" && session) {
+        setSession(session);
+        return;
+      }
 
-      // Quando o usuário faz logout, voltar para Tela de Login
       if (event === "SIGNED_OUT") {
+        setSession(null);
         setAuthView("login");
-        // Limpar caches de sessão ao sair
         sessionStorage.clear();
         localStorage.removeItem("studyflow_current_page");
         localStorage.removeItem("studyflow_more_scroll");
+        return;
       }
 
-      // Quando o usuário faz login, verificar se há intenção de checkout pendente
-      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
-        const savedIntent = localStorage.getItem(CHECKOUT_INTENT_KEY);
-        if (savedIntent) {
-          try {
-            const intent = JSON.parse(savedIntent);
-            // Verificar se a intenção não expirou (30 minutos)
-            const thirtyMinutes = 30 * 60 * 1000;
-            if (Date.now() - intent.timestamp < thirtyMinutes) {
-              // Redirecionar para página de preços (o checkout será aberto lá)
-              setAuthView("pricing");
-            } else {
-              // Intenção expirada, limpar
+      if (session) {
+        setSession(session);
+
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+          const savedIntent = localStorage.getItem(CHECKOUT_INTENT_KEY);
+          if (savedIntent) {
+            try {
+              const intent = JSON.parse(savedIntent);
+              const thirtyMinutes = 30 * 60 * 1000;
+              if (Date.now() - intent.timestamp < thirtyMinutes) {
+                setAuthView("pricing");
+              } else {
+                localStorage.removeItem(CHECKOUT_INTENT_KEY);
+              }
+            } catch {
               localStorage.removeItem(CHECKOUT_INTENT_KEY);
             }
-          } catch (e) {
-            localStorage.removeItem(CHECKOUT_INTENT_KEY);
           }
         }
-      }
 
-      // Detectar modo de recuperação de senha
-      if (event === "PASSWORD_RECOVERY") {
-        setIsRecoveryMode(true);
-        // Limpar hash da URL
-        window.history.replaceState(null, "", window.location.pathname);
-      }
-
-      // Quando o usuário faz login normal ou confirma e-mail, garantir que o modal de recuperação esteja fechado
-      if (event === "SIGNED_IN" && isRecoveryMode) {
-        // Se o evento for SIGNED_IN mas não veio de um PASSWORD_RECOVERY (ou hash de recovery),
-        // fechamos o modal para evitar confusão no fluxo de confirmação de e-mail.
-        const hash = window.location.hash;
-        if (!hash.includes("type=recovery")) {
-          setIsRecoveryMode(false);
+        if (event === "PASSWORD_RECOVERY") {
+          setIsRecoveryMode(true);
+          window.history.replaceState(null, "", window.location.pathname);
         }
+
+        if (event === "SIGNED_IN" && isRecoveryMode) {
+          const hash = window.location.hash;
+          if (!hash.includes("type=recovery")) {
+            setIsRecoveryMode(false);
+          }
+        }
+
+        return;
       }
+
+      // Sessão nula sem logout explícito — tenta recuperar antes de desmontar o app
+      setTimeout(() => {
+        void ensureValidSession().then((recovered) => {
+          setSession(recovered);
+        });
+      }, 0);
     });
+
+    const removeFocusListener = setupSessionRefreshOnFocus();
 
     // Verificar hash na montagem do componente
     checkRecoveryHash();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      removeFocusListener();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -212,14 +228,13 @@ function App() {
               onBack={() => setAuthView("landing")}
               onNavigateToLogin={() => setAuthView("login")}
               onNavigateToSignup={() => setAuthView("signup")}
-              onPaymentConfirmed={() => {
-                // Limpar página salva para garantir que vá para o Dashboard
+              onPaymentConfirmed={async () => {
                 localStorage.removeItem("studyflow_current_page");
-                // Ao confirmar pagamento na PricingPage (fluxo inicial),
-                // recarregamos para que o App.tsx detecte a nova sessão/status
-                setTimeout(() => {
-                  window.location.reload();
-                }, 500);
+                const userId = session?.user?.id;
+                if (userId) {
+                  await confirmSubscriptionAfterPayment(userId);
+                }
+                window.location.reload();
               }}
             />
           )}
@@ -239,6 +254,11 @@ function App() {
                   // Confirmação de e-mail obrigatória — sem sessão imediata
                   setPendingVerifyEmail(email);
                   setAuthView("verify-email");
+                  requestAnimationFrame(() => {
+                    window.scrollTo(0, 0);
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                  });
                   return;
                 }
                 // Cadastro com sessão imediata — entra no app

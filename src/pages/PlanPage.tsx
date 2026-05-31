@@ -20,17 +20,23 @@ import PixPaymentModal from "../components/PixPaymentModal";
 import FloatingBackButton from "../components/FloatingBackButton";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../contexts/ToastContext";
+import {
+  confirmSubscriptionAfterPayment,
+  UserSubscriptionSnapshot,
+} from "../utils/subscriptionPolling";
 
 interface PlanPageProps {
   subscriptionStatus: string | null;
   subscriptionType: string | null;
   onNavigateBack: () => void;
+  onPaymentConfirmed?: () => void | Promise<void>;
 }
 
 export default function PlanPage({
   subscriptionStatus: initialStatus,
   subscriptionType: initialType,
   onNavigateBack,
+  onPaymentConfirmed,
 }: PlanPageProps) {
   const { addToast } = useToast();
   const [showCheckoutMensal, setShowCheckoutMensal] = useState(false);
@@ -59,6 +65,27 @@ export default function PlanPage({
     status: initialStatus || "none",
   });
 
+  const applySubscriptionToPlanStatus = (data: UserSubscriptionSnapshot) => {
+    if (data.status === "trial") {
+      setPlanStatus({
+        type: "trial",
+        status: "active",
+        trialEndsAt: data.trial_ends_at ?? undefined,
+      });
+    } else if (data.status === "active") {
+      setPlanStatus({
+        type: data.plan_type === "lifetime" ? "lifetime" : "monthly",
+        status: "active",
+        nextBillingDate: data.next_billing_date ?? undefined,
+      });
+    } else {
+      setPlanStatus({
+        type: "none",
+        status: data.status || "none",
+      });
+    }
+  };
+
   useEffect(() => {
     const fetchPlanStatus = async () => {
       const {
@@ -77,24 +104,7 @@ export default function PlanPage({
         return;
       }
 
-      if (data.status === "trial") {
-        setPlanStatus({
-          type: "trial",
-          status: "active",
-          trialEndsAt: data.trial_ends_at,
-        });
-      } else if (data.status === "active") {
-        setPlanStatus({
-          type: data.plan_type === "lifetime" ? "lifetime" : "monthly",
-          status: "active",
-          nextBillingDate: data.next_billing_date,
-        });
-      } else {
-        setPlanStatus({
-          type: "none",
-          status: data.status || "none",
-        });
-      }
+      applySubscriptionToPlanStatus(data as UserSubscriptionSnapshot);
     };
 
     fetchPlanStatus();
@@ -522,10 +532,20 @@ export default function PlanPage({
 
       {/* Checkout Modals */}
       {showCheckoutMensal && (
-        <CheckoutMensal onClose={() => setShowCheckoutMensal(false)} />
+        <CheckoutMensal
+          onClose={() => setShowCheckoutMensal(false)}
+          onPaymentConfirmed={() => {
+            if (onPaymentConfirmed) void onPaymentConfirmed();
+          }}
+        />
       )}
       {showCheckoutVitalicio && (
-        <CheckoutVitalicio onClose={() => setShowCheckoutVitalicio(false)} />
+        <CheckoutVitalicio
+          onClose={() => setShowCheckoutVitalicio(false)}
+          onPaymentConfirmed={() => {
+            if (onPaymentConfirmed) void onPaymentConfirmed();
+          }}
+        />
       )}
 
       {/* Pagamento PIX */}
@@ -534,12 +554,26 @@ export default function PlanPage({
         onClose={() => setShowPixModal(false)}
         plan={pixPlan}
         couponCode={isCouponApplied ? coupon : undefined}
-        onPaymentConfirmed={() => {
-          setPlanStatus((prev) => ({
-            ...prev,
-            status: "active",
-            type: pixPlan,
-          }));
+        onPaymentConfirmed={async () => {
+          if (onPaymentConfirmed) {
+            await onPaymentConfirmed();
+            return;
+          }
+
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          const userId = session?.user?.id;
+
+          addToast("Confirmando pagamento...", "info");
+
+          if (userId) {
+            const subscription = await confirmSubscriptionAfterPayment(userId);
+            if (subscription) {
+              applySubscriptionToPlanStatus(subscription);
+            }
+          }
+
           addToast("Pagamento confirmado! Seu plano foi ativado.", "success");
         }}
       />

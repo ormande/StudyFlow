@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
-import { 
-  Home, Clock, Plus, Target, Trophy, Star, BarChart2, History, 
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Home, Clock, Plus, Target, Trophy, Star, BarChart2, History,
   Palette, Target as TargetIcon, MessageSquare, HelpCircle, Lock, LogOut, Settings, Info, CreditCard
 } from 'lucide-react';
 import { TabType } from '../types';
-import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
+import { mergeProfileWithMetadata } from '../utils/syncProfileFromMetadata';
+import { getAvatarPublicUrl } from '../utils/avatarUrl';
 import Button from './Button';
 
 interface SidebarProps {
@@ -68,18 +70,24 @@ export default function Sidebar({
         }
 
         if (data) {
+          const merged = mergeProfileWithMetadata(
+            data,
+            session.user.user_metadata
+          );
           let avatarUrl = null;
           if (data.avatar_url) {
-            // Obter URL pública do avatar
-            const { data: urlData } = supabase.storage
-              .from('avatars')
-              .getPublicUrl(data.avatar_url);
-            avatarUrl = urlData.publicUrl;
+            avatarUrl = getAvatarPublicUrl(data.avatar_url);
           }
 
           setProfileData({
-            firstName: data.first_name || '',
+            firstName: merged.first_name || '',
             avatarUrl,
+          });
+        } else {
+          const metadata = session.user.user_metadata || {};
+          setProfileData({
+            firstName: metadata.first_name || '',
+            avatarUrl: null,
           });
         }
       } catch (error: any) {
@@ -187,7 +195,7 @@ export default function Sidebar({
           <div>
             <h1 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">StudyFlow</h1>
             <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              Versão 1.9.2
+              Versão 1.11.0
             </p>
           </div>
         </div>

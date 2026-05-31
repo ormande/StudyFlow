@@ -14,6 +14,63 @@ export function getLocalDateString(date: Date = new Date()): string {
 }
 
 /**
+ * Normaliza qualquer entrada de data de log para YYYY-MM-DD (fuso local).
+ * Evita toISOString() que desloca o dia em UTC-3/UTC-4.
+ */
+export function normalizeLogDate(date?: string | null): string {
+  if (!date) return getLocalDateString();
+
+  const trimmed = date.trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (trimmed.includes("T")) {
+    const parsed = new Date(trimmed);
+    if (!isNaN(parsed.getTime())) {
+      return getLocalDateString(parsed);
+    }
+  }
+
+  const slashMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (slashMatch) {
+    const [, d, m, y] = slashMatch;
+    return `${y}-${m}-${d}`;
+  }
+
+  return getLocalDateString();
+}
+
+/** Interpreta YYYY-MM-DD como meia-noite no fuso local (sem shift UTC). */
+export function parseLocalDateString(dateString: string): Date {
+  const normalized = normalizeLogDate(dateString);
+  const [year, month, day] = normalized.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+/** Exibe YYYY-MM-DD em pt-BR (dd/mm/aaaa). */
+export function formatLocalDateDisplay(dateString: string): string {
+  if (!dateString) return "";
+  const normalized = normalizeLogDate(dateString);
+  const [year, month, day] = normalized.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("pt-BR");
+}
+
+/** Chave dd/mm para gráficos — derivada só de log.date. */
+export function formatLocalDateChartKey(dateString: string): string {
+  const normalized = normalizeLogDate(dateString);
+  const [, month, day] = normalized.split("-");
+  return `${day}/${month}`;
+}
+
+/** Hora local do registro (timestamp em ms); fallback meio-dia. */
+export function getLogHourFromTimestamp(timestamp?: number | null): number {
+  if (!timestamp) return 12;
+  return new Date(timestamp).getHours();
+}
+
+/**
  * Retorna a data de ontem em formato YYYY-MM-DD usando timezone local
  */
 export function getYesterdayDateString(): string {
@@ -61,6 +118,57 @@ export function getNextDateString(dateString: string): string {
   const date = new Date(dateString + "T00:00:00");
   date.setDate(date.getDate() + 1);
   return getLocalDateString(date);
+}
+
+/**
+ * Intervalo de datas para filtros do histórico (fuso local).
+ * - Hoje (1): somente o dia atual
+ * - 7D, 30D…: últimos N dias de calendário incluindo hoje
+ */
+export function getLogDateRangeFilter(days: number | null): {
+  from: string | null;
+  to: string | null;
+} {
+  if (days === null) {
+    return { from: null, to: null };
+  }
+
+  const today = getLocalDateString();
+
+  if (days === 1) {
+    return { from: today, to: today };
+  }
+
+  const fromDate = new Date();
+  fromDate.setHours(0, 0, 0, 0);
+  fromDate.setDate(fromDate.getDate() - (days - 1));
+  return { from: getLocalDateString(fromDate), to: null };
+}
+
+/** Minutos totais de um registro de estudo. */
+export function getLogTotalMinutes(log: {
+  hours?: number;
+  minutes?: number;
+  seconds?: number;
+}): number {
+  return (
+    (log.hours || 0) * 60 +
+    (log.minutes || 0) +
+    Math.floor((log.seconds || 0) / 60)
+  );
+}
+
+/** Data local (YYYY-MM-DD) em que o ciclo atual começou. */
+export function getCycleStartDateString(cycleStartDate: number): string {
+  return getLocalDateString(new Date(cycleStartDate));
+}
+
+/** Registro pertence ao ciclo atual (usa log.date, não timestamp). */
+export function isLogInCurrentCycle(
+  log: { date: string },
+  cycleStartDate: number
+): boolean {
+  return normalizeLogDate(log.date) >= getCycleStartDateString(cycleStartDate);
 }
 
 /**

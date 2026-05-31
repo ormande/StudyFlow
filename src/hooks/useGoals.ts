@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { StudyLog } from "../types";
 import { useToast } from "../contexts/ToastContext";
-import { getLocalDateString } from "../utils/dateUtils";
+import { getLocalDateString, parseLocalDateString } from "../utils/dateUtils";
 
 export interface GoalsSettings {
   countWeekends: boolean;
@@ -193,7 +193,8 @@ export function useGoals(logs: StudyLog[]) {
 
     // Filtrar logs da semana
     const weekLogs = logs.filter((log) => {
-      const logDate = new Date(log.date);
+      if (!log.date) return false;
+      const logDate = parseLocalDateString(log.date);
       return logDate >= weekStart && logDate <= weekEnd;
     });
 

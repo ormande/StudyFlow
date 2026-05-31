@@ -12,6 +12,7 @@ import {
 import { Subject, StudyLog, StudyType } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLocalDateString } from "../utils/dateUtils";
+import Select from "./Select";
 
 interface HistoryModalProps {
   isOpen: boolean;
@@ -103,24 +104,17 @@ export default function HistoryModal({
 
             {/* Filtro */}
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
-              <div className="relative">
-                <Filter
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
-                  size={18}
-                />
-                <select
-                  value={filterSubject}
-                  onChange={(e) => setFilterSubject(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white outline-none focus:border-emerald-500 transition-colors"
-                >
-                  <option value="all">Todas as matérias</option>
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                value={filterSubject}
+                onChange={setFilterSubject}
+                variant="muted"
+                leftIcon={<Filter size={18} />}
+                placeholder="Todas as matérias"
+                options={[
+                  { value: "all", label: "Todas as matérias" },
+                  ...subjects.map((s) => ({ value: s.id, label: s.name })),
+                ]}
+              />
             </div>
 
             {/* Lista de Registros */}

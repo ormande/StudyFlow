@@ -2,6 +2,22 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { Subject, StudyLog, UserStats } from "../types";
 import { useToast } from "../contexts/ToastContext";
+import {
+  getMissingProfileFields,
+  mergeProfileWithMetadata,
+} from "../utils/syncProfileFromMetadata";
+import {
+  SUBJECT_SELECT,
+  mapSubjectRow,
+} from "../utils/subjectMapper";
+import { Subtopic } from "../types";
+import { withValidSession } from "../lib/sessionGuard";
+import {
+  normalizeLogDate,
+  getLogDateRangeFilter,
+  getCycleStartDateString,
+  isLogInCurrentCycle,
+} from "../utils/dateUtils";
 
 // ✅ FUNÇÃO DE VALIDAÇÃO - Garante que números nunca sejam negativos
 const sanitizeNumber = (
@@ -13,8 +29,29 @@ const sanitizeNumber = (
   return Math.max(0, Math.floor(value)); // Nunca negativo, sempre inteiro
 };
 
+const mapLogRow = (l: Record<string, unknown>): StudyLog => ({
+  ...(l as StudyLog),
+  id: l.id as string,
+  subjectId: l.subject_id as string,
+  subtopicId: (l.subtopic_id as string | null) ?? undefined,
+  type: l.type as StudyLog["type"],
+  date: normalizeLogDate(l.date as string),
+  hours: sanitizeNumber(l.hours as number),
+  minutes: sanitizeNumber(l.minutes as number),
+  seconds: sanitizeNumber(l.seconds as number),
+  pages: sanitizeNumber(l.pages as number),
+  correct: sanitizeNumber(l.correct as number),
+  wrong: sanitizeNumber(l.wrong as number),
+  blank: sanitizeNumber(l.blank as number),
+  notes: (l.notes as string) ?? "",
+  timestamp: (l.timestamp as number) ?? Date.now(),
+  subject: (l.subjects as { name?: string } | null)?.name,
+  subtopic: (l.subtopics as { name?: string } | null)?.name,
+});
+
 // Constante de paginação
 const LOGS_PER_PAGE = 20;
+const CYCLE_LOGS_LIMIT = 5000;
 
 type SearchStudyLogsRow = {
   id: string;
@@ -63,6 +100,7 @@ export function useSupabaseData(session: any) {
   const { addToast } = useToast();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [logs, setLogs] = useState<StudyLog[]>([]);
+  const [cycleLogs, setCycleLogs] = useState<StudyLog[]>([]);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
@@ -84,9 +122,19 @@ export function useSupabaseData(session: any) {
   const [loadingMoreLogs, setLoadingMoreLogs] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [daysFilter, setDaysFilter] = useState<number | null>(30); // Padrão: 30 dias
+  const daysFilterRef = useRef(daysFilter);
+  const cycleStartDateRef = useRef(cycleStartDate);
 
   // Ref para evitar múltiplas chamadas simultâneas de fetchData
   const isFetchingRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    daysFilterRef.current = daysFilter;
+  }, [daysFilter]);
+
+  useEffect(() => {
+    cycleStartDateRef.current = cycleStartDate;
+  }, [cycleStartDate]);
 
   const subjectsRef = useRef<Subject[]>([]);
   useEffect(() => {
@@ -98,7 +146,7 @@ export function useSupabaseData(session: any) {
 
     const { data: subData, error: subError } = await supabase
       .from("subjects")
-      .select("*, subtopics(*)")
+      .select(SUBJECT_SELECT)
       .eq("user_id", session.user.id)
       .order("position");
 
@@ -111,11 +159,40 @@ export function useSupabaseData(session: any) {
       return;
     }
 
-    const mappedSubjects = (subData || []).map((s: any) => ({
-      ...s,
-      goalMinutes: sanitizeNumber(s.goal_minutes),
-    }));
+    const mappedSubjects = (subData || []).map((s: Record<string, unknown>) =>
+      mapSubjectRow(s, sanitizeNumber)
+    );
     setSubjects(mappedSubjects);
+  }, [session?.user?.id, addToast]);
+
+  const fetchSubscriptionOnly = useCallback(async () => {
+    if (!session?.user?.id) return null;
+
+    const { data: subData, error: subError } = await supabase
+      .from("user_subscriptions")
+      .select("status, plan_type, trial_ends_at, next_billing_date")
+      .eq("user_id", session.user.id)
+      .maybeSingle()
+      .returns<UserSubscriptionRow>();
+
+    if (subError) {
+      console.error("Erro assinatura:", subError);
+      addToast(
+        "Erro ao carregar assinatura. Detalhe: " + subError.message,
+        "error"
+      );
+      return null;
+    }
+
+    applySubscriptionState(
+      subData ?? null,
+      setSubscriptionType,
+      setSubscriptionStatus,
+      setTrialEndsAt,
+      setNextBillingDate
+    );
+
+    return subData ?? null;
   }, [session?.user?.id, addToast]);
 
   const fetchSettingsOnly = useCallback(async () => {
@@ -143,31 +220,8 @@ export function useSupabaseData(session: any) {
     setShowPerformance(settingsData.show_performance ?? true);
     setWelcomeSeen(settingsData.welcome_seen ?? false);
 
-    // Assinatura agora vem da tabela nova
-    const { data: subData, error: subError } = await supabase
-      .from("user_subscriptions")
-      .select("status, plan_type, trial_ends_at, next_billing_date")
-      .eq("user_id", session.user.id)
-      .maybeSingle()
-      .returns<UserSubscriptionRow>();
-
-    if (subError) {
-      console.error("Erro assinatura:", subError);
-      addToast(
-        "Erro ao carregar assinatura. Detalhe: " + subError.message,
-        "error"
-      );
-      return;
-    }
-
-    applySubscriptionState(
-      subData ?? null,
-      setSubscriptionType,
-      setSubscriptionStatus,
-      setTrialEndsAt,
-      setNextBillingDate
-    );
-  }, [session?.user?.id, addToast]);
+    await fetchSubscriptionOnly();
+  }, [session?.user?.id, addToast, fetchSubscriptionOnly]);
 
   const fetchStatsOnly = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -192,6 +246,33 @@ export function useSupabaseData(session: any) {
       setStats(statsData as UserStats);
     }
   }, [session?.user?.id, addToast]);
+
+  /** Todos os logs do ciclo atual (sem paginação — usa log.date). */
+  const fetchCycleLogs = useCallback(async () => {
+    if (!session?.user?.id) return;
+
+    const fromDate = getCycleStartDateString(cycleStartDateRef.current);
+
+    try {
+      const { data, error } = await supabase
+        .from("study_logs")
+        .select("*, subjects(name, color), subtopics(name)")
+        .eq("user_id", session.user.id)
+        .gte("date", fromDate)
+        .order("date", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(CYCLE_LOGS_LIMIT);
+
+      if (error) {
+        console.error("Erro ao carregar logs do ciclo:", error);
+        return;
+      }
+
+      setCycleLogs((data || []).map(mapLogRow));
+    } catch (error) {
+      console.error("Erro ao carregar logs do ciclo:", error);
+    }
+  }, [session?.user?.id]);
 
   const refreshLogsOnly = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -248,7 +329,7 @@ export function useSupabaseData(session: any) {
       // --- CARREGAR MATÉRIAS ---
       const { data: subData, error: subError } = await supabase
         .from("subjects")
-        .select("*, subtopics(*)")
+        .select(SUBJECT_SELECT)
         .order("position");
 
       if (subError) {
@@ -259,11 +340,9 @@ export function useSupabaseData(session: any) {
         );
       }
 
-      // TRADUÇÃO DO BANCO PARA O APP (snake_case -> camelCase)
-      const mappedSubjects = (subData || []).map((s: any) => ({
-        ...s,
-        goalMinutes: sanitizeNumber(s.goal_minutes),
-      }));
+      const mappedSubjects = (subData || []).map((s: Record<string, unknown>) =>
+        mapSubjectRow(s, sanitizeNumber)
+      );
       setSubjects(mappedSubjects);
 
       // --- CARREGAR ESTATÍSTICAS AGREGADAS (Server-Side Aggregation) ---
@@ -291,8 +370,7 @@ export function useSupabaseData(session: any) {
       // --- CARREGAR LOGS COMPLETOS (Paginação inicial) ---
       // Busca apenas os primeiros 20 registros para carregamento rápido
       // Mais registros podem ser carregados sob demanda via loadMoreLogs
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      await fetchLogs(0, LOGS_PER_PAGE, "", daysFilter);
+      await fetchLogs(0, LOGS_PER_PAGE, "", daysFilterRef.current);
 
       // --- CARREGAR CONFIGURAÇÕES ---
       const { data: settingsData, error: settingsError } = await supabase
@@ -310,6 +388,23 @@ export function useSupabaseData(session: any) {
       }
 
       if (settingsData) {
+        const metadata = session.user.user_metadata || {};
+        const profileBackfill = getMissingProfileFields(settingsData, metadata);
+
+        if (Object.keys(profileBackfill).length > 0) {
+          const { error: backfillError } = await supabase
+            .from("user_settings")
+            .update(profileBackfill)
+            .eq("user_id", session.user.id);
+
+          if (backfillError) {
+            console.error(
+              "Erro ao sincronizar perfil dos metadados:",
+              backfillError
+            );
+          }
+        }
+
         setCycleStartDate(settingsData.cycle_start_date || Date.now());
         setDailyGoal(sanitizeNumber(settingsData.daily_goal));
         setShowPerformance(settingsData.show_performance ?? true);
@@ -379,16 +474,19 @@ export function useSupabaseData(session: any) {
           Date.now() + 7 * 24 * 60 * 60 * 1000
         ).toISOString();
         const metadata = session.user.user_metadata || {};
+        const profileFields = mergeProfileWithMetadata(null, metadata);
         const { error: insertError } = await supabase
           .from("user_settings")
           .upsert(
             [
               {
                 user_id: session.user.id,
-                first_name: metadata.first_name || null,
-                last_name: metadata.last_name || null,
-                birth_date: metadata.birth_date || null,
-                cpf_cnpj: metadata.cpf_cnpj || null,
+                first_name: profileFields.first_name || null,
+                last_name: profileFields.last_name || null,
+                birth_date: profileFields.birth_date || null,
+                cpf_cnpj: profileFields.cpf_cnpj || null,
+                terms_accepted: profileFields.terms_accepted ?? false,
+                terms_accepted_at: profileFields.terms_accepted_at || null,
                 cycle_start_date: Date.now(),
                 daily_goal: 0,
                 show_performance: true,
@@ -451,13 +549,19 @@ export function useSupabaseData(session: any) {
       setLoadingData(false);
       isFetchingRef.current = false;
     }
-  }, [session?.user?.id, daysFilter, fetchStreak]);
+  }, [session?.user?.id, fetchStreak]);
 
   // 2. CARREGAR DADOS INICIAIS
   useEffect(() => {
     if (!session?.user?.id) return;
     fetchData();
   }, [session?.user?.id, fetchData]);
+
+  // Recarregar logs completos do ciclo quando o ciclo inicia/reinicia
+  useEffect(() => {
+    if (!session?.user?.id || loadingData) return;
+    fetchCycleLogs();
+  }, [session?.user?.id, cycleStartDate, loadingData, fetchCycleLogs]);
 
   // 3. REALTIME: sincronizar entre abas/dispositivos via Supabase Realtime
   useEffect(() => {
@@ -486,7 +590,10 @@ export function useSupabaseData(session: any) {
         // Ordem: manter UI consistente
         if (run.subjects) await fetchSubjectsOnly();
         if (run.settings) await fetchSettingsOnly();
-        if (run.logs) await refreshLogsOnly();
+        if (run.logs) {
+          await refreshLogsOnly();
+          await fetchCycleLogs();
+        }
         if (run.stats) await fetchStatsOnly();
         if (run.streak) await fetchStreak();
       }, 300);
@@ -661,11 +768,12 @@ export function useSupabaseData(session: any) {
         }
 
         // Inserir/atualizar subtópicos
-        const subtopicsToUpsert = subtopics.map((st) => ({
+        const subtopicsToUpsert = subtopics.map((st, index) => ({
           id: st.id,
           subject_id: id,
           name: st.name,
           completed: st.completed || false,
+          position: index,
         }));
 
         if (subtopicsToUpsert.length > 0) {
@@ -695,6 +803,55 @@ export function useSupabaseData(session: any) {
     }
   };
 
+  const addSubtopic = async (
+    subjectId: string,
+    name: string
+  ): Promise<Subtopic | null> => {
+    if (!session?.user?.id) return null;
+
+    try {
+      const subject = subjectsRef.current.find((s) => s.id === subjectId);
+      const position = subject?.subtopics.length ?? 0;
+
+      const { data, error } = await supabase
+        .from("subtopics")
+        .insert({
+          subject_id: subjectId,
+          name: name.trim(),
+          completed: false,
+          position,
+        })
+        .select("id, name, completed")
+        .single();
+
+      if (error) throw error;
+
+      const newSubtopic: Subtopic = {
+        id: data.id,
+        name: data.name,
+        completed: data.completed ?? false,
+      };
+
+      setSubjects((prev) =>
+        prev.map((s) =>
+          s.id === subjectId
+            ? { ...s, subtopics: [...s.subtopics, newSubtopic] }
+            : s
+        )
+      );
+
+      return newSubtopic;
+    } catch (error: any) {
+      console.error("Erro ao adicionar subtópico:", error);
+      addToast(
+        "Erro ao adicionar subtópico. Detalhe: " +
+          (error?.message || "Erro desconhecido"),
+        "error"
+      );
+      throw error;
+    }
+  };
+
   const reorderSubjects = async (newSubjects: Subject[]) => {
     setSubjects(newSubjects);
     try {
@@ -720,64 +877,59 @@ export function useSupabaseData(session: any) {
   const addLog = async (log: any) => {
     if (!session?.user) return;
     try {
-      // ✅ VALIDAÇÃO: Todos os campos numéricos são sanitizados
-      const dbLog = {
-        user_id: session.user.id,
-        subject_id: log.subjectId,
-        subtopic_id: log.subtopicId || null,
-        type: log.type,
-        hours: sanitizeNumber(log.hours),
-        minutes: sanitizeNumber(log.minutes),
-        seconds: sanitizeNumber(log.seconds),
-        pages: sanitizeNumber(log.pages),
-        correct: sanitizeNumber(log.correct),
-        wrong: sanitizeNumber(log.wrong),
-        blank: sanitizeNumber(log.blank),
-        notes: log.notes,
-        date: log.date,
-        timestamp: log.timestamp || Date.now(),
-      };
+      await withValidSession(async (activeSession) => {
+        const dbLog = {
+          user_id: activeSession.user.id,
+          subject_id: log.subjectId,
+          subtopic_id: log.subtopicId || null,
+          type: log.type,
+          hours: sanitizeNumber(log.hours),
+          minutes: sanitizeNumber(log.minutes),
+          seconds: sanitizeNumber(log.seconds),
+          pages: sanitizeNumber(log.pages),
+          correct: sanitizeNumber(log.correct),
+          wrong: sanitizeNumber(log.wrong),
+          blank: sanitizeNumber(log.blank),
+          notes: log.notes,
+          date: normalizeLogDate(log.date),
+          timestamp: log.timestamp || Date.now(),
+        };
 
-      const { data, error } = await supabase
-        .from("study_logs")
-        .insert([dbLog])
-        .select()
-        .single();
-      if (error) {
-        throw error;
-      }
+        const { data, error } = await supabase
+          .from("study_logs")
+          .insert([dbLog])
+          .select("*, subtopics(name)")
+          .single();
+        if (error) {
+          throw error;
+        }
 
-      // Adiciona localmente já traduzido e validado
-      const newLocalLog = {
-        ...data,
-        id: data.id,
-        subjectId: data.subject_id,
-        subtopicId: data.subtopic_id,
-        hours: sanitizeNumber(data.hours),
-        minutes: sanitizeNumber(data.minutes),
-        seconds: sanitizeNumber(data.seconds),
-        pages: sanitizeNumber(data.pages),
-        correct: sanitizeNumber(data.correct),
-        wrong: sanitizeNumber(data.wrong),
-        blank: sanitizeNumber(data.blank),
-      };
-      setLogs([newLocalLog, ...logs]); // Adiciona novo log no início da lista
+        const newLocalLog = mapLogRow(data as Record<string, unknown>);
+        if (log.subtopic && !newLocalLog.subtopic) {
+          newLocalLog.subtopic = log.subtopic;
+        }
+        setLogs([newLocalLog, ...logs]);
 
-      // Atualiza estatísticas após adicionar log
-      const { data: updatedStats } = await supabase.rpc("get_user_stats", {
-        p_user_id: session.user.id,
+        if (isLogInCurrentCycle(newLocalLog, cycleStartDateRef.current)) {
+          setCycleLogs((prev) => [newLocalLog, ...prev]);
+        }
+
+        const { data: updatedStats } = await supabase.rpc("get_user_stats", {
+          p_user_id: activeSession.user.id,
+        });
+        if (updatedStats) {
+          setStats(updatedStats as UserStats);
+        }
+
+        await fetchStreak();
       });
-      if (updatedStats) {
-        setStats(updatedStats as UserStats);
-      }
-
-      await fetchStreak();
-
     } catch (error: any) {
       console.error("Erro ao salvar log:", error);
+      const message = error?.message || "Erro desconhecido";
       addToast(
-        "Erro ao registrar estudo. Detalhe: " +
-          (error?.message || "Erro desconhecido"),
+        message.includes("Sessão expirada")
+          ? "Sua sessão expirou. Faça login novamente para salvar o registro."
+          : "Erro ao registrar estudo. Detalhe: " + message,
         "error"
       );
     }
@@ -786,20 +938,21 @@ export function useSupabaseData(session: any) {
   const deleteLog = async (id: string) => {
     if (!session?.user) return;
     try {
-      const { error } = await supabase.from("study_logs").delete().eq("id", id);
-      if (error) throw error;
-      setLogs(logs.filter((l) => l.id !== id));
+      await withValidSession(async (activeSession) => {
+        const { error } = await supabase.from("study_logs").delete().eq("id", id);
+        if (error) throw error;
+        setLogs(logs.filter((l) => l.id !== id));
+        setCycleLogs((prev) => prev.filter((l) => l.id !== id));
 
-      // Atualiza estatísticas após deletar log
-      const { data: updatedStats } = await supabase.rpc("get_user_stats", {
-        p_user_id: session.user.id,
+        const { data: updatedStats } = await supabase.rpc("get_user_stats", {
+          p_user_id: activeSession.user.id,
+        });
+        if (updatedStats) {
+          setStats(updatedStats as UserStats);
+        }
+
+        await fetchStreak();
       });
-      if (updatedStats) {
-        setStats(updatedStats as UserStats);
-      }
-
-      await fetchStreak();
-
     } catch (error: any) {
       console.error(error);
       addToast(
@@ -813,42 +966,42 @@ export function useSupabaseData(session: any) {
   const editLog = async (id: string, updates: Partial<StudyLog>) => {
     if (!session?.user) return;
     try {
-      // ✅ VALIDAÇÃO: Sanitiza campos numéricos na edição
-      const sanitizedUpdates: any = { ...updates };
-      if (updates.hours !== undefined)
-        sanitizedUpdates.hours = sanitizeNumber(updates.hours);
-      if (updates.minutes !== undefined)
-        sanitizedUpdates.minutes = sanitizeNumber(updates.minutes);
-      if (updates.seconds !== undefined)
-        sanitizedUpdates.seconds = sanitizeNumber(updates.seconds);
-      if (updates.pages !== undefined)
-        sanitizedUpdates.pages = sanitizeNumber(updates.pages);
-      if (updates.correct !== undefined)
-        sanitizedUpdates.correct = sanitizeNumber(updates.correct);
-      if (updates.wrong !== undefined)
-        sanitizedUpdates.wrong = sanitizeNumber(updates.wrong);
-      if (updates.blank !== undefined)
-        sanitizedUpdates.blank = sanitizeNumber(updates.blank);
+      await withValidSession(async (activeSession) => {
+        const sanitizedUpdates: any = { ...updates };
+        if (updates.hours !== undefined)
+          sanitizedUpdates.hours = sanitizeNumber(updates.hours);
+        if (updates.minutes !== undefined)
+          sanitizedUpdates.minutes = sanitizeNumber(updates.minutes);
+        if (updates.seconds !== undefined)
+          sanitizedUpdates.seconds = sanitizeNumber(updates.seconds);
+        if (updates.pages !== undefined)
+          sanitizedUpdates.pages = sanitizeNumber(updates.pages);
+        if (updates.correct !== undefined)
+          sanitizedUpdates.correct = sanitizeNumber(updates.correct);
+        if (updates.wrong !== undefined)
+          sanitizedUpdates.wrong = sanitizeNumber(updates.wrong);
+        if (updates.blank !== undefined)
+          sanitizedUpdates.blank = sanitizeNumber(updates.blank);
 
-      const { error } = await supabase
-        .from("study_logs")
-        .update(sanitizedUpdates)
-        .eq("id", id);
-      if (error) throw error;
-      setLogs(
-        logs.map((l) => (l.id === id ? { ...l, ...sanitizedUpdates } : l))
-      );
+        const { error } = await supabase
+          .from("study_logs")
+          .update(sanitizedUpdates)
+          .eq("id", id);
+        if (error) throw error;
+        setLogs(
+          logs.map((l) => (l.id === id ? { ...l, ...sanitizedUpdates } : l))
+        );
+        await fetchCycleLogs();
 
-      // Atualiza estatísticas após editar log
-      const { data: updatedStats } = await supabase.rpc("get_user_stats", {
-        p_user_id: session.user.id,
+        const { data: updatedStats } = await supabase.rpc("get_user_stats", {
+          p_user_id: activeSession.user.id,
+        });
+        if (updatedStats) {
+          setStats(updatedStats as UserStats);
+        }
+
+        await fetchStreak();
       });
-      if (updatedStats) {
-        setStats(updatedStats as UserStats);
-      }
-
-      await fetchStreak();
-
     } catch (error: any) {
       console.error(error);
       addToast(
@@ -897,16 +1050,6 @@ export function useSupabaseData(session: any) {
     }
   };
 
-  // Função auxiliar para calcular data de corte baseada em dias
-  const getDateCutoff = (days: number | null): string | null => {
-    if (days === null) return null;
-    const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    const year = cutoffDate.getFullYear();
-    const month = String(cutoffDate.getMonth() + 1).padStart(2, "0");
-    const day = String(cutoffDate.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
   // Função central para buscar logs (com suporte a busca, paginação e filtro de data)
   const fetchLogs = async (
     offset: number,
@@ -918,7 +1061,7 @@ export function useSupabaseData(session: any) {
       return;
     }
 
-    const dateCutoff = getDateCutoff(days);
+    const { from: dateFrom, to: dateTo } = getLogDateRangeFilter(days);
 
     try {
       // CENÁRIO A: Com busca (searchTerm existe)
@@ -952,6 +1095,7 @@ export function useSupabaseData(session: any) {
           ...l,
           subjectId: l.subject_id ?? "",
           subtopicId: l.subtopic_id ?? undefined,
+          date: normalizeLogDate(l.date),
           hours: sanitizeNumber(l.hours ?? 0),
           minutes: sanitizeNumber(l.minutes ?? 0),
           seconds: sanitizeNumber(l.seconds ?? 0),
@@ -974,8 +1118,11 @@ export function useSupabaseData(session: any) {
         .select("*, subjects(name, color), subtopics(name)")
         .eq("user_id", session.user.id);
 
-      if (dateCutoff) {
-        queryNormal = queryNormal.gte("date", dateCutoff);
+      if (dateFrom) {
+        queryNormal = queryNormal.gte("date", dateFrom);
+      }
+      if (dateTo) {
+        queryNormal = queryNormal.lte("date", dateTo);
       }
 
       const { data: logData, error: logError } = await queryNormal
@@ -993,20 +1140,7 @@ export function useSupabaseData(session: any) {
       }
 
       // TRADUÇÃO DO BANCO PARA O APP
-      const mappedLogs = (logData || []).map((l: any) => ({
-        ...l,
-        subjectId: l.subject_id,
-        subtopicId: l.subtopic_id,
-        hours: sanitizeNumber(l.hours),
-        minutes: sanitizeNumber(l.minutes),
-        seconds: sanitizeNumber(l.seconds),
-        pages: sanitizeNumber(l.pages),
-        correct: sanitizeNumber(l.correct),
-        wrong: sanitizeNumber(l.wrong),
-        blank: sanitizeNumber(l.blank),
-        subject: l.subjects?.name,
-        subtopic: l.subtopics?.name,
-      }));
+      const mappedLogs = (logData || []).map(mapLogRow);
 
       // Atualizar estado baseado no offset
       if (offset === 0) {
@@ -1084,6 +1218,7 @@ export function useSupabaseData(session: any) {
   return {
     subjects,
     logs,
+    cycleLogs,
     stats,
     currentStreak,
     longestStreak,
@@ -1107,10 +1242,12 @@ export function useSupabaseData(session: any) {
     addSubject,
     deleteSubject,
     updateSubject,
+    addSubtopic,
     reorderSubjects,
     addLog,
     deleteLog,
     editLog,
     updateSettings,
+    refreshSubscription: fetchSubscriptionOnly,
   };
 }

@@ -444,13 +444,7 @@ export default function PricingPage({ onBack, onNavigateToLogin, onNavigateToSig
         couponCode={isCouponApplied ? coupon : undefined}
         onPaymentConfirmed={() => {
           if (onPaymentConfirmed) {
-            onPaymentConfirmed();
-          } else {
-            // Fallback caso a prop não tenha sido passada
-            localStorage.removeItem('studyflow_current_page');
-            setTimeout(() => {
-              window.location.reload();
-            }, 500);
+            void onPaymentConfirmed();
           }
         }}
       />

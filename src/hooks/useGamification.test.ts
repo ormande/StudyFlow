@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useGamification } from './useGamification';
+import { getLocalDateString } from '../utils/dateUtils';
 import { StudyLog } from '../types';
 
 describe('useGamification', () => {
@@ -19,7 +20,7 @@ describe('useGamification', () => {
       wrong: 0,
       blank: 0,
       timestamp: Date.now(),
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
     };
 
     // Act: Calcular gamificação usando renderHook
@@ -43,7 +44,7 @@ describe('useGamification', () => {
         minutes: 30,
         seconds: 0,
         timestamp: Date.now(),
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
       },
       {
         id: 'test-2',
@@ -56,7 +57,7 @@ describe('useGamification', () => {
         wrong: 2,
         blank: 1,
         timestamp: Date.now(),
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
       },
     ];
 
@@ -81,7 +82,7 @@ describe('useGamification', () => {
         minutes: 0,
         seconds: 0,
         timestamp: Date.now(),
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
       },
     ];
 
